@@ -1,0 +1,17 @@
+{
+  "name": "snippet-manager/app",
+  "description": "A PHP-based snippet manager with YAML storage",
+  "type": "project",
+  "require": {
+    "php": ">=7.4",
+    "symfony/yaml": "^5.4"
+  },
+  "autoload": {
+    "psr-4": {
+      "SnippetManager\\": "lib/"
+    }
+  },
+  "config": {
+    "optimize-autoloader": true
+  }
+}

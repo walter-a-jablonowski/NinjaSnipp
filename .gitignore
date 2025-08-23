@@ -1,0 +1,9 @@
+desktop.ini
+composer.lock
+vendor/
+snipp_promp.code-workspace
+.vs/
+bin/
+obj/
+NinjaSnipp_SAV_2_nearly_runable.zip
+NinjaSnipp_SAV.zip

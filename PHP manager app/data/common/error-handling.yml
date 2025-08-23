@@ -1,0 +1,10 @@
+sh: err--
+usage: |
+  Basic error handling pattern for functions.
+  Can be included in misc snippets.
+
+content: |
+  // Input validation
+  if( ! {paramName} ) {
+    throw new {errorType=Error|TypeError|RangeError}('{errorMessage=Invalid parameter provided}');
+  }

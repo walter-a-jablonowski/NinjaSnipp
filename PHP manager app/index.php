@@ -1,0 +1,233 @@
+<?php
+require_once 'vendor/autoload.php';
+
+use SnippetManager\SnippetManager;
+
+$manager = new SnippetManager(['data', 'snippets']);
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snippet Manager</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="style.css?v=<?= time() ?>" rel="stylesheet">
+</head>
+<body>
+  <!-- Header -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+    <div class="container-fluid">
+      <a class="navbar-brand d-flex align-items-center" href="#">
+        <i class="bi bi-code-square me-2 fs-4"></i>
+        <span class="fw-bold">Snippet Manager</span>
+      </a>
+      
+      <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      
+      <div class="navbar-nav ms-auto">
+        <div class="nav-item">
+          <div class="input-group">
+            <input type="text" class="form-control" id="searchInput" placeholder="Search snippets..." autocomplete="off">
+            <button class="btn btn-outline-light" type="button" id="searchBtn">
+              <i class="bi bi-search"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Search History Dropdown -->
+  <div id="searchHistory" class="dropdown-menu position-absolute" style="display: none; z-index: 1050;"></div>
+
+  <div class="container-fluid">
+    <div class="row">
+      <!-- Sidebar Navigation -->
+      <nav id="sidebarNav" class="col-lg-3 col-xl-2 d-lg-block bg-light sidebar collapse">
+        <div class="position-sticky pt-3">
+          <!-- Data Folder Selection -->
+          <div class="mb-3">
+            <label for="dataFolderSelect" class="form-label fw-bold">Data Folder:</label>
+            <select class="form-select" id="dataFolderSelect">
+              <?php foreach( $manager->getDataPaths() as $path ): ?>
+                <option value="<?= htmlspecialchars($path) ?>" <?= $path === $manager->getCurrentDataPath() ? 'selected' : '' ?>>
+                  <?= htmlspecialchars($path) ?>
+                </option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+
+          <!-- Tab Control -->
+          <ul class="nav nav-pills flex-column mb-3" id="sidebarTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="files-tab" data-bs-toggle="pill" data-bs-target="#files-pane" type="button" role="tab">
+                <i class="bi bi-folder me-2"></i>Files & Folders
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="recent-tab" data-bs-toggle="pill" data-bs-target="#recent-pane" type="button" role="tab">
+                <i class="bi bi-clock-history me-2"></i>Recent
+              </button>
+            </li>
+          </ul>
+
+          <!-- Tab Content -->
+          <div class="tab-content">
+            <!-- Files & Folders Tab -->
+            <div class="tab-pane fade show active" id="files-pane" role="tabpanel">
+              <!-- Breadcrumb -->
+              <nav aria-label="breadcrumb">
+                <ol class="breadcrumb" id="breadcrumb">
+                  <li class="breadcrumb-item"><a href="#" data-path="">Base</a></li>
+                </ol>
+              </nav>
+
+              <!-- Action Buttons -->
+              <div class="d-flex gap-2 mb-3">
+                <button class="btn btn-sm btn-success" id="newSnippetBtn" title="New Snippet">
+                  <i class="bi bi-plus"></i>
+                </button>
+                <button class="btn btn-sm btn-primary" id="newFolderBtn" title="New Folder">
+                  <i class="bi bi-folder-plus"></i>
+                </button>
+                <button class="btn btn-sm btn-warning" id="bulkActionsBtn" title="Bulk Actions" disabled>
+                  <i class="bi bi-list-check"></i>
+                </button>
+              </div>
+
+              <!-- File List -->
+              <div id="fileList" class="list-group">
+                <!-- Files will be loaded here -->
+              </div>
+            </div>
+
+            <!-- Recent Tab -->
+            <div class="tab-pane fade" id="recent-pane" role="tabpanel">
+              <div id="recentList" class="list-group">
+                <!-- Recent snippets will be loaded here -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <!-- Main Content -->
+      <main class="col-lg-9 col-xl-10 ms-sm-auto px-md-4">
+        <div class="pt-3">
+          <!-- Content Tab Control -->
+          <ul class="nav nav-tabs mb-3" id="contentTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="edit-tab" data-bs-toggle="tab" data-bs-target="#edit-pane" type="button" role="tab">
+                <i class="bi bi-pencil me-2"></i>Edit
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="render-tab" data-bs-toggle="tab" data-bs-target="#render-pane" type="button" role="tab" disabled>
+                <i class="bi bi-eye me-2"></i>Rendered
+              </button>
+            </li>
+          </ul>
+
+          <!-- Content Tab Panes -->
+          <div class="tab-content">
+            <!-- Edit Tab -->
+            <div class="tab-pane fade show active" id="edit-pane" role="tabpanel">
+              <div id="editContent">
+                <div class="text-center text-muted py-5">
+                  <i class="bi bi-file-text display-1"></i>
+                  <p class="mt-3">Select a snippet to edit or create a new one</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Rendered Tab -->
+            <div class="tab-pane fade" id="render-pane" role="tabpanel">
+              <div id="renderContent">
+                <div class="card">
+                  <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Rendered Snippet</h5>
+                    <button class="btn btn-sm btn-outline-primary" id="copyRenderedBtn" disabled>
+                      <i class="bi bi-clipboard me-1"></i>Copy
+                    </button>
+                  </div>
+                  <div class="card-body">
+                    <div id="placeholderForm" class="mb-3" style="display: none;">
+                      <h6>Fill Placeholders:</h6>
+                      <div id="placeholderInputs"></div>
+                      <button class="btn btn-sm btn-primary mt-2" id="renderBtn">Render</button>
+                    </div>
+                    <pre id="renderedOutput" class="bg-light p-3 rounded"><code>No content to render</code></pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Modals -->
+  <!-- New Snippet Modal -->
+  <div class="modal fade" id="newSnippetModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">New Snippet</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="newSnippetForm">
+            <div class="mb-3">
+              <label for="snippetName" class="form-label">Name</label>
+              <input type="text" class="form-control" id="snippetName" required>
+            </div>
+            <div class="mb-3">
+              <label for="snippetType" class="form-label">Type</label>
+              <select class="form-select" id="snippetType">
+                <option value="yml">YAML Snippet</option>
+                <option value="md">Markdown File</option>
+              </select>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="createSnippetBtn">Create</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Folder Modal -->
+  <div class="modal fade" id="newFolderModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">New Folder</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="newFolderForm">
+            <div class="mb-3">
+              <label for="folderName" class="form-label">Folder Name</label>
+              <input type="text" class="form-control" id="folderName" required>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="createFolderBtn">Create</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="app.js?v=<?= time() ?>"></script>
+</body>
+</html>

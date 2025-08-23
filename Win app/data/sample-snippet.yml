@@ -1,0 +1,15 @@
+identifier: 1a2b3c4d-5e6f-7g8h-9i0j
+name: Sample Greeting
+shortcut: greet
+content: |
+  Hello there!
+  
+  Thank you for using NinjaSnipp.
+  This is a sample snippet to demonstrate how snippets work.
+comments: This is a sample snippet that demonstrates the basic functionality.
+tags:
+  - sample
+  - greeting
+  - demo
+createdAt: 2023-11-01T12:00:00Z
+modifiedAt: 2023-11-01T12:00:00Z

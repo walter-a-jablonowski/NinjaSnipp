@@ -1,0 +1,26 @@
+sh: class--
+usage: |
+  Creates a PHP class with constructor and basic methods.
+  Use {className} for the class name, {property} for a property name.
+  Choose {visibility} for property visibility.
+
+content: |
+  class {className=MyClass}
+  {
+    {visibility=private|public} ${property=name};
+
+    public function __construct( ${property} )
+    {
+      $this->{property} = ${property};
+    }
+
+    public function get{property|ucfirst}() : string
+    {
+      return $this->{property};
+    }
+
+    public function set{property|ucfirst}( ${property} ) : void
+    {
+      $this->{property} = ${property};
+    }
+  }
