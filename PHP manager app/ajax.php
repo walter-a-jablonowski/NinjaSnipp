@@ -48,26 +48,18 @@ try {
       $data = $input['data'] ?? [];
       
       if( $manager->saveSnippet($path, $data) )
-      {
         $response = ['success' => true, 'message' => 'Snippet saved successfully'];
-      }
       else
-      {
         $response = ['success' => false, 'message' => 'Failed to save snippet'];
-      }
       break;
 
     case 'deleteSnippet':
       $path = $input['path'] ?? '';
       
       if( $manager->deleteSnippet($path) )
-      {
         $response = ['success' => true, 'message' => 'Snippet deleted successfully'];
-      }
       else
-      {
         $response = ['success' => false, 'message' => 'Failed to delete snippet'];
-      }
       break;
 
     case 'duplicateSnippet':
@@ -75,13 +67,9 @@ try {
       $targetPath = $input['targetPath'] ?? '';
       
       if( $manager->duplicateSnippet($sourcePath, $targetPath) )
-      {
         $response = ['success' => true, 'message' => 'Snippet duplicated successfully'];
-      }
       else
-      {
         $response = ['success' => false, 'message' => 'Failed to duplicate snippet'];
-      }
       break;
 
     case 'searchSnippets':
@@ -109,26 +97,18 @@ try {
       $fullPath = $manager->getCurrentDataPath() . '/' . $folderPath;
       
       if( ! is_dir($fullPath) && mkdir($fullPath, 0755, true) )
-      {
         $response = ['success' => true, 'message' => 'Folder created successfully'];
-      }
       else
-      {
         $response = ['success' => false, 'message' => 'Failed to create folder or folder already exists'];
-      }
       break;
 
     case 'setDataPath':
       $dataPath = $input['dataPath'] ?? '';
       
       if( $manager->setCurrentDataPath($dataPath) )
-      {
         $response = ['success' => true, 'message' => 'Data path changed successfully'];
-      }
       else
-      {
         $response = ['success' => false, 'message' => 'Invalid data path'];
-      }
       break;
 
     default:
