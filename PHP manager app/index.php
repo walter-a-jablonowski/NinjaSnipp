@@ -1,9 +1,12 @@
 <?php
-require_once 'vendor/autoload.php';
 
 use SnippetManager\SnippetManager;
+use Symfony\Component\Yaml\Yaml;
 
-$manager = new SnippetManager(['data/demo_data_1', 'data/demo_data_2']);
+require_once 'vendor/autoload.php';
+
+$config  = Yaml::parseFile('config.yml');
+$manager = new SnippetManager( $config['dataPaths'] ?? ['data']);
 
 ?>
 <!DOCTYPE html>

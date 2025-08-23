@@ -1,27 +1,29 @@
 <?php
-require_once 'vendor/autoload.php';
 
 use SnippetManager\SnippetManager;
+use Symfony\Component\Yaml\Yaml;
+
+require_once 'vendor/autoload.php';
+
 
 header('Content-Type: application/json');
 
-// Get JSON input
-$input = json_decode(file_get_contents('php://input'), true);
+$input  = json_decode( file_get_contents('php://input'), true);
 $action = $input['action'] ?? '';
 
-$manager = new SnippetManager(['data/demo_data_1', 'data/demo_data_2']);
+$config  = Yaml::parseFile('config.yml');
+$manager = new SnippetManager( $config['dataPaths'] ?? ['data']);
 
 // Set current data path if provided, otherwise ensure we're using the first path
-if( isset($input['dataPath']) && !empty($input['dataPath']) ) {
+if( isset($input['dataPath']) && !empty($input['dataPath']) )
   $manager->setCurrentDataPath($input['dataPath']);
-} else {
-  // Ensure we're using the first data path when no dataPath is provided
+else  // ensure we're using the first data path when no dataPath is provided
   $manager->setCurrentDataPath($manager->getDataPaths()[0]);
-}
 
 $response = ['success' => false, 'message' => 'Unknown action'];
 
 try {
+
   switch( $action )
   {
     case 'listFiles':
