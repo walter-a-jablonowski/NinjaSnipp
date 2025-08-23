@@ -9,11 +9,15 @@ header('Content-Type: application/json');
 $input = json_decode(file_get_contents('php://input'), true);
 $action = $input['action'] ?? '';
 
-$manager = new SnippetManager(['data', 'snippets']);
+$manager = new SnippetManager(['data/demo_data_1', 'data/demo_data_2']);
 
-// Set current data path if provided
-if( isset($input['dataPath']) )
+// Set current data path if provided, otherwise ensure we're using the first path
+if( isset($input['dataPath']) && !empty($input['dataPath']) ) {
   $manager->setCurrentDataPath($input['dataPath']);
+} else {
+  // Ensure we're using the first data path when no dataPath is provided
+  $manager->setCurrentDataPath($manager->getDataPaths()[0]);
+}
 
 $response = ['success' => false, 'message' => 'Unknown action'];
 
