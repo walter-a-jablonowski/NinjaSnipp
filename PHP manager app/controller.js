@@ -245,10 +245,16 @@ class SnippetManager {
       if( result.snippet._type === 'yml' ) {
         renderTab.disabled = false;
         renderTab.classList.remove('disabled');
+        // Auto-render immediately when a YAML snippet is selected
+        this.extractAndShowPlaceholders();
+        // Keep Rendered tab active (it's first now); just update actions visibility
+        this.updateActionButtonsVisibility();
       }
       else {
         renderTab.disabled = true;
         renderTab.classList.add('disabled');
+        // Switch to Edit tab for non-YAML files
+        this.activateTab('edit-tab');
       }
     }
     else {
@@ -336,6 +342,11 @@ class SnippetManager {
       this.showSuccess('Snippet saved successfully');
       this.currentSnippet = data;
       this.loadFiles(this.currentPath); // Refresh file list
+
+      // Re-render after save when YAML
+      if( this.currentSnippet._type === 'yml' ) {
+        this.extractAndShowPlaceholders();
+      }
     }
     else {
       this.showError('Failed to save snippet: ' + result.message);
@@ -418,6 +429,18 @@ class SnippetManager {
       const el = document.getElementById(id);
       if( el ) el.disabled = !enabled;
     });
+  }
+
+  activateTab(tabButtonId) {
+    const btn = document.getElementById(tabButtonId);
+    if( ! btn ) return;
+    try {
+      const tab = new bootstrap.Tab(btn);
+      tab.show();
+    }
+    catch(e) {
+      // No-op if Bootstrap is unavailable
+    }
   }
 
   switchToRenderTab() {
