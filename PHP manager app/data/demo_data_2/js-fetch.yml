@@ -1,0 +1,22 @@
+sh: fetch--
+usage: |
+  Template for a JavaScript Fetch request with basic error handling.
+  Choose method and provide URL and optional payload.
+
+content: |
+  const url = '{url=https://api.example.com/items}';
+  const method = '{method=GET|POST|PUT|DELETE}';
+  const headers = { 'Content-Type': 'application/json' };
+  const body = method === 'GET' ? undefined : JSON.stringify({payload});
+  
+  try {
+    const res = await fetch(url, { method, headers, body });
+    if( ! res.ok ) {
+      throw new Error(`Request failed with status ${res.status}`);
+    }
+    const data = await res.json();
+    console.log(data);
+  }
+  catch( e ) {
+    console.error('Fetch error:', e);
+  }

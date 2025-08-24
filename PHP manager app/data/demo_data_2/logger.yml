@@ -1,0 +1,14 @@
+sh: log--
+usage: |
+  Minimal PHP logger helper to standard error.
+  Use level and message placeholders.
+
+content: |
+  /**
+   * Simple logger
+   */
+  function log_{channel=app}( string $message, string $level = '{level=INFO|DEBUG|WARN|ERROR}' ) : void
+  {
+    $ts = date('c');
+    error_log("[$ts] [$level] {channel}: $message");
+  }
