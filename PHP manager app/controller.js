@@ -4,6 +4,7 @@ class SnippetManager {
   constructor() {
     this.currentPath = '';
     this.currentSnippet = null;
+    this.currentDataPath = '';
     this.searchHistory = JSON.parse(localStorage.getItem('searchHistory') || '[]');
     this.recentSnippets = JSON.parse(localStorage.getItem('recentSnippets') || '[]');
     this.selectedFiles = new Set();
@@ -13,6 +14,9 @@ class SnippetManager {
 
   init() {
     this.bindEvents();
+    // Initialize current data path from select
+    const sel = document.getElementById('dataFolderSelect');
+    if( sel ) this.currentDataPath = sel.value;
     this.loadFiles();
     this.loadRecentSnippets();
     this.setupSearchHistory();
@@ -117,7 +121,7 @@ class SnippetManager {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ action, ...data })
+        body: JSON.stringify({ action, dataPath: this.currentDataPath, ...data })
       });
       
       return await response.json();
@@ -811,6 +815,8 @@ class SnippetManager {
   }
 
   async changeDataFolder(dataPath) {
+    // Update local state and notify server for consistency
+    this.currentDataPath = dataPath;
     const result = await this.apiCall('setDataPath', { dataPath });
     
     if( result.success ) {
