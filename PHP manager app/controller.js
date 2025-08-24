@@ -2,7 +2,6 @@
 
 class SnippetManager {
   constructor() {
-    // State properties
     this.currentPath = '';
     this.currentSnippet = null;
     this.currentDataPath = '';
@@ -10,43 +9,21 @@ class SnippetManager {
     this.recentSnippets = JSON.parse(localStorage.getItem('recentSnippets') || '[]');
     this.selectedFiles = new Set();
     
-    // Cache frequently used DOM elements
-    this.elements = {};
-    
     this.init();
   }
 
   init() {
-    this.cacheElements();
     this.bindEvents();
-    this.currentDataPath = this.elements.dataFolderSelect?.value || '';
+    const dataFolderSelect = document.getElementById('dataFolderSelect');
+    this.currentDataPath = dataFolderSelect?.value || '';
     this.loadFiles();
     this.loadRecentSnippets();
     this.setupSearchHistory();
   }
 
-  cacheElements() {
-    const ids = [
-      'searchInput', 'searchBtn', 'searchHistory', 'dataFolderSelect',
-      'newSnippetBtn', 'newFolderBtn', 'backBtn', 'createSnippetBtn', 'createFolderBtn',
-      'render-tab', 'renderBtn', 'copyRenderedBtn', 'recent-tab',
-      'saveSnippetBtn', 'duplicateSnippetBtn', 'deleteSnippetBtn',
-      'fileList', 'recentList', 'editEmptyState', 'editForm',
-      'snippetNameEdit', 'fieldSh', 'fieldUsage', 'snippetSh', 'snippetUsage', 'snippetContent',
-      'placeholderForm', 'placeholderInputs', 'renderedOutput'
-    ];
-    
-    ids.forEach(id => {
-      this.elements[id] = document.getElementById(id);
-    });
-  }
-
   bindEvents() {
-    const { searchInput, searchBtn, dataFolderSelect, newSnippetBtn, newFolderBtn, backBtn,
-            createSnippetBtn, createFolderBtn, renderBtn, copyRenderedBtn, saveSnippetBtn,
-            duplicateSnippetBtn, deleteSnippetBtn } = this.elements;
-
     // Search functionality
+    const searchInput = document.getElementById('searchInput');
     if( searchInput ) {
       searchInput.addEventListener('input', (e) => this.handleSearch(e.target.value));
       searchInput.addEventListener('keydown', (e) => {
@@ -60,23 +37,24 @@ class SnippetManager {
     
     // Button event bindings
     const buttonEvents = [
-      [searchBtn, 'click', () => this.performSearch()],
-      [dataFolderSelect, 'change', (e) => this.changeDataFolder(e.target.value)],
-      [newSnippetBtn, 'click', () => this.showModal('newSnippetModal')],
-      [newFolderBtn, 'click', () => this.showModal('newFolderModal')],
-      [backBtn, 'click', () => this.goBack()],
-      [createSnippetBtn, 'click', () => this.createSnippet()],
-      [createFolderBtn, 'click', () => this.createFolder()],
-      [this.elements['render-tab'], 'click', () => this.extractAndShowPlaceholders()],
-      [renderBtn, 'click', () => this.renderSnippet()],
-      [copyRenderedBtn, 'click', () => this.copyRenderedContent()],
-      [saveSnippetBtn, 'click', () => this.saveCurrentSnippet()],
-      [duplicateSnippetBtn, 'click', () => this.duplicateCurrentSnippet()],
-      [deleteSnippetBtn, 'click', () => this.deleteCurrentSnippet()],
-      [this.elements['recent-tab'], 'click', () => this.loadRecentSnippets()]
+      ['searchBtn', 'click', () => this.performSearch()],
+      ['dataFolderSelect', 'change', (e) => this.changeDataFolder(e.target.value)],
+      ['newSnippetBtn', 'click', () => this.showModal('newSnippetModal')],
+      ['newFolderBtn', 'click', () => this.showModal('newFolderModal')],
+      ['backBtn', 'click', () => this.goBack()],
+      ['createSnippetBtn', 'click', () => this.createSnippet()],
+      ['createFolderBtn', 'click', () => this.createFolder()],
+      ['render-tab', 'click', () => this.extractAndShowPlaceholders()],
+      ['renderBtn', 'click', () => this.renderSnippet()],
+      ['copyRenderedBtn', 'click', () => this.copyRenderedContent()],
+      ['saveSnippetBtn', 'click', () => this.saveCurrentSnippet()],
+      ['duplicateSnippetBtn', 'click', () => this.duplicateCurrentSnippet()],
+      ['deleteSnippetBtn', 'click', () => this.deleteCurrentSnippet()],
+      ['recent-tab', 'click', () => this.loadRecentSnippets()]
     ];
 
-    buttonEvents.forEach(([element, event, handler]) => {
+    buttonEvents.forEach(([elementId, event, handler]) => {
+      const element = document.getElementById(elementId);
       if( element ) element.addEventListener(event, handler);
     });
 
@@ -137,10 +115,11 @@ class SnippetManager {
   }
 
   renderFileList(files) {
-    if( ! this.elements.fileList ) return;
+    const fileList = document.getElementById('fileList');
+    if( ! fileList ) return;
     
     if( files.length === 0 ) {
-      this.elements.fileList.innerHTML = `
+      fileList.innerHTML = `
         <div class="empty-state">
           <i class="bi bi-folder-x"></i>
           <p>No files found in this folder</p>
@@ -149,7 +128,7 @@ class SnippetManager {
       return;
     }
 
-    this.elements.fileList.innerHTML = files.map(file => {
+    fileList.innerHTML = files.map(file => {
       const icon = file.type === 'folder' ? 'bi-folder' : 
                    file.extension === 'yml' ? 'bi-file-code' : 'bi-file-text';
       const modified = file.modified ? new Date(file.modified * 1000).toLocaleDateString() : '';
@@ -230,47 +209,48 @@ class SnippetManager {
   }
 
   renderEditForm(snippet) {
-    const emptyState = document.getElementById('editEmptyState');
-    const form = document.getElementById('editForm');
-    const nameInput = document.getElementById('snippetNameEdit');
-    const shField = document.getElementById('fieldSh');
-    const usageField = document.getElementById('fieldUsage');
-    const shInput = document.getElementById('snippetSh');
-    const usageInput = document.getElementById('snippetUsage');
-    const contentInput = document.getElementById('snippetContent');
+    const editEmptyState = document.getElementById('editEmptyState');
+    const editForm = document.getElementById('editForm');
+    const snippetNameEdit = document.getElementById('snippetNameEdit');
+    const fieldSh = document.getElementById('fieldSh');
+    const fieldUsage = document.getElementById('fieldUsage');
+    const snippetSh = document.getElementById('snippetSh');
+    const snippetUsage = document.getElementById('snippetUsage');
+    const snippetContent = document.getElementById('snippetContent');
 
-    if( ! form || ! nameInput || ! contentInput ) return;
+    if( ! editForm || ! snippetNameEdit || ! snippetContent ) return;
 
-    // Populate common fields
-    nameInput.value = snippet._name || '';
-    contentInput.value = snippet.content || '';
-
-    // Toggle YAML-only fields
     const isYaml = snippet._type === 'yml';
-    shField.style.display = isYaml ? '' : 'none';
-    usageField.style.display = isYaml ? '' : 'none';
+    
+    // Populate form fields
+    snippetNameEdit.value = snippet._name || '';
+    snippetContent.value = snippet.content || '';
+    
     if( isYaml ) {
-      shInput.value = snippet.sh || '';
-      usageInput.value = snippet.usage || '';
+      if( snippetSh ) snippetSh.value = snippet.sh || '';
+      if( snippetUsage ) snippetUsage.value = snippet.usage || '';
     }
+
+    // Toggle YAML-only fields visibility
+    [fieldSh, fieldUsage].forEach(field => {
+      if( field ) field.style.display = isYaml ? '' : 'none';
+    });
 
     // Show form, hide empty state
-    emptyState.style.display = 'none';
-    form.style.display = 'block';
+    if( editEmptyState ) editEmptyState.style.display = 'none';
+    editForm.style.display = 'block';
 
-    // Enable or disable Render tab
-    const renderTab = document.getElementById('render-tab');
-    if( isYaml ) {
-      renderTab.disabled = false;
-      renderTab.classList.remove('disabled');
-    }
-    else {
-      renderTab.disabled = true;
-      renderTab.classList.add('disabled');
-    }
-
-    // Enable actions (a snippet is selected)
+    // Configure render tab
+    this.configureRenderTab(isYaml);
     this.setActionButtonsEnabled(true);
+  }
+
+  configureRenderTab(enabled) {
+    const renderTab = document.getElementById('render-tab');
+    if( renderTab ) {
+      renderTab.disabled = !enabled;
+      renderTab.classList.toggle('disabled', !enabled);
+    }
   }
 
   async saveCurrentSnippet() {
@@ -361,38 +341,39 @@ class SnippetManager {
   }
 
   clearEditForm() {
-    const emptyState = document.getElementById('editEmptyState');
-    const form = document.getElementById('editForm');
-    if( emptyState && form ) {
-      form.style.display = 'none';
-      emptyState.style.display = 'block';
-      // Clear values
-      const inputs = ['snippetNameEdit','snippetSh','snippetUsage','snippetContent'];
-      inputs.forEach(id => { const el = document.getElementById(id); if( el ) el.value = ''; });
+    const editEmptyState = document.getElementById('editEmptyState');
+    const editForm = document.getElementById('editForm');
+    
+    if( editEmptyState && editForm ) {
+      editForm.style.display = 'none';
+      editEmptyState.style.display = 'block';
+      
+      // Clear form values
+      const inputs = ['snippetNameEdit', 'snippetSh', 'snippetUsage', 'snippetContent'];
+      inputs.forEach(id => {
+        const input = document.getElementById(id);
+        if( input ) input.value = '';
+      });
     }
     
-    // Disable render tab
-    const renderTab = document.getElementById('render-tab');
-    renderTab.disabled = true;
-    renderTab.classList.add('disabled');
-
-    // No snippet selected: disable actions
+    this.configureRenderTab(false);
     this.setActionButtonsEnabled(false);
   }
 
   updateActionButtonsVisibility() {
     const activeTab = document.querySelector('#contentTabs .nav-link.active');
     const show = activeTab && activeTab.id === 'edit-tab';
-    ['saveSnippetBtn','duplicateSnippetBtn','deleteSnippetBtn'].forEach(id => {
-      const el = document.getElementById(id);
-      if( el ) el.style.display = show ? '' : 'none';
+    
+    ['saveSnippetBtn', 'duplicateSnippetBtn', 'deleteSnippetBtn'].forEach(id => {
+      const btn = document.getElementById(id);
+      if( btn ) btn.style.display = show ? '' : 'none';
     });
   }
 
   setActionButtonsEnabled(enabled) {
-    ['saveSnippetBtn','duplicateSnippetBtn','deleteSnippetBtn'].forEach(id => {
-      const el = document.getElementById(id);
-      if( el ) el.disabled = !enabled;
+    ['saveSnippetBtn', 'duplicateSnippetBtn', 'deleteSnippetBtn'].forEach(id => {
+      const btn = document.getElementById(id);
+      if( btn ) btn.disabled = !enabled;
     });
   }
 
@@ -411,9 +392,11 @@ class SnippetManager {
 
   async extractAndShowPlaceholders() {
     if( ! this.currentSnippet || this.currentSnippet._type !== 'yml' ) return;
-    if( ! this.elements.snippetContent ) return;
+    
+    const snippetContent = document.getElementById('snippetContent');
+    if( ! snippetContent ) return;
 
-    const result = await this.apiCall('extractPlaceholders', { content: this.elements.snippetContent.value });
+    const result = await this.apiCall('extractPlaceholders', { content: snippetContent.value });
     
     if( result.success ) {
       this.renderPlaceholderForm(result.placeholders);
@@ -421,7 +404,8 @@ class SnippetManager {
   }
 
   renderPlaceholderForm(placeholders) {
-    const { placeholderForm, placeholderInputs } = this.elements;
+    const placeholderForm = document.getElementById('placeholderForm');
+    const placeholderInputs = document.getElementById('placeholderInputs');
     
     if( Object.keys(placeholders).length === 0 ) {
       if( placeholderForm ) placeholderForm.style.display = 'none';
@@ -484,11 +468,13 @@ class SnippetManager {
     });
     
     if( result.success ) {
-      if( this.elements.renderedOutput ) {
-        this.elements.renderedOutput.innerHTML = `<code>${this.escapeHtml(result.rendered)}</code>`;
+      const renderedOutput = document.getElementById('renderedOutput');
+      if( renderedOutput ) {
+        renderedOutput.innerHTML = `<code>${this.escapeHtml(result.rendered)}</code>`;
       }
-      if( this.elements.copyRenderedBtn ) {
-        this.elements.copyRenderedBtn.disabled = false;
+      const copyRenderedBtn = document.getElementById('copyRenderedBtn');
+      if( copyRenderedBtn ) {
+        copyRenderedBtn.disabled = false;
       }
     }
     else {
@@ -513,10 +499,11 @@ class SnippetManager {
   }
 
   async copyRenderedContent() {
-    if( ! this.elements.renderedOutput ) return;
+    const renderedOutput = document.getElementById('renderedOutput');
+    if( ! renderedOutput ) return;
     
     try {
-      await navigator.clipboard.writeText(this.elements.renderedOutput.textContent);
+      await navigator.clipboard.writeText(renderedOutput.textContent);
       this.showSuccess('Content copied to clipboard');
     }
     catch( error ) {
@@ -525,7 +512,8 @@ class SnippetManager {
   }
 
   async performSearch() {
-    const query = this.elements.searchInput?.value.trim();
+    const searchInput = document.getElementById('searchInput');
+    const query = searchInput?.value.trim();
     if( ! query ) return;
 
     this.addToSearchHistory(query);
@@ -541,10 +529,11 @@ class SnippetManager {
   }
 
   renderSearchResults(results) {
-    if( ! this.elements.fileList ) return;
+    const fileList = document.getElementById('fileList');
+    if( ! fileList ) return;
     
     if( results.length === 0 ) {
-      this.elements.fileList.innerHTML = `
+      fileList.innerHTML = `
         <div class="empty-state">
           <i class="bi bi-search"></i>
           <p>No snippets found matching your search</p>
@@ -553,7 +542,7 @@ class SnippetManager {
       return;
     }
 
-    this.elements.fileList.innerHTML = results.map(result => {
+    fileList.innerHTML = results.map(result => {
       const icon = result.type === 'yml' ? 'bi-file-code' : 'bi-file-text';
       
       return `
@@ -583,6 +572,8 @@ class SnippetManager {
   showSearchHistory() {
     const searchHistory = document.getElementById('searchHistory');
     const searchInput = document.getElementById('searchInput');
+    if( ! searchHistory || ! searchInput ) return;
+    
     const rect = searchInput.getBoundingClientRect();
     
     searchHistory.style.display = 'block';
@@ -600,7 +591,7 @@ class SnippetManager {
     searchHistory.addEventListener('click', (e) => {
       if( e.target.closest('.search-history-item') ) {
         const query = e.target.closest('.search-history-item').dataset.query;
-        document.getElementById('searchInput').value = query;
+        searchInput.value = query;
         this.performSearch();
         this.hideSearchHistory();
       }
@@ -660,6 +651,7 @@ class SnippetManager {
 
   loadRecentSnippets() {
     const recentList = document.getElementById('recentList');
+    if( ! recentList ) return;
     
     if( this.recentSnippets.length === 0 ) {
       recentList.innerHTML = `
