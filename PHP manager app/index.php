@@ -65,7 +65,7 @@ $manager = new SnippetManager( $config['dataPaths'] ?? ['data']);
           </div>
 
           <!-- Tab Control -->
-          <ul class="nav nav-pills flex-column mb-3" id="sidebarTabs" role="tablist">
+          <ul class="nav nav-pills mb-3 gap-1 flex-lg-row flex-nowrap" id="sidebarTabs" role="tablist">
             <li class="nav-item" role="presentation">
               <button class="nav-link small py-1 px-2 active" id="files-tab" data-bs-toggle="pill" data-bs-target="#files-pane" type="button" role="tab">
                 <i class="bi bi-folder me-2"></i>Files
