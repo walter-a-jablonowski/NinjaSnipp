@@ -129,6 +129,19 @@ $manager = new SnippetManager( $config['dataPaths'] ?? ['data']);
                 <i class="bi bi-eye me-2"></i>Rendered
               </button>
             </li>
+            <li class="nav-item ms-auto" role="presentation">
+              <div class="d-flex gap-2 align-items-center">
+                <button type="button" class="btn btn-sm btn-primary" id="saveSnippetBtn" title="Save" aria-label="Save">
+                  <i class="bi bi-save"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="duplicateSnippetBtn" title="Duplicate" aria-label="Duplicate">
+                  <i class="bi bi-files"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger" id="deleteSnippetBtn" title="Delete" aria-label="Delete">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </li>
           </ul>
 
           <!-- Content Tab Panes -->
@@ -144,17 +157,6 @@ $manager = new SnippetManager( $config['dataPaths'] ?? ['data']);
 
                 <!-- Static Edit Form (hidden by default; JS will populate) -->
                 <form id="editForm" class="snippet-form" style="display: none;">
-                  <div class="action-buttons d-flex gap-2 mb-3">
-                    <button type="button" class="btn btn-primary" id="saveSnippetBtn">
-                      <i class="bi bi-save me-1"></i>Save
-                    </button>
-                    <button type="button" class="btn btn-outline-secondary" id="duplicateSnippetBtn">
-                      <i class="bi bi-files me-1"></i>Duplicate
-                    </button>
-                    <button type="button" class="btn btn-outline-danger" id="deleteSnippetBtn">
-                      <i class="bi bi-trash me-1"></i>Delete
-                    </button>
-                  </div>
 
                   <div class="mb-3">
                     <label for="snippetNameEdit" class="form-label">Name</label>

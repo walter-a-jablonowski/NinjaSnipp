@@ -94,6 +94,13 @@ class SnippetManager {
     if( dupBtn ) dupBtn.addEventListener('click', () => this.duplicateCurrentSnippet());
     if( delBtn ) delBtn.addEventListener('click', () => this.deleteCurrentSnippet());
 
+    // Toggle action buttons visibility on tab change
+    const tabButtons = document.querySelectorAll('#contentTabs [data-bs-toggle="tab"]');
+    tabButtons.forEach(btn => btn.addEventListener('shown.bs.tab', () => this.updateActionButtonsVisibility()));
+    // Initial state
+    this.updateActionButtonsVisibility();
+    this.setActionButtonsEnabled(false);
+
 
     // File list interactions
     document.addEventListener('click', (e) => {
@@ -290,6 +297,9 @@ class SnippetManager {
       renderTab.disabled = true;
       renderTab.classList.add('disabled');
     }
+
+    // Enable actions (a snippet is selected)
+    this.setActionButtonsEnabled(true);
   }
 
   async saveCurrentSnippet() {
@@ -389,6 +399,25 @@ class SnippetManager {
     const renderTab = document.getElementById('render-tab');
     renderTab.disabled = true;
     renderTab.classList.add('disabled');
+
+    // No snippet selected: disable actions
+    this.setActionButtonsEnabled(false);
+  }
+
+  updateActionButtonsVisibility() {
+    const activeTab = document.querySelector('#contentTabs .nav-link.active');
+    const show = activeTab && activeTab.id === 'edit-tab';
+    ['saveSnippetBtn','duplicateSnippetBtn','deleteSnippetBtn'].forEach(id => {
+      const el = document.getElementById(id);
+      if( el ) el.style.display = show ? '' : 'none';
+    });
+  }
+
+  setActionButtonsEnabled(enabled) {
+    ['saveSnippetBtn','duplicateSnippetBtn','deleteSnippetBtn'].forEach(id => {
+      const el = document.getElementById(id);
+      if( el ) el.disabled = !enabled;
+    });
   }
 
   switchToRenderTab() {
