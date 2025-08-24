@@ -1,0 +1,9 @@
+sh: hlp
+usage: |
+
+  Helper info
+
+content: |
+
+  // included helper block
+  console.log('Included for {name=debug}')

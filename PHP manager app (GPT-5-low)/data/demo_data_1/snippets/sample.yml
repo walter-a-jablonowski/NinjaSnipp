@@ -1,0 +1,11 @@
+sh: arrf--
+usage: |
+
+  Sample array find snippet usage
+
+content: |
+
+  const items = [{ id: 1 }, { id: 2 }]
+  const id = {id=1|2|3}
+  const found = items.find(x => x.id === id)
+  {include: "helper"}

@@ -1,0 +1,14 @@
+{
+  "name": "ninjashare/snippet-manager",
+  "description": "Snippet Manager App - PHP + JS",
+  "type": "project",
+  "require": {
+    "php": ">=8.0",
+    "symfony/yaml": "^5.4"
+  },
+  "autoload": {
+    "psr-4": {
+      "App\\": "src/"
+    }
+  }
+}

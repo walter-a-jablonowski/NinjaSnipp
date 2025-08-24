@@ -1,0 +1,8 @@
+sh: oth
+usage: |
+
+  Another demo snippet
+
+content: |
+
+  Hello {who=World|Friend}
