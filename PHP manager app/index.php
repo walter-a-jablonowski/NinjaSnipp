@@ -180,15 +180,17 @@ $manager = new SnippetManager( $config['dataPaths'] ?? ['data']);
                 <!-- Static Edit Form (hidden by default; JS will populate) -->
                 <form id="editForm" class="snippet-form" style="display: none;">
 
-                  <div class="mb-3">
-                    <label for="snippetNameEdit" class="form-label">Name</label>
-                    <input type="text" class="form-control" id="snippetNameEdit" required>
-                  </div>
-
-                  <!-- YAML-only fields -->
-                  <div class="mb-3" id="fieldSh">
-                    <label for="snippetSh" class="form-label">Short Code</label>
-                    <input type="text" class="form-control" id="snippetSh" placeholder="e.g., arr--">
+                  <!-- Group Name and Short Code on one line (Short Code is YAML-only) -->
+                  <div class="row g-2 mb-3 align-items-end">
+                    <div class="col-12 col-md-8">
+                      <label for="snippetNameEdit" class="form-label">Name</label>
+                      <input type="text" class="form-control" id="snippetNameEdit" required>
+                    </div>
+                    <!-- YAML-only fields -->
+                    <div class="col-12 col-md-4" id="fieldSh">
+                      <label for="snippetSh" class="form-label">Short Code</label>
+                      <input type="text" class="form-control" id="snippetSh" placeholder="e.g., arr--">
+                    </div>
                   </div>
 
                   <div class="mb-3" id="fieldUsage">
