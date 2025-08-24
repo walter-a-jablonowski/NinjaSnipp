@@ -18,7 +18,12 @@ $manager = new SnippetManager( $config['dataPaths'] ?? ['data']);
 if( isset($input['dataPath']) && !empty($input['dataPath']) )
   $manager->setCurrentDataPath($input['dataPath']);
 else  // ensure we're using the first data path when no dataPath is provided
-  $manager->setCurrentDataPath($manager->getDataPaths()[0]);
+{
+  $paths = $manager->getDataPaths(); // associative label => path
+  $firstLabel = array_key_first($paths);
+  if( $firstLabel !== null )
+    $manager->setCurrentDataPath($paths[$firstLabel]);
+}
 
 $response = ['success' => false, 'message' => 'Unknown action'];
 

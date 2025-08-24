@@ -6,13 +6,43 @@ use Symfony\Component\Yaml\Yaml;
 
 class SnippetManager
 {
-  private array $dataPaths;
+  private array $dataPaths; // associative: label => path
   private string $currentDataPath;
+  private string $currentDataLabel;
 
   public function __construct( array $dataPaths = ['data'] )
   {
-    $this->dataPaths = $dataPaths;
-    $this->currentDataPath = $dataPaths[0];
+    // Normalize into associative array label => path
+    $normalized = [];
+    foreach( $dataPaths as $key => $value )
+    {
+      if( is_string($key) ) // keyed config: label => path
+      {
+        $label = $key;
+        $path  = $value;
+      }
+      else // numeric keys: use path as label (fallback)
+      {
+        $label = is_string($value) ? $value : (string)$key;
+        $path  = is_string($value) ? $value : '';
+      }
+
+      if( $path === '' ) continue;
+      // Normalize separators to forward slashes
+      $path = str_replace('\\', '/', $path);
+      $normalized[$label] = $path;
+    }
+
+    if( empty($normalized) )
+      $normalized = ['data' => 'data'];
+
+    $this->dataPaths = $normalized;
+
+    // Initialize current selection to first entry
+    $firstLabel = array_key_first($this->dataPaths);
+    $this->currentDataLabel = $firstLabel;
+    $this->currentDataPath  = $this->dataPaths[$firstLabel];
+
     $this->ensureDataDirectories();
   }
 
@@ -27,22 +57,42 @@ class SnippetManager
 
   public function getDataPaths() : array
   {
+    // Returns associative label => path
     return $this->dataPaths;
   }
 
-  public function setCurrentDataPath( string $path ) : bool
+  public function setCurrentDataPath( string $pathOrLabel ) : bool
   {
-    if( in_array($path, $this->dataPaths) )
+    // Accept either a label or a path
+    if( isset($this->dataPaths[$pathOrLabel]) )
     {
-      $this->currentDataPath = $path;
+      $this->currentDataLabel = $pathOrLabel;
+      $this->currentDataPath  = $this->dataPaths[$pathOrLabel];
       return true;
     }
+
+    // Try to match by path value
+    foreach( $this->dataPaths as $label => $path )
+    {
+      if( $path === $pathOrLabel )
+      {
+        $this->currentDataLabel = $label;
+        $this->currentDataPath  = $path;
+        return true;
+      }
+    }
+
     return false;
   }
 
   public function getCurrentDataPath() : string
   {
     return $this->currentDataPath;
+  }
+
+  public function getCurrentDataLabel() : string
+  {
+    return $this->currentDataLabel;
   }
 
   public function listFiles( string $subPath = '' ) : array

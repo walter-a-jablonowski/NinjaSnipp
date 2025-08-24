@@ -57,9 +57,9 @@ $manager = new SnippetManager( $config['dataPaths'] ?? ['data']);
           <div class="mb-3">
             <label for="dataFolderSelect" class="form-label fw-bold">Data Folder:</label>
             <select class="form-select" id="dataFolderSelect">
-              <?php foreach( $manager->getDataPaths() as $path ): ?>
+              <?php foreach( $manager->getDataPaths() as $label => $path ): ?>
                 <option value="<?= htmlspecialchars($path) ?>" <?= $path === $manager->getCurrentDataPath() ? 'selected' : '' ?>>
-                  <?= htmlspecialchars($path) ?>
+                  <?= htmlspecialchars($label) ?>
                 </option>
               <?php endforeach; ?>
             </select>
@@ -69,7 +69,7 @@ $manager = new SnippetManager( $config['dataPaths'] ?? ['data']);
           <ul class="nav nav-pills flex-column mb-3" id="sidebarTabs" role="tablist">
             <li class="nav-item" role="presentation">
               <button class="nav-link active" id="files-tab" data-bs-toggle="pill" data-bs-target="#files-pane" type="button" role="tab">
-                <i class="bi bi-folder me-2"></i>Files & Folders
+                <i class="bi bi-folder me-2"></i>Files
               </button>
             </li>
             <li class="nav-item" role="presentation">
