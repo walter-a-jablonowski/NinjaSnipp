@@ -86,13 +86,6 @@ class SnippetManager {
       this.copyRenderedContent();
     });
 
-    // Breadcrumb navigation
-    document.addEventListener('click', (e) => {
-      if( e.target.matches('.breadcrumb a') ) {
-        e.preventDefault();
-        this.navigateToPath(e.target.dataset.path);
-      }
-    });
 
     // File list interactions
     document.addEventListener('click', (e) => {
@@ -145,7 +138,6 @@ class SnippetManager {
     
     if( result.success ) {
       this.renderFileList(result.files);
-      this.updateBreadcrumb(subPath);
       this.currentPath = subPath;
     }
     else {
@@ -188,28 +180,6 @@ class SnippetManager {
     }).join('');
   }
 
-  updateBreadcrumb(path) {
-    const breadcrumb = document.getElementById('breadcrumb');
-    if( ! breadcrumb ) return; // Breadcrumb not present in UI
-    const parts = path ? path.split('/') : [];
-    
-    let html = '<li class="breadcrumb-item"><a href="#" data-path="">Base</a></li>';
-    let currentPath = '';
-    
-    parts.forEach((part, index) => {
-      currentPath += (currentPath ? '/' : '') + part;
-      const isLast = index === parts.length - 1;
-      
-      if( isLast ) {
-        html += `<li class="breadcrumb-item active">${part}</li>`;
-      }
-      else {
-        html += `<li class="breadcrumb-item"><a href="#" data-path="${currentPath}">${part}</a></li>`;
-      }
-    });
-    
-    breadcrumb.innerHTML = html;
-  }
 
   goBack() {
     if( ! this.currentPath ) return; // already at base
