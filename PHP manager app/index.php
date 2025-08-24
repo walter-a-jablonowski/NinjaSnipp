@@ -131,6 +131,9 @@ $manager = new SnippetManager( $config['dataPaths'] ?? ['data']);
             </li>
             <li class="nav-item ms-auto" role="presentation">
               <div class="d-flex gap-2 align-items-center">
+                <button type="button" class="btn btn-sm btn-outline-primary" id="copyRenderedBtn" title="Copy rendered" aria-label="Copy rendered" style="display: none;" disabled>
+                  <i class="bi bi-clipboard"></i>
+                </button>
                 <button type="button" class="btn btn-sm btn-primary" id="saveSnippetBtn" title="Save" aria-label="Save">
                   <i class="bi bi-save"></i>
                 </button>
@@ -149,20 +152,10 @@ $manager = new SnippetManager( $config['dataPaths'] ?? ['data']);
             <!-- Rendered Tab -->
             <div id="render-pane" class="tab-pane fade show active" role="tabpanel">
               <div id="renderContent">
-                <div class="card">
-                  <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Rendered Snippet</h5>
-                    <button class="btn btn-sm btn-outline-primary" id="copyRenderedBtn" disabled>
-                      <i class="bi bi-clipboard me-1"></i>Copy
-                    </button>
-                  </div>
-                  <div class="card-body">
-                    <div id="inlineSnippet" class="inline-snippet"></div>
-                    <pre id="renderedOutput" class="bg-light p-3 rounded mt-3"><code>No content to render</code></pre>
-                    <!-- Choice menu for placeholders (shown on demand) -->
-                    <div id="phChoiceMenu" class="dropdown-menu"></div>
-                  </div>
-                </div>
+                <div id="inlineSnippet" class="inline-snippet"></div>
+                <pre id="renderedOutput" class="bg-light p-3 rounded mt-3"><code>No content to render</code></pre>
+                <!-- Choice menu for placeholders (shown on demand) -->
+                <div id="phChoiceMenu" class="dropdown-menu"></div>
               </div>
             </div>
 

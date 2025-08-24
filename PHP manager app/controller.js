@@ -366,6 +366,14 @@ class SnippetManager {
       const btn = document.getElementById(id);
       if( btn ) btn.style.display = show ? '' : 'none';
     });
+
+    // Copy button is only visible on Render tab when a YAML snippet is loaded
+    const copyBtn = document.getElementById('copyRenderedBtn');
+    if( copyBtn ) {
+      const renderActive = activeTab && activeTab.id === 'render-tab';
+      const canRender = !!(this.currentSnippet && this.currentSnippet._type === 'yml');
+      copyBtn.style.display = (renderActive && canRender) ? '' : 'none';
+    }
   }
 
   setActionButtonsEnabled(enabled) {
