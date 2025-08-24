@@ -121,7 +121,7 @@ $manager = new SnippetManager( $config['dataPaths'] ?? ['data']);
           <ul class="nav nav-tabs mb-3" id="contentTabs" role="tablist">
             <li class="nav-item" role="presentation">
               <button id="render-tab" class="nav-link active" data-bs-toggle="tab" data-bs-target="#render-pane" type="button" role="tab" disabled>
-                <i class="bi bi-eye me-2"></i>Rendered
+                <i class="bi bi-eye me-2"></i>Preview
               </button>
             </li>
             <li class="nav-item" role="presentation">
