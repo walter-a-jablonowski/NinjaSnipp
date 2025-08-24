@@ -82,15 +82,11 @@ $manager = new SnippetManager( $config['dataPaths'] ?? ['data']);
           <div class="tab-content">
             <!-- Files & Folders Tab -->
             <div class="tab-pane fade show active" id="files-pane" role="tabpanel">
-              <!-- Breadcrumb -->
-              <nav aria-label="breadcrumb">
-                <ol class="breadcrumb" id="breadcrumb">
-                  <li class="breadcrumb-item"><a href="#" data-path="">Base</a></li>
-                </ol>
-              </nav>
-
               <!-- Action Buttons -->
               <div class="d-flex gap-2 mb-3">
+                <button class="btn btn-sm btn-outline-secondary" id="backBtn" title="Back">
+                  <i class="bi bi-arrow-left"></i>
+                </button>
                 <button class="btn btn-sm btn-success" id="newSnippetBtn" title="New Snippet">
                   <i class="bi bi-plus"></i>
                 </button>

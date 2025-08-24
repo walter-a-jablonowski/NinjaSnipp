@@ -56,6 +56,12 @@ class SnippetManager {
       this.showNewFolderModal();
     });
 
+    // Back button (navigate up one level)
+    const backBtn = document.getElementById('backBtn');
+    if( backBtn ) {
+      backBtn.addEventListener('click', () => this.goBack());
+    }
+
     // Modal actions
     document.getElementById('createSnippetBtn').addEventListener('click', () => {
       this.createSnippet();
@@ -184,6 +190,7 @@ class SnippetManager {
 
   updateBreadcrumb(path) {
     const breadcrumb = document.getElementById('breadcrumb');
+    if( ! breadcrumb ) return; // Breadcrumb not present in UI
     const parts = path ? path.split('/') : [];
     
     let html = '<li class="breadcrumb-item"><a href="#" data-path="">Base</a></li>';
@@ -202,6 +209,14 @@ class SnippetManager {
     });
     
     breadcrumb.innerHTML = html;
+  }
+
+  goBack() {
+    if( ! this.currentPath ) return; // already at base
+    const parts = this.currentPath.split('/');
+    parts.pop();
+    const parent = parts.join('/');
+    this.navigateToPath(parent);
   }
 
   handleFileClick(e) {
