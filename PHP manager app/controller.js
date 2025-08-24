@@ -2,6 +2,7 @@
 
 class SnippetManager {
   constructor() {
+    // State properties
     this.currentPath = '';
     this.currentSnippet = null;
     this.currentDataPath = '';
@@ -9,107 +10,86 @@ class SnippetManager {
     this.recentSnippets = JSON.parse(localStorage.getItem('recentSnippets') || '[]');
     this.selectedFiles = new Set();
     
+    // Cache frequently used DOM elements
+    this.elements = {};
+    
     this.init();
   }
 
   init() {
+    this.cacheElements();
     this.bindEvents();
-    // Initialize current data path from select
-    const sel = document.getElementById('dataFolderSelect');
-    if( sel ) this.currentDataPath = sel.value;
+    this.currentDataPath = this.elements.dataFolderSelect?.value || '';
     this.loadFiles();
     this.loadRecentSnippets();
     this.setupSearchHistory();
   }
 
+  cacheElements() {
+    const ids = [
+      'searchInput', 'searchBtn', 'searchHistory', 'dataFolderSelect',
+      'newSnippetBtn', 'newFolderBtn', 'backBtn', 'createSnippetBtn', 'createFolderBtn',
+      'render-tab', 'renderBtn', 'copyRenderedBtn', 'recent-tab',
+      'saveSnippetBtn', 'duplicateSnippetBtn', 'deleteSnippetBtn',
+      'fileList', 'recentList', 'editEmptyState', 'editForm',
+      'snippetNameEdit', 'fieldSh', 'fieldUsage', 'snippetSh', 'snippetUsage', 'snippetContent',
+      'placeholderForm', 'placeholderInputs', 'renderedOutput'
+    ];
+    
+    ids.forEach(id => {
+      this.elements[id] = document.getElementById(id);
+    });
+  }
+
   bindEvents() {
+    const { searchInput, searchBtn, dataFolderSelect, newSnippetBtn, newFolderBtn, backBtn,
+            createSnippetBtn, createFolderBtn, renderBtn, copyRenderedBtn, saveSnippetBtn,
+            duplicateSnippetBtn, deleteSnippetBtn } = this.elements;
+
     // Search functionality
-    document.getElementById('searchInput').addEventListener('input', (e) => {
-      this.handleSearch(e.target.value);
-    });
-    
-    document.getElementById('searchBtn').addEventListener('click', () => {
-      this.performSearch();
-    });
-    
-    document.getElementById('searchInput').addEventListener('keydown', (e) => {
-      if( e.key === 'Enter' ) {
-        this.performSearch();
-      }
-      if( e.key === 'ArrowDown' || e.key === 'ArrowUp' ) {
-        this.navigateSearchHistory(e.key);
-        e.preventDefault();
-      }
-    });
-
-    // Data folder selection
-    document.getElementById('dataFolderSelect').addEventListener('change', (e) => {
-      this.changeDataFolder(e.target.value);
-    });
-
-    // New snippet/folder buttons
-    document.getElementById('newSnippetBtn').addEventListener('click', () => {
-      this.showNewSnippetModal();
-    });
-    
-    document.getElementById('newFolderBtn').addEventListener('click', () => {
-      this.showNewFolderModal();
-    });
-
-    // Back button (navigate up one level)
-    const backBtn = document.getElementById('backBtn');
-    if( backBtn ) {
-      backBtn.addEventListener('click', () => this.goBack());
+    if( searchInput ) {
+      searchInput.addEventListener('input', (e) => this.handleSearch(e.target.value));
+      searchInput.addEventListener('keydown', (e) => {
+        if( e.key === 'Enter' ) this.performSearch();
+        if( e.key === 'ArrowDown' || e.key === 'ArrowUp' ) {
+          this.navigateSearchHistory(e.key);
+          e.preventDefault();
+        }
+      });
     }
+    
+    // Button event bindings
+    const buttonEvents = [
+      [searchBtn, 'click', () => this.performSearch()],
+      [dataFolderSelect, 'change', (e) => this.changeDataFolder(e.target.value)],
+      [newSnippetBtn, 'click', () => this.showModal('newSnippetModal')],
+      [newFolderBtn, 'click', () => this.showModal('newFolderModal')],
+      [backBtn, 'click', () => this.goBack()],
+      [createSnippetBtn, 'click', () => this.createSnippet()],
+      [createFolderBtn, 'click', () => this.createFolder()],
+      [this.elements['render-tab'], 'click', () => this.extractAndShowPlaceholders()],
+      [renderBtn, 'click', () => this.renderSnippet()],
+      [copyRenderedBtn, 'click', () => this.copyRenderedContent()],
+      [saveSnippetBtn, 'click', () => this.saveCurrentSnippet()],
+      [duplicateSnippetBtn, 'click', () => this.duplicateCurrentSnippet()],
+      [deleteSnippetBtn, 'click', () => this.deleteCurrentSnippet()],
+      [this.elements['recent-tab'], 'click', () => this.loadRecentSnippets()]
+    ];
 
-    // Modal actions
-    document.getElementById('createSnippetBtn').addEventListener('click', () => {
-      this.createSnippet();
+    buttonEvents.forEach(([element, event, handler]) => {
+      if( element ) element.addEventListener(event, handler);
+    });
+
+    // Tab switching visibility
+    document.querySelectorAll('#contentTabs [data-bs-toggle="tab"]')
+      .forEach(btn => btn.addEventListener('shown.bs.tab', () => this.updateActionButtonsVisibility()));
+    
+    // Global document events
+    document.addEventListener('click', (e) => {
+      if( e.target.closest('.file-item') ) this.handleFileClick(e);
+      else this.hideContextMenu();
     });
     
-    document.getElementById('createFolderBtn').addEventListener('click', () => {
-      this.createFolder();
-    });
-
-    // Tab switching
-    document.getElementById('render-tab').addEventListener('click', () => {
-      this.switchToRenderTab();
-    });
-
-    // Render button
-    document.getElementById('renderBtn').addEventListener('click', () => {
-      this.renderSnippet();
-    });
-
-    // Copy rendered button
-    document.getElementById('copyRenderedBtn').addEventListener('click', () => {
-      this.copyRenderedContent();
-    });
-
-    // Edit form action buttons (static form)
-    const saveBtn = document.getElementById('saveSnippetBtn');
-    const dupBtn = document.getElementById('duplicateSnippetBtn');
-    const delBtn = document.getElementById('deleteSnippetBtn');
-    if( saveBtn ) saveBtn.addEventListener('click', () => this.saveCurrentSnippet());
-    if( dupBtn ) dupBtn.addEventListener('click', () => this.duplicateCurrentSnippet());
-    if( delBtn ) delBtn.addEventListener('click', () => this.deleteCurrentSnippet());
-
-    // Toggle action buttons visibility on tab change
-    const tabButtons = document.querySelectorAll('#contentTabs [data-bs-toggle="tab"]');
-    tabButtons.forEach(btn => btn.addEventListener('shown.bs.tab', () => this.updateActionButtonsVisibility()));
-    // Initial state
-    this.updateActionButtonsVisibility();
-    this.setActionButtonsEnabled(false);
-
-
-    // File list interactions
-    document.addEventListener('click', (e) => {
-      if( e.target.closest('.file-item') ) {
-        this.handleFileClick(e);
-      }
-    });
-
-    // Context menu
     document.addEventListener('contextmenu', (e) => {
       if( e.target.closest('.file-item') ) {
         e.preventDefault();
@@ -117,15 +97,9 @@ class SnippetManager {
       }
     });
 
-    // Hide context menu on click outside
-    document.addEventListener('click', () => {
-      this.hideContextMenu();
-    });
-
-    // Recent tab
-    document.getElementById('recent-tab').addEventListener('click', () => {
-      this.loadRecentSnippets();
-    });
+    // Initial state
+    this.updateActionButtonsVisibility();
+    this.setActionButtonsEnabled(false);
   }
 
   async apiCall(action, data = {}) {
@@ -163,10 +137,10 @@ class SnippetManager {
   }
 
   renderFileList(files) {
-    const fileList = document.getElementById('fileList');
+    if( ! this.elements.fileList ) return;
     
     if( files.length === 0 ) {
-      fileList.innerHTML = `
+      this.elements.fileList.innerHTML = `
         <div class="empty-state">
           <i class="bi bi-folder-x"></i>
           <p>No files found in this folder</p>
@@ -175,7 +149,7 @@ class SnippetManager {
       return;
     }
 
-    fileList.innerHTML = files.map(file => {
+    this.elements.fileList.innerHTML = files.map(file => {
       const icon = file.type === 'folder' ? 'bi-folder' : 
                    file.extension === 'yml' ? 'bi-file-code' : 'bi-file-text';
       const modified = file.modified ? new Date(file.modified * 1000).toLocaleDateString() : '';
@@ -201,34 +175,25 @@ class SnippetManager {
     const parts = this.currentPath.split('/');
     parts.pop();
     const parent = parts.join('/');
-    this.navigateToPath(parent);
+    this.loadFiles(parent);
   }
 
   handleFileClick(e) {
     const fileItem = e.target.closest('.file-item');
-    const path = fileItem.dataset.path;
-    const type = fileItem.dataset.type;
-    const extension = fileItem.dataset.extension;
+    const { path, type } = fileItem.dataset;
 
-    // Clear previous selection
-    document.querySelectorAll('.file-item.active').forEach(item => {
-      item.classList.remove('active');
-    });
-    
+    // Clear previous selection and set new active item
+    document.querySelectorAll('.file-item.active').forEach(item => item.classList.remove('active'));
     fileItem.classList.add('active');
 
     if( type === 'folder' ) {
-      this.navigateToPath(path);
+      this.loadFiles(path);
     }
     else {
-      // The path already includes the full filename with extension
       this.loadSnippet(path);
     }
   }
 
-  navigateToPath(path) {
-    this.loadFiles(path);
-  }
 
   async loadSnippet(path) {
     this.showLoading('editContent');
@@ -443,17 +408,12 @@ class SnippetManager {
     }
   }
 
-  switchToRenderTab() {
-    if( ! this.currentSnippet || this.currentSnippet._type !== 'yml' ) return;
-
-    this.extractAndShowPlaceholders();
-  }
 
   async extractAndShowPlaceholders() {
-    const contentInput = document.getElementById('snippetContent');
-    if( ! contentInput ) return;
+    if( ! this.currentSnippet || this.currentSnippet._type !== 'yml' ) return;
+    if( ! this.elements.snippetContent ) return;
 
-    const result = await this.apiCall('extractPlaceholders', { content: contentInput.value });
+    const result = await this.apiCall('extractPlaceholders', { content: this.elements.snippetContent.value });
     
     if( result.success ) {
       this.renderPlaceholderForm(result.placeholders);
@@ -461,53 +421,54 @@ class SnippetManager {
   }
 
   renderPlaceholderForm(placeholders) {
-    const placeholderForm = document.getElementById('placeholderForm');
-    const placeholderInputs = document.getElementById('placeholderInputs');
+    const { placeholderForm, placeholderInputs } = this.elements;
     
     if( Object.keys(placeholders).length === 0 ) {
-      placeholderForm.style.display = 'none';
+      if( placeholderForm ) placeholderForm.style.display = 'none';
       this.renderSnippet();
       return;
     }
 
-    placeholderForm.style.display = 'block';
+    if( placeholderForm ) placeholderForm.style.display = 'block';
     
-    placeholderInputs.innerHTML = Object.entries(placeholders).map(([name, config]) => {
-      if( config.type === 'choice' ) {
-        return `
-          <div class="placeholder-input">
-            <label class="form-label">${name}</label>
-            <div class="placeholder-choice">
-              ${config.choices.map((choice, index) => `
-                <button type="button" class="btn btn-outline-primary ${index === 0 ? 'active' : ''}" 
-                        data-placeholder="${name}" data-value="${choice}">
-                  ${choice}
-                </button>
-              `).join('')}
+    if( placeholderInputs ) {
+      placeholderInputs.innerHTML = Object.entries(placeholders).map(([name, config]) => {
+        if( config.type === 'choice' ) {
+          return `
+            <div class="placeholder-input">
+              <label class="form-label">${name}</label>
+              <div class="placeholder-choice">
+                ${config.choices.map((choice, index) => `
+                  <button type="button" class="btn btn-outline-primary ${index === 0 ? 'active' : ''}" 
+                          data-placeholder="${name}" data-value="${choice}">
+                    ${choice}
+                  </button>
+                `).join('')}
+              </div>
             </div>
-          </div>
-        `;
-      }
-      else {
-        return `
-          <div class="placeholder-input">
-            <label for="placeholder_${name}" class="form-label">${name}</label>
-            <input type="text" class="form-control" id="placeholder_${name}" 
-                   data-placeholder="${name}" value="${config.default}" placeholder="${config.default}">
-          </div>
-        `;
-      }
-    }).join('');
+          `;
+        }
+        else {
+          return `
+            <div class="placeholder-input">
+              <label for="placeholder_${name}" class="form-label">${name}</label>
+              <input type="text" class="form-control" id="placeholder_${name}" 
+                     data-placeholder="${name}" value="${config.default}" placeholder="${config.default}">
+            </div>
+          `;
+        }
+      }).join('');
 
-    // Bind choice buttons
-    placeholderInputs.addEventListener('click', (e) => {
-      if( e.target.matches('.placeholder-choice .btn') ) {
-        const placeholder = e.target.dataset.placeholder;
-        const buttons = placeholderInputs.querySelectorAll(`[data-placeholder="${placeholder}"]`);
-        buttons.forEach(btn => btn.classList.remove('active'));
-        e.target.classList.add('active');
-      }
-    });
+      // Bind choice buttons
+      placeholderInputs.addEventListener('click', (e) => {
+        if( e.target.matches('.placeholder-choice .btn') ) {
+          const placeholder = e.target.dataset.placeholder;
+          const buttons = placeholderInputs.querySelectorAll(`[data-placeholder="${placeholder}"]`);
+          buttons.forEach(btn => btn.classList.remove('active'));
+          e.target.classList.add('active');
+        }
+      });
+    }
 
     this.renderSnippet();
   }
@@ -523,8 +484,12 @@ class SnippetManager {
     });
     
     if( result.success ) {
-      document.getElementById('renderedOutput').innerHTML = `<code>${this.escapeHtml(result.rendered)}</code>`;
-      document.getElementById('copyRenderedBtn').disabled = false;
+      if( this.elements.renderedOutput ) {
+        this.elements.renderedOutput.innerHTML = `<code>${this.escapeHtml(result.rendered)}</code>`;
+      }
+      if( this.elements.copyRenderedBtn ) {
+        this.elements.copyRenderedBtn.disabled = false;
+      }
     }
     else {
       this.showError('Failed to render snippet: ' + result.message);
@@ -548,11 +513,10 @@ class SnippetManager {
   }
 
   async copyRenderedContent() {
-    const output = document.getElementById('renderedOutput');
-    const text = output.textContent;
+    if( ! this.elements.renderedOutput ) return;
     
     try {
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(this.elements.renderedOutput.textContent);
       this.showSuccess('Content copied to clipboard');
     }
     catch( error ) {
@@ -561,7 +525,7 @@ class SnippetManager {
   }
 
   async performSearch() {
-    const query = document.getElementById('searchInput').value.trim();
+    const query = this.elements.searchInput?.value.trim();
     if( ! query ) return;
 
     this.addToSearchHistory(query);
@@ -577,10 +541,10 @@ class SnippetManager {
   }
 
   renderSearchResults(results) {
-    const fileList = document.getElementById('fileList');
+    if( ! this.elements.fileList ) return;
     
     if( results.length === 0 ) {
-      fileList.innerHTML = `
+      this.elements.fileList.innerHTML = `
         <div class="empty-state">
           <i class="bi bi-search"></i>
           <p>No snippets found matching your search</p>
@@ -589,7 +553,7 @@ class SnippetManager {
       return;
     }
 
-    fileList.innerHTML = results.map(result => {
+    this.elements.fileList.innerHTML = results.map(result => {
       const icon = result.type === 'yml' ? 'bi-file-code' : 'bi-file-text';
       
       return `
@@ -740,13 +704,8 @@ class SnippetManager {
     return `${days}d ago`;
   }
 
-  showNewSnippetModal() {
-    const modal = new bootstrap.Modal(document.getElementById('newSnippetModal'));
-    modal.show();
-  }
-
-  showNewFolderModal() {
-    const modal = new bootstrap.Modal(document.getElementById('newFolderModal'));
+  showModal(modalId) {
+    const modal = new bootstrap.Modal(document.getElementById(modalId));
     modal.show();
   }
 
