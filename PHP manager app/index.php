@@ -136,10 +136,47 @@ $manager = new SnippetManager( $config['dataPaths'] ?? ['data']);
             <!-- Edit Tab -->
             <div class="tab-pane fade show active" id="edit-pane" role="tabpanel">
               <div id="editContent">
-                <div class="text-center text-muted py-5">
+                <!-- Empty state (shown when no snippet selected) -->
+                <div id="editEmptyState" class="text-center text-muted py-5">
                   <i class="bi bi-file-text display-1"></i>
                   <p class="mt-3">Select a snippet to edit or create a new one</p>
                 </div>
+
+                <!-- Static Edit Form (hidden by default; JS will populate) -->
+                <form id="editForm" class="snippet-form" style="display: none;">
+                  <div class="action-buttons d-flex gap-2 mb-3">
+                    <button type="button" class="btn btn-primary" id="saveSnippetBtn">
+                      <i class="bi bi-save me-1"></i>Save
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" id="duplicateSnippetBtn">
+                      <i class="bi bi-files me-1"></i>Duplicate
+                    </button>
+                    <button type="button" class="btn btn-outline-danger" id="deleteSnippetBtn">
+                      <i class="bi bi-trash me-1"></i>Delete
+                    </button>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="snippetNameEdit" class="form-label">Name</label>
+                    <input type="text" class="form-control" id="snippetNameEdit" required>
+                  </div>
+
+                  <!-- YAML-only fields -->
+                  <div class="mb-3" id="fieldSh">
+                    <label for="snippetSh" class="form-label">Short Code</label>
+                    <input type="text" class="form-control" id="snippetSh" placeholder="e.g., arr--">
+                  </div>
+
+                  <div class="mb-3" id="fieldUsage">
+                    <label for="snippetUsage" class="form-label">Usage</label>
+                    <textarea class="form-control" id="snippetUsage" rows="3" placeholder="Comments, usage and sample..."></textarea>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="snippetContent" class="form-label">Content</label>
+                    <textarea class="form-control" id="snippetContent" rows="12" placeholder="Some {var} snippet..." required></textarea>
+                  </div>
+                </form>
               </div>
             </div>
 

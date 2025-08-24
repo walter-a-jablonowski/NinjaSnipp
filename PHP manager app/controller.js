@@ -86,6 +86,14 @@ class SnippetManager {
       this.copyRenderedContent();
     });
 
+    // Edit form action buttons (static form)
+    const saveBtn = document.getElementById('saveSnippetBtn');
+    const dupBtn = document.getElementById('duplicateSnippetBtn');
+    const delBtn = document.getElementById('deleteSnippetBtn');
+    if( saveBtn ) saveBtn.addEventListener('click', () => this.saveCurrentSnippet());
+    if( dupBtn ) dupBtn.addEventListener('click', () => this.duplicateCurrentSnippet());
+    if( delBtn ) delBtn.addEventListener('click', () => this.deleteCurrentSnippet());
+
 
     // File list interactions
     document.addEventListener('click', (e) => {
@@ -244,87 +252,44 @@ class SnippetManager {
   }
 
   renderEditForm(snippet) {
-    const editContent = document.getElementById('editContent');
-    
-    if( snippet._type === 'yml' ) {
-      editContent.innerHTML = `
-        <form class="snippet-form">
-          <div class="action-buttons d-flex gap-2 mb-3">
-            <button type="button" class="btn btn-primary" id="saveSnippetBtn">
-              <i class="bi bi-save me-1"></i>Save
-            </button>
-            <button type="button" class="btn btn-outline-secondary" id="duplicateSnippetBtn">
-              <i class="bi bi-files me-1"></i>Duplicate
-            </button>
-            <button type="button" class="btn btn-outline-danger" id="deleteSnippetBtn">
-              <i class="bi bi-trash me-1"></i>Delete
-            </button>
-          </div>
-          
-          <div class="mb-3">
-            <label for="snippetNameEdit" class="form-label">Name</label>
-            <input type="text" class="form-control" id="snippetNameEdit" value="${snippet._name}" required>
-          </div>
-          
-          <div class="mb-3">
-            <label for="snippetSh" class="form-label">Short Code</label>
-            <input type="text" class="form-control" id="snippetSh" value="${snippet.sh || ''}" placeholder="e.g., arr--">
-          </div>
-          
-          <div class="mb-3">
-            <label for="snippetUsage" class="form-label">Usage</label>
-            <textarea class="form-control" id="snippetUsage" rows="3" placeholder="Comments, usage and sample...">${snippet.usage || ''}</textarea>
-          </div>
-          
-          <div class="mb-3">
-            <label for="snippetContent" class="form-label">Content</label>
-            <textarea class="form-control" id="snippetContent" rows="10" placeholder="Some {var} snippet..." required>${snippet.content || ''}</textarea>
-          </div>
-        </form>
-      `;
-    }
-    else {
-      editContent.innerHTML = `
-        <form class="snippet-form">
-          <div class="action-buttons d-flex gap-2 mb-3">
-            <button type="button" class="btn btn-primary" id="saveSnippetBtn">
-              <i class="bi bi-save me-1"></i>Save
-            </button>
-            <button type="button" class="btn btn-outline-secondary" id="duplicateSnippetBtn">
-              <i class="bi bi-files me-1"></i>Duplicate
-            </button>
-            <button type="button" class="btn btn-outline-danger" id="deleteSnippetBtn">
-              <i class="bi bi-trash me-1"></i>Delete
-            </button>
-          </div>
-          
-          <div class="mb-3">
-            <label for="snippetNameEdit" class="form-label">File Name</label>
-            <input type="text" class="form-control" id="snippetNameEdit" value="${snippet._name}" required>
-          </div>
-          
-          <div class="mb-3">
-            <label for="snippetContent" class="form-label">Content</label>
-            <textarea class="form-control" id="snippetContent" rows="15" required>${snippet.content || ''}</textarea>
-          </div>
-        </form>
-      `;
+    const emptyState = document.getElementById('editEmptyState');
+    const form = document.getElementById('editForm');
+    const nameInput = document.getElementById('snippetNameEdit');
+    const shField = document.getElementById('fieldSh');
+    const usageField = document.getElementById('fieldUsage');
+    const shInput = document.getElementById('snippetSh');
+    const usageInput = document.getElementById('snippetUsage');
+    const contentInput = document.getElementById('snippetContent');
+
+    if( ! form || ! nameInput || ! contentInput ) return;
+
+    // Populate common fields
+    nameInput.value = snippet._name || '';
+    contentInput.value = snippet.content || '';
+
+    // Toggle YAML-only fields
+    const isYaml = snippet._type === 'yml';
+    shField.style.display = isYaml ? '' : 'none';
+    usageField.style.display = isYaml ? '' : 'none';
+    if( isYaml ) {
+      shInput.value = snippet.sh || '';
+      usageInput.value = snippet.usage || '';
     }
 
-    // Bind save button
-    document.getElementById('saveSnippetBtn').addEventListener('click', () => {
-      this.saveCurrentSnippet();
-    });
-    
-    // Bind duplicate button
-    document.getElementById('duplicateSnippetBtn').addEventListener('click', () => {
-      this.duplicateCurrentSnippet();
-    });
-    
-    // Bind delete button
-    document.getElementById('deleteSnippetBtn').addEventListener('click', () => {
-      this.deleteCurrentSnippet();
-    });
+    // Show form, hide empty state
+    emptyState.style.display = 'none';
+    form.style.display = 'block';
+
+    // Enable or disable Render tab
+    const renderTab = document.getElementById('render-tab');
+    if( isYaml ) {
+      renderTab.disabled = false;
+      renderTab.classList.remove('disabled');
+    }
+    else {
+      renderTab.disabled = true;
+      renderTab.classList.add('disabled');
+    }
   }
 
   async saveCurrentSnippet() {
@@ -410,12 +375,15 @@ class SnippetManager {
   }
 
   clearEditForm() {
-    document.getElementById('editContent').innerHTML = `
-      <div class="text-center text-muted py-5">
-        <i class="bi bi-file-text display-1"></i>
-        <p class="mt-3">Select a snippet to edit or create a new one</p>
-      </div>
-    `;
+    const emptyState = document.getElementById('editEmptyState');
+    const form = document.getElementById('editForm');
+    if( emptyState && form ) {
+      form.style.display = 'none';
+      emptyState.style.display = 'block';
+      // Clear values
+      const inputs = ['snippetNameEdit','snippetSh','snippetUsage','snippetContent'];
+      inputs.forEach(id => { const el = document.getElementById(id); if( el ) el.value = ''; });
+    }
     
     // Disable render tab
     const renderTab = document.getElementById('render-tab');
