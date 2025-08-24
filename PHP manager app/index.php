@@ -67,12 +67,12 @@ $manager = new SnippetManager( $config['dataPaths'] ?? ['data']);
           <!-- Tab Control -->
           <ul class="nav nav-pills flex-column mb-3" id="sidebarTabs" role="tablist">
             <li class="nav-item" role="presentation">
-              <button class="nav-link active" id="files-tab" data-bs-toggle="pill" data-bs-target="#files-pane" type="button" role="tab">
+              <button class="nav-link small py-1 px-2 active" id="files-tab" data-bs-toggle="pill" data-bs-target="#files-pane" type="button" role="tab">
                 <i class="bi bi-folder me-2"></i>Files
               </button>
             </li>
             <li class="nav-item" role="presentation">
-              <button class="nav-link" id="recent-tab" data-bs-toggle="pill" data-bs-target="#recent-pane" type="button" role="tab">
+              <button class="nav-link small py-1 px-2" id="recent-tab" data-bs-toggle="pill" data-bs-target="#recent-pane" type="button" role="tab">
                 <i class="bi bi-clock-history me-2"></i>Recent
               </button>
             </li>
