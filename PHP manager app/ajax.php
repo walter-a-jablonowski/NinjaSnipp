@@ -97,6 +97,12 @@ try {
       $response = ['success' => true, 'rendered' => $rendered];
       break;
 
+    case 'composeContent':
+      $snippet = $input['snippet'] ?? [];
+      $composed = $manager->composeContent($snippet);
+      $response = ['success' => true, 'composed' => $composed];
+      break;
+
     case 'extractPlaceholders':
       $content = $input['content'] ?? '';
       $placeholders = $manager->extractPlaceholders($content);

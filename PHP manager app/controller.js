@@ -8,6 +8,7 @@ class SnippetManager {
     this.searchHistory = JSON.parse(localStorage.getItem('searchHistory') || '[]');
     this.recentSnippets = JSON.parse(localStorage.getItem('recentSnippets') || '[]');
     this.selectedFiles = new Set();
+    this.placeholderGroups = new Map(); // name => [elements]
     
     this.init();
   }
@@ -44,8 +45,7 @@ class SnippetManager {
       ['backBtn', 'click', () => this.goBack()],
       ['createSnippetBtn', 'click', () => this.createSnippet()],
       ['createFolderBtn', 'click', () => this.createFolder()],
-      ['render-tab', 'click', () => this.extractAndShowPlaceholders()],
-      ['renderBtn', 'click', () => this.renderSnippet()],
+      ['render-tab', 'click', () => this.composeAndRenderInline()],
       ['copyRenderedBtn', 'click', () => this.copyRenderedContent()],
       ['saveSnippetBtn', 'click', () => this.saveCurrentSnippet()],
       ['duplicateSnippetBtn', 'click', () => this.duplicateCurrentSnippet()],
@@ -148,7 +148,6 @@ class SnippetManager {
     }).join('');
   }
 
-
   goBack() {
     if( ! this.currentPath ) return; // already at base
     const parts = this.currentPath.split('/');
@@ -173,7 +172,6 @@ class SnippetManager {
     }
   }
 
-
   async loadSnippet(path) {
     this.showLoading('editContent');
     
@@ -189,8 +187,8 @@ class SnippetManager {
       if( result.snippet._type === 'yml' ) {
         renderTab.disabled = false;
         renderTab.classList.remove('disabled');
-        // Auto-render immediately when a YAML snippet is selected
-        this.extractAndShowPlaceholders();
+        // Auto-render inline immediately when a YAML snippet is selected
+        this.composeAndRenderInline();
         // Keep Rendered tab active (it's first now); just update actions visibility
         this.updateActionButtonsVisibility();
       }
@@ -290,7 +288,7 @@ class SnippetManager {
 
       // Re-render after save when YAML
       if( this.currentSnippet._type === 'yml' ) {
-        this.extractAndShowPlaceholders();
+        this.composeAndRenderInline();
       }
     }
     else {
@@ -389,113 +387,199 @@ class SnippetManager {
     }
   }
 
-
-  async extractAndShowPlaceholders() {
+  async composeAndRenderInline() {
     if( ! this.currentSnippet || this.currentSnippet._type !== 'yml' ) return;
-    
     const snippetContent = document.getElementById('snippetContent');
-    if( ! snippetContent ) return;
+    const inlineContainer = document.getElementById('inlineSnippet');
+    if( ! snippetContent || ! inlineContainer ) return;
 
-    const result = await this.apiCall('extractPlaceholders', { content: snippetContent.value });
-    
+    const snippet = { ...this.currentSnippet, content: snippetContent.value };
+    const result = await this.apiCall('composeContent', { snippet });
     if( result.success ) {
-      this.renderPlaceholderForm(result.placeholders);
+      this.renderInlineSnippet(result.composed || '');
+      // Also update live preview initially with defaults
+      this.updateRenderedOutput();
     }
   }
 
-  renderPlaceholderForm(placeholders) {
-    const placeholderForm = document.getElementById('placeholderForm');
-    const placeholderInputs = document.getElementById('placeholderInputs');
-    
-    if( Object.keys(placeholders).length === 0 ) {
-      if( placeholderForm ) placeholderForm.style.display = 'none';
-      this.renderSnippet();
-      return;
-    }
+  renderInlineSnippet(composedText) {
+    const container = document.getElementById('inlineSnippet');
+    if( ! container ) return;
+    // Build HTML with editable placeholders
+    const html = this.buildInlineHtmlFromComposed(composedText);
+    container.innerHTML = html;
+    this.bindInlinePlaceholderEvents();
+  }
 
-    if( placeholderForm ) placeholderForm.style.display = 'block';
-    
-    if( placeholderInputs ) {
-      placeholderInputs.innerHTML = Object.entries(placeholders).map(([name, config]) => {
-        if( config.type === 'choice' ) {
-          return `
-            <div class="placeholder-input">
-              <label class="form-label">${name}</label>
-              <div class="placeholder-choice">
-                ${config.choices.map((choice, index) => `
-                  <button type="button" class="btn btn-outline-primary ${index === 0 ? 'active' : ''}" 
-                          data-placeholder="${name}" data-value="${choice}">
-                    ${choice}
-                  </button>
-                `).join('')}
-              </div>
-            </div>
-          `;
+  buildInlineHtmlFromComposed(text) {
+    const regex = /\{([^}]+)\}/g;
+    let lastIndex = 0;
+    let match;
+    let out = '';
+    while( (match = regex.exec(text)) ) {
+      const before = text.slice(lastIndex, match.index);
+      out += this.escapeHtml(before);
+      const token = match[1];
+      if( token.trim().toLowerCase().startsWith('include:') ) {
+        // includes should already be resolved; render verbatim fallback
+        out += this.escapeHtml(match[0]);
+      }
+      else if( token.includes('=') ) {
+        const [rawName, rawDefault] = token.split('=', 2);
+        const name = rawName.trim();
+        const def = rawDefault;
+        if( def.includes('|') ) {
+          const choices = def.split('|').map(s => s.trim());
+          const defChoice = choices[0] || '';
+          const dataChoices = this.escapeHtml(JSON.stringify(choices));
+          out += `<span class="ph ph-choice" tabindex="0" data-ph="${this.escapeHtml(name)}" data-default="${this.escapeHtml(defChoice)}" data-choices='${dataChoices}'>${this.escapeHtml(defChoice)}</span>`;
         }
         else {
-          return `
-            <div class="placeholder-input">
-              <label for="placeholder_${name}" class="form-label">${name}</label>
-              <input type="text" class="form-control" id="placeholder_${name}" 
-                     data-placeholder="${name}" value="${config.default}" placeholder="${config.default}">
-            </div>
-          `;
+          const defVal = def;
+          out += `<span class="ph ph-text" contenteditable="true" tabindex="0" data-ph="${this.escapeHtml(name)}" data-default="${this.escapeHtml(defVal)}">${this.escapeHtml(defVal)}</span>`;
         }
-      }).join('');
-
-      // Bind choice buttons
-      placeholderInputs.addEventListener('click', (e) => {
-        if( e.target.matches('.placeholder-choice .btn') ) {
-          const placeholder = e.target.dataset.placeholder;
-          const buttons = placeholderInputs.querySelectorAll(`[data-placeholder="${placeholder}"]`);
-          buttons.forEach(btn => btn.classList.remove('active'));
-          e.target.classList.add('active');
-        }
-      });
+      }
+      else {
+        const name = token.trim();
+        out += `<span class="ph ph-text" contenteditable="true" tabindex="0" data-ph="${this.escapeHtml(name)}" data-default="">` + `</span>`;
+      }
+      lastIndex = regex.lastIndex;
     }
-
-    this.renderSnippet();
+    out += this.escapeHtml(text.slice(lastIndex));
+    return out;
   }
 
-  async renderSnippet() {
-    if( ! this.currentSnippet ) return;
-
-    const placeholders = this.collectPlaceholderValues();
-    
-    const result = await this.apiCall('renderSnippet', { 
-      snippet: this.currentSnippet, 
-      placeholders 
+  bindInlinePlaceholderEvents() {
+    this.placeholderGroups = new Map();
+    const nodes = document.querySelectorAll('#inlineSnippet .ph');
+    nodes.forEach(el => {
+      const name = el.dataset.ph;
+      if( ! this.placeholderGroups.has(name) ) this.placeholderGroups.set(name, []);
+      this.placeholderGroups.get(name).push(el);
     });
-    
+
+    // helpers
+    const setGroupValue = (name, value) => {
+      const group = this.placeholderGroups.get(name) || [];
+      group.forEach(node => {
+        if( node.classList.contains('ph-text') ) node.textContent = value;
+        else node.textContent = value; // ph-choice
+      });
+      this.updateRenderedOutput();
+    };
+
+    const onFocus = (e) => {
+      const el = e.currentTarget;
+      el.dataset.edited = '0';
+      if( el.classList.contains('ph-choice') ) this.openChoiceMenu(el);
+    };
+    const onBlur = (e) => {
+      const el = e.currentTarget;
+      const name = el.dataset.ph;
+      const edited = el.dataset.edited === '1';
+      const defVal = el.dataset.default || '';
+      let value = (el.textContent || '').trim();
+      if( ! edited || value === '' ) value = defVal;
+      setGroupValue(name, value);
+      this.closeChoiceMenu();
+    };
+    const onInput = (e) => {
+      const el = e.currentTarget;
+      el.dataset.edited = '1';
+      const name = el.dataset.ph;
+      const value = el.textContent;
+      // mirror to siblings (avoid recursion by direct assignment)
+      const group = this.placeholderGroups.get(name) || [];
+      group.forEach(node => { if( node !== el ) node.textContent = value; });
+      this.updateRenderedOutput();
+    };
+    const onKeyDown = (e) => {
+      const el = e.currentTarget;
+      if( el.classList.contains('ph-choice') ) {
+        if( e.key === 'Enter' || e.key === ' ' ) {
+          this.openChoiceMenu(el);
+          e.preventDefault();
+        }
+      }
+    };
+
+    nodes.forEach(el => {
+      el.addEventListener('focus', onFocus);
+      el.addEventListener('blur', onBlur);
+      el.addEventListener('keydown', onKeyDown);
+      if( el.classList.contains('ph-text') ) el.addEventListener('input', onInput);
+    });
+  }
+
+  openChoiceMenu(el) {
+    const menu = document.getElementById('phChoiceMenu');
+    if( ! menu ) return;
+    const choices = JSON.parse(el.dataset.choices || '[]');
+    const name = el.dataset.ph;
+    const rect = el.getBoundingClientRect();
+    menu.innerHTML = choices.map(ch => `<button type="button" class="dropdown-item" data-value="${this.escapeHtml(ch)}">${this.escapeHtml(ch)}</button>`).join('');
+    menu.style.display = 'block';
+    menu.style.position = 'absolute';
+    menu.style.left = (rect.left + window.scrollX) + 'px';
+    menu.style.top = (rect.bottom + window.scrollY) + 'px';
+    menu.classList.add('show');
+
+    const onClick = (e) => {
+      if( e.target.matches('.dropdown-item') ) {
+        const val = e.target.getAttribute('data-value');
+        const group = this.placeholderGroups.get(name) || [];
+        group.forEach(node => node.textContent = val);
+        this.updateRenderedOutput();
+        this.closeChoiceMenu();
+      }
+    };
+    // Rebind each time to keep it simple
+    menu.onclick = onClick;
+
+    const clickOutside = (evt) => {
+      if( ! menu.contains(evt.target) && evt.target !== el ) this.closeChoiceMenu();
+    };
+    // Store to remove later
+    this._choiceOutsideHandler = clickOutside;
+    document.addEventListener('click', clickOutside);
+  }
+
+  closeChoiceMenu() {
+    const menu = document.getElementById('phChoiceMenu');
+    if( ! menu ) return;
+    menu.classList.remove('show');
+    menu.style.display = 'none';
+    if( this._choiceOutsideHandler ) {
+      document.removeEventListener('click', this._choiceOutsideHandler);
+      this._choiceOutsideHandler = null;
+    }
+  }
+
+  getCurrentPlaceholderValues() {
+    const values = {};
+    this.placeholderGroups.forEach((nodes, name) => {
+      const el = nodes[0];
+      const txt = (el.textContent || '').trim();
+      values[name] = txt !== '' ? txt : (el.dataset.default || '');
+    });
+    return values;
+  }
+
+  async updateRenderedOutput() {
+    if( ! this.currentSnippet ) return;
+    const snippetContent = document.getElementById('snippetContent');
+    const snippet = { ...this.currentSnippet, content: snippetContent?.value || this.currentSnippet.content };
+    const placeholders = this.getCurrentPlaceholderValues();
+    const result = await this.apiCall('renderSnippet', { snippet, placeholders });
     if( result.success ) {
       const renderedOutput = document.getElementById('renderedOutput');
-      if( renderedOutput ) {
-        renderedOutput.innerHTML = `<code>${this.escapeHtml(result.rendered)}</code>`;
-      }
+      if( renderedOutput ) renderedOutput.innerHTML = `<code>${this.escapeHtml(result.rendered)}</code>`;
       const copyRenderedBtn = document.getElementById('copyRenderedBtn');
-      if( copyRenderedBtn ) {
-        copyRenderedBtn.disabled = false;
-      }
+      if( copyRenderedBtn ) copyRenderedBtn.disabled = false;
     }
     else {
       this.showError('Failed to render snippet: ' + result.message);
     }
-  }
-
-  collectPlaceholderValues() {
-    const placeholders = {};
-    const inputs = document.querySelectorAll('#placeholderInputs input[data-placeholder]');
-    const activeButtons = document.querySelectorAll('#placeholderInputs .btn.active[data-placeholder]');
-    
-    inputs.forEach(input => {
-      placeholders[input.dataset.placeholder] = input.value;
-    });
-    
-    activeButtons.forEach(button => {
-      placeholders[button.dataset.placeholder] = button.dataset.value;
-    });
-    
-    return placeholders;
   }
 
   async copyRenderedContent() {

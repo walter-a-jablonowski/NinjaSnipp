@@ -334,6 +334,19 @@ class SnippetManager
     return $content;
   }
 
+  public function composeContent( array $snippet ) : string
+  {
+    if( ! isset($snippet['content']) )
+      return '';
+
+    $content = $snippet['content'];
+
+    // Resolve includes only; placeholders remain intact for inline editing
+    $content = $this->processIncludes($content);
+
+    return $content;
+  }
+
   private function processIncludes( string $content ) : string
   {
     return preg_replace_callback('/\{include:\s*["\']([^"\']+)["\']\s*\}/', function($matches) {

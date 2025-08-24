@@ -157,12 +157,10 @@ $manager = new SnippetManager( $config['dataPaths'] ?? ['data']);
                     </button>
                   </div>
                   <div class="card-body">
-                    <div id="placeholderForm" class="mb-3" style="display: none;">
-                      <h6>Fill Placeholders:</h6>
-                      <div id="placeholderInputs"></div>
-                      <button class="btn btn-sm btn-primary mt-2" id="renderBtn">Render</button>
-                    </div>
-                    <pre id="renderedOutput" class="bg-light p-3 rounded"><code>No content to render</code></pre>
+                    <div id="inlineSnippet" class="inline-snippet"></div>
+                    <pre id="renderedOutput" class="bg-light p-3 rounded mt-3"><code>No content to render</code></pre>
+                    <!-- Choice menu for placeholders (shown on demand) -->
+                    <div id="phChoiceMenu" class="dropdown-menu"></div>
                   </div>
                 </div>
               </div>
