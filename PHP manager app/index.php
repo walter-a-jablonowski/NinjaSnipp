@@ -153,7 +153,6 @@ $manager = new SnippetManager( $config['dataPaths'] ?? ['data']);
             <div id="render-pane" class="tab-pane fade show active" role="tabpanel">
               <div id="renderContent">
                 <div id="inlineSnippet" class="inline-snippet"></div>
-                <pre id="renderedOutput" class="bg-light p-3 rounded mt-3"><code>No content to render</code></pre>
                 <!-- Choice menu for placeholders (shown on demand) -->
                 <div id="phChoiceMenu" class="dropdown-menu"></div>
               </div>

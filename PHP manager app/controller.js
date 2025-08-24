@@ -9,6 +9,7 @@ class SnippetManager {
     this.recentSnippets = JSON.parse(localStorage.getItem('recentSnippets') || '[]');
     this.selectedFiles = new Set();
     this.placeholderGroups = new Map(); // name => [elements]
+    this.renderedText = '';
     
     this.init();
   }
@@ -580,10 +581,9 @@ class SnippetManager {
     const placeholders = this.getCurrentPlaceholderValues();
     const result = await this.apiCall('renderSnippet', { snippet, placeholders });
     if( result.success ) {
-      const renderedOutput = document.getElementById('renderedOutput');
-      if( renderedOutput ) renderedOutput.innerHTML = `<code>${this.escapeHtml(result.rendered)}</code>`;
+      this.renderedText = result.rendered || '';
       const copyRenderedBtn = document.getElementById('copyRenderedBtn');
-      if( copyRenderedBtn ) copyRenderedBtn.disabled = false;
+      if( copyRenderedBtn ) copyRenderedBtn.disabled = this.renderedText.length === 0;
     }
     else {
       this.showError('Failed to render snippet: ' + result.message);
@@ -591,11 +591,10 @@ class SnippetManager {
   }
 
   async copyRenderedContent() {
-    const renderedOutput = document.getElementById('renderedOutput');
-    if( ! renderedOutput ) return;
+    if( ! this.renderedText ) return;
     
     try {
-      await navigator.clipboard.writeText(renderedOutput.textContent);
+      await navigator.clipboard.writeText(this.renderedText);
       this.showSuccess('Content copied to clipboard');
     }
     catch( error ) {
