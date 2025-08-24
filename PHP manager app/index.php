@@ -120,13 +120,13 @@ $manager = new SnippetManager( $config['dataPaths'] ?? ['data']);
           <!-- Content Tab Control -->
           <ul class="nav nav-tabs mb-3" id="contentTabs" role="tablist">
             <li class="nav-item" role="presentation">
-              <button class="nav-link active" id="edit-tab" data-bs-toggle="tab" data-bs-target="#edit-pane" type="button" role="tab">
-                <i class="bi bi-pencil me-2"></i>Edit
+              <button id="render-tab" class="nav-link active" data-bs-toggle="tab" data-bs-target="#render-pane" type="button" role="tab" disabled>
+                <i class="bi bi-eye me-2"></i>Rendered
               </button>
             </li>
             <li class="nav-item" role="presentation">
-              <button class="nav-link" id="render-tab" data-bs-toggle="tab" data-bs-target="#render-pane" type="button" role="tab" disabled>
-                <i class="bi bi-eye me-2"></i>Rendered
+              <button id="edit-tab" class="nav-link" data-bs-toggle="tab" data-bs-target="#edit-pane" type="button" role="tab">
+                <i class="bi bi-pencil me-2"></i>Edit
               </button>
             </li>
             <li class="nav-item ms-auto" role="presentation">
@@ -146,8 +146,30 @@ $manager = new SnippetManager( $config['dataPaths'] ?? ['data']);
 
           <!-- Content Tab Panes -->
           <div class="tab-content">
+            <!-- Rendered Tab -->
+            <div id="render-pane" class="tab-pane fade show active" role="tabpanel">
+              <div id="renderContent">
+                <div class="card">
+                  <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Rendered Snippet</h5>
+                    <button class="btn btn-sm btn-outline-primary" id="copyRenderedBtn" disabled>
+                      <i class="bi bi-clipboard me-1"></i>Copy
+                    </button>
+                  </div>
+                  <div class="card-body">
+                    <div id="placeholderForm" class="mb-3" style="display: none;">
+                      <h6>Fill Placeholders:</h6>
+                      <div id="placeholderInputs"></div>
+                      <button class="btn btn-sm btn-primary mt-2" id="renderBtn">Render</button>
+                    </div>
+                    <pre id="renderedOutput" class="bg-light p-3 rounded"><code>No content to render</code></pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- Edit Tab -->
-            <div class="tab-pane fade show active" id="edit-pane" role="tabpanel">
+            <div id="edit-pane" class="tab-pane fade" role="tabpanel">
               <div id="editContent">
                 <!-- Empty state (shown when no snippet selected) -->
                 <div id="editEmptyState" class="text-center text-muted py-5">
@@ -179,28 +201,6 @@ $manager = new SnippetManager( $config['dataPaths'] ?? ['data']);
                     <textarea class="form-control" id="snippetContent" rows="12" placeholder="Some {var} snippet..." required></textarea>
                   </div>
                 </form>
-              </div>
-            </div>
-
-            <!-- Rendered Tab -->
-            <div class="tab-pane fade" id="render-pane" role="tabpanel">
-              <div id="renderContent">
-                <div class="card">
-                  <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Rendered Snippet</h5>
-                    <button class="btn btn-sm btn-outline-primary" id="copyRenderedBtn" disabled>
-                      <i class="bi bi-clipboard me-1"></i>Copy
-                    </button>
-                  </div>
-                  <div class="card-body">
-                    <div id="placeholderForm" class="mb-3" style="display: none;">
-                      <h6>Fill Placeholders:</h6>
-                      <div id="placeholderInputs"></div>
-                      <button class="btn btn-sm btn-primary mt-2" id="renderBtn">Render</button>
-                    </div>
-                    <pre id="renderedOutput" class="bg-light p-3 rounded"><code>No content to render</code></pre>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
