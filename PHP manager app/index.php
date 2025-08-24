@@ -52,11 +52,10 @@ $manager = new SnippetManager( $config['dataPaths'] ?? ['data']);
     <div class="row">
       <!-- Sidebar Navigation -->
       <nav id="sidebarNav" class="col-lg-3 col-xl-2 d-lg-block bg-light sidebar collapse">
-        <div class="position-sticky pt-3">
+        <div class="position-sticky pt-1">
           <!-- Data Folder Selection -->
           <div class="mb-3">
-            <label for="dataFolderSelect" class="form-label fw-bold">Data Folder:</label>
-            <select class="form-select" id="dataFolderSelect">
+            <select id="dataFolderSelect" class="form-select" title="Data folder">
               <?php foreach( $manager->getDataPaths() as $label => $path ): ?>
                 <option value="<?= htmlspecialchars($path) ?>" <?= $path === $manager->getCurrentDataPath() ? 'selected' : '' ?>>
                   <?= htmlspecialchars($label) ?>
