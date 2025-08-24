@@ -35,29 +35,28 @@ content: |
   - App logo (icon) and app title
   - search field: full-text search including search history, fuzzy search
 - Main content
-  - Left side: Navigation bar (slides in from the side on smartphones), contains:
+  - Left side: Navigation bar (slides in on smartphones), contains:
     - The user can choose which data folder to use (dropdown)
-    - Tab control (pills)
+    - Tab control
       - List of files and folders of the current level of the data folder
         - Create, edit, delete, duplicate snippets
-        - Bulk operations (select multiple, cut, copy, delete and so on)
+        - Bulk operations (delete, move)
       - Recent snippets list (last one first)
   - Right side: snippet content
     - Tab control
-      - Rendered view (hidden for md files)
-        - show the rendered snippet with included content (if there are include placeholders)
-        - use tab inside the rendered content to fill in placholders (use no form for this)
-        - use default if user tabs over a placeholder
-        - copy button
       - Edit tab
         - if we load a yml file: form view
-          - input group
-            - name
-            - sh
+          - name
+          - sh
           - usage
           - content
         - or if we load a md file: edit view
           - file name
           - content
+      - Rendered view (unavailable for md files)
+        - show the rendered snippet with included content (if there are include placeholders)
+        - use tab to fill in placholders
+        - use default if user tabs over a placeholder
+        - copy button
 
 Use bootstrap 5.3 and improve the look using own styles to make it look nice. Make it look good on all devices.
