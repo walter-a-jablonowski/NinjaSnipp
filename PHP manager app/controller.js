@@ -650,7 +650,7 @@ class SnippetManager {
       const icon = result.type === 'yml' ? 'bi-file-code' : 'bi-file-text';
       
       return `
-        <div class="list-group-item file-item" data-path="${result.path.replace(/\.[^.]+$/, '')}" 
+        <div class="list-group-item file-item" data-path="${result.path}" 
              data-type="file" data-extension="${result.type}">
           <div class="d-flex align-items-center">
             <i class="bi ${icon} file-icon me-2"></i>
@@ -773,7 +773,7 @@ class SnippetManager {
       const timeAgo = this.timeAgo(item.timestamp);
       
       return `
-        <div class="list-group-item file-item" data-path="${item.path.replace(/\.[^.]+$/, '')}" 
+        <div class="list-group-item file-item" data-path="${item.path}" 
              data-type="file" data-extension="${extension}">
           <div class="d-flex align-items-center">
             <i class="bi ${icon} file-icon me-2"></i>
