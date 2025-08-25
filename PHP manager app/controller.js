@@ -869,7 +869,6 @@ class SnippetManager {
     if( result.success ) {
       this.currentPath = '';
       this.loadFiles();
-      this.showSuccess('Data folder changed successfully');
     }
     else {
       this.showError('Failed to change data folder: ' + result.message);
