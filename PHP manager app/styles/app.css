@@ -5,8 +5,34 @@
 
 .sidebar .position-sticky {
   top: 76px;
-  max-height: calc(100vh - 76px);
+  height: calc(100vh - 76px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* only inner lists scroll */
+}
+
+/* Sidebar tab content fills remaining height */
+.sidebar .tab-content {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Only the visible pane becomes a flex column */
+.sidebar .tab-pane.active,
+.sidebar .tab-pane.show {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+/* Lists scroll independently */
+#fileList,
+#recentList {
+  flex: 1;
+  min-height: 0; /* important for flex scrolling */
   overflow-y: auto;
+  scrollbar-gutter: stable;
 }
 
 /* Search input styling */
