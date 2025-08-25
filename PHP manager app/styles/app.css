@@ -188,6 +188,38 @@
   margin-bottom: 1rem;
 }
 
+/* New Snippet button accent (lighter orange) */
+#newSnippetBtn {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: #ffa94d; /* light orange */
+  --bs-btn-border-color: #ffa94d;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #ff922b;
+  --bs-btn-hover-border-color: #ff922b;
+  --bs-btn-focus-shadow-rgb: 255, 169, 77;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #f76707;
+  --bs-btn-active-border-color: #e8590c;
+  --bs-btn-disabled-bg: #ffa94d;
+  --bs-btn-disabled-border-color: #ffa94d;
+}
+
+/* New Folder button accent (lighter orange) */
+#newFolderBtn {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: #ffa94d; /* light orange */
+  --bs-btn-border-color: #ffa94d;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #ff922b;
+  --bs-btn-hover-border-color: #ff922b;
+  --bs-btn-focus-shadow-rgb: 255, 169, 77;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #f76707;
+  --bs-btn-active-border-color: #e8590c;
+  --bs-btn-disabled-bg: #ffa94d;
+  --bs-btn-disabled-border-color: #ffa94d;
+}
+
 /* Loading states */
 .loading {
   opacity: 0.6;
