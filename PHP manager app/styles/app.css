@@ -1,6 +1,7 @@
 .sidebar {
   min-height: calc(100vh - 56px);
   border-right: 1px solid #dee2e6;
+  padding-right: 0; /* remove gutter space on the right */
 }
 
 .sidebar .position-sticky {
