@@ -5,7 +5,7 @@ usage: |
   Choose {method} for HTTP method.
 
 content: |
-  <form name="{formName=contactForm}" action="{action=/submit}" method="{method=post|get}">
+  <form name="{formName}" action="{action=/submit}" method="{method=post|get}">
     <div class="form-group">
       <label for="{fieldName=name}">Name:</label>
       <input type="text" id="{fieldName}" name="{fieldName}" required>
