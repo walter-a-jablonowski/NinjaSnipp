@@ -40,7 +40,7 @@ content: |
     - Tab control
       - List of files and folders of the current level of the data folder
         - Create, edit, delete, duplicate snippets
-        - Bulk operations (delete, move)
+        - Bulk changes on files/folders (delete, move)
       - Recent snippets list (last one first)
   - Right side: snippet content
     - Tab control

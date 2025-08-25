@@ -40,7 +40,7 @@ content: |
     - Tab control (pills)
       - List of files and folders of the current level of the data folder
         - Create, edit, delete, duplicate snippets
-        - Bulk operations (select multiple, cut, copy, delete and so on)
+        - Bulk changes on files/folders (select multiple, cut, copy, delete and so on)
       - Recent snippets list (last one first)
   - Right side: snippet content
     - Tab control

@@ -5,7 +5,7 @@ This folder contains example snippets to demonstrate the Snippet Manager functio
 ## Available Snippets
 
 ### Base Level
-- **example-array.yml** - JavaScript array operations with placeholders
+- **example-array.yml** - JavaScript array actions with placeholders
 - **php-class.yml** - PHP class template with constructor and methods  
 - **html-form.yml** - HTML form with common input fields
 

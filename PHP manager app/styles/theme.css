@@ -1,4 +1,4 @@
-/* Theme: override Bootstrap primary color to a nice orange */
+/* Theme: override BS primary color to a nice orange */
 
 :root {
   --bs-primary: #fd7e14; /* orange */

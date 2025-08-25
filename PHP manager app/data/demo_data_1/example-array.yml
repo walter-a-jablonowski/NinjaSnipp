@@ -1,13 +1,13 @@
 sh: arr--
 usage: |
-  Creates a JavaScript array with common operations.
+  Creates a JavaScript array.
   Use {{ name }} for variable name, {{ items }} for initial items.
-  Choose {{ operation }} for the type of operation to include.
+  Choose {{ action }} for the type of action to include.
 
 content: |
   const {{ name=myArray }} = [{{ items=1, 2, 3 }}];
   
-  // {{ operation=push|pop|shift|unshift|slice|splice }} operation
-  {{ name }}.{{ operation }}({{ value=newItem }});
+  // {{ action=push|pop|shift|unshift|slice|splice }} action
+  {{ name }}.{{ action }}({{ value=newItem }});
   
   console.log({{ name }});

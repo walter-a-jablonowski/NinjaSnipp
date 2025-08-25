@@ -412,7 +412,7 @@ class SnippetManager
         return "{{{$name}}}";
       }
 
-      // Not a valid placeholder per syntax: leave verbatim
+      // No valid placeholder per syntax: leave verbatim
       return $matches[0];
     }, $content);
   }
@@ -463,7 +463,7 @@ class SnippetManager
           ];
         }
       }
-      // else: not a valid placeholder, skip
+      // else: no valid placeholder, skip
     }
     
     return $placeholders;

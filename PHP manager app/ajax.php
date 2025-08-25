@@ -14,7 +14,7 @@ $action = $input['action'] ?? '';
 $config  = Yaml::parseFile('config.yml');
 $manager = new SnippetManager( $config['dataPaths'] ?? ['data']);
 
-// Set current data path if provided, otherwise ensure we're using the first path
+// Set current data path if provided, or ensure we're using the first path
 if( isset($input['dataPath']) && !empty($input['dataPath']) )
   $manager->setCurrentDataPath($input['dataPath']);
 else  // ensure we're using the first data path when no dataPath is provided

@@ -462,7 +462,7 @@ class SnippetManager {
         out += `<span class="ph ph-text" contenteditable="true" tabindex="0" data-ph="${this.escapeHtml(name)}" data-default="" data-ph-label="${this.escapeHtml(name)}"></span>`;
       }
       else {
-        // Not a valid placeholder token; render verbatim
+        // No valid placeholder token; render verbatim
         out += this.escapeHtml(match[0]);
       }
       lastIndex = regex.lastIndex;
@@ -875,7 +875,7 @@ class SnippetManager {
   }
 
   async changeDataFolder(dataPath) {
-    // Update local state and notify server for consistency
+    // Update local state and inform server for consistency
     this.currentDataPath = dataPath;
     const result = await this.apiCall('setDataPath', { dataPath });
     
