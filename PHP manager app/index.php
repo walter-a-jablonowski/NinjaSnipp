@@ -17,7 +17,8 @@ $manager = new SnippetManager( $config['dataPaths'] ?? ['data']);
   <title>Ninja Snipp</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-  <link href="style.css?v=<?= time() ?>" rel="stylesheet">
+  <link href="styles/theme.css?v=<?= time() ?>" rel="stylesheet">
+  <link href="styles/app.css?v=<?= time() ?>" rel="stylesheet">
 </head>
 <body>
   <!-- Header -->

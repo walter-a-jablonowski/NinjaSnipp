@@ -1,0 +1,92 @@
+/* Theme: override Bootstrap primary color to a nice orange */
+
+:root {
+  --bs-primary: #fd7e14; /* orange */
+  --bs-primary-rgb: 253, 126, 20;
+  /* List group theme tied to primary */
+  --bs-list-group-active-bg: var(--bs-primary);
+  --bs-list-group-active-border-color: var(--bs-primary);
+  --bs-list-group-active-color: #fff;
+}
+
+/* Buttons: align with primary orange */
+.btn-primary {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: #fd7e14;
+  --bs-btn-border-color: #fd7e14;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #e26e10;
+  --bs-btn-hover-border-color: #d46812;
+  --bs-btn-focus-shadow-rgb: 253, 126, 20;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #c65f0e;
+  --bs-btn-active-border-color: #b8570d;
+  --bs-btn-disabled-bg: #fd7e14;
+  --bs-btn-disabled-border-color: #fd7e14;
+}
+
+.btn-outline-primary {
+  --bs-btn-color: #fd7e14;
+  --bs-btn-border-color: #fd7e14;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #fd7e14;
+  --bs-btn-hover-border-color: #fd7e14;
+  --bs-btn-focus-shadow-rgb: 253, 126, 20;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #fd7e14;
+  --bs-btn-active-border-color: #fd7e14;
+}
+
+/* Links using the primary hue */
+.link-primary { color: #fd7e14 !important; }
+
+/* Nav pills and tabs themed with primary orange */
+.nav-pills {
+  --bs-nav-pills-link-active-bg: var(--bs-primary);
+  --bs-nav-pills-link-active-color: #fff;
+}
+
+.nav-pills .nav-link {
+  color: var(--bs-primary);
+}
+
+.nav-pills .nav-link:hover {
+  color: var(--bs-primary);
+  background-color: rgba(var(--bs-primary-rgb), 0.08);
+}
+
+.nav-tabs {
+  --bs-nav-link-color: var(--bs-primary);
+  --bs-nav-link-hover-color: var(--bs-primary);
+  --bs-nav-tabs-link-hover-border-color: rgba(var(--bs-primary-rgb), 0.5);
+  --bs-nav-tabs-link-active-color: var(--bs-primary);
+  --bs-nav-tabs-link-active-border-color: var(--bs-primary) var(--bs-primary) var(--bs-body-bg);
+}
+
+.nav-tabs .nav-link {
+  color: var(--bs-primary);
+}
+
+.nav-tabs .nav-link:hover,
+.nav-tabs .nav-link:focus {
+  color: var(--bs-primary);
+}
+
+/* Ensure inactive tab text is orange */
+.nav-tabs .nav-link:not(.active) {
+  color: var(--bs-primary);
+}
+
+/* List group: active item themed with primary orange */
+.list-group {
+  --bs-list-group-active-bg: var(--bs-primary);
+  --bs-list-group-active-border-color: var(--bs-primary);
+  --bs-list-group-active-color: #fff;
+}
+
+/* Enforce active styling in case variables don't cascade */
+.list-group-item.active {
+  background-color: var(--bs-primary) !important;
+  border-color: var(--bs-primary) !important;
+  color: #fff !important;
+}
