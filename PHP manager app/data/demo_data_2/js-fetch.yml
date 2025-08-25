@@ -4,10 +4,10 @@ usage: |
   Choose method and provide URL and optional payload.
 
 content: |
-  const url = '{url=https://api.example.com/items}';
-  const method = '{method=GET|POST|PUT|DELETE}';
+  const url = '{{ url=https://api.example.com/items }}';
+  const method = '{{ method=GET|POST|PUT|DELETE }}';
   const headers = { 'Content-Type': 'application/json' };
-  const body = method === 'GET' ? undefined : JSON.stringify({payload});
+  const body = method === 'GET' ? undefined : JSON.stringify({{ payload }});
   
   try {
     const res = await fetch(url, { method, headers, body });

@@ -191,7 +191,7 @@ $manager = new SnippetManager( $config['dataPaths'] ?? ['data']);
 
                   <div class="mb-3">
                     <label for="snippetContent" class="form-label">Content</label>
-                    <textarea class="form-control" id="snippetContent" rows="12" placeholder="Some {var} snippet..." required></textarea>
+                    <textarea class="form-control" id="snippetContent" rows="12" placeholder="Some {{ var }} snippet..." required></textarea>
                   </div>
                 </form>
               </div>

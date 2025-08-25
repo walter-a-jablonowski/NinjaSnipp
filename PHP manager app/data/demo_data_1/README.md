@@ -15,9 +15,9 @@ This folder contains example snippets to demonstrate the Snippet Manager functio
 
 ## Features Demonstrated
 
-- **Placeholders**: `{name=default}` syntax
-- **Choices**: `{method=post|get}` syntax  
-- **Includes**: `{include: "snippet-name"}` syntax
+- **Placeholders**: `{{ name=default }}` syntax
+- **Choices**: `{{ method=post|get }}` syntax  
+- **Includes**: `{{ include: "snippet-name" }}` syntax
 - **Short codes**: Quick access via `sh` field
 - **Usage documentation**: Help text for each snippet
 

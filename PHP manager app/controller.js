@@ -421,22 +421,31 @@ class SnippetManager {
   }
 
   buildInlineHtmlFromComposed(text) {
-    const regex = /\{([^}]+)\}/g;
+    const regex = /\{\{\s*([^}]*)\s*\}\}/g;
     let lastIndex = 0;
     let match;
     let out = '';
     while( (match = regex.exec(text)) ) {
       const before = text.slice(lastIndex, match.index);
       out += this.escapeHtml(before);
-      const token = match[1];
-      if( token.trim().toLowerCase().startsWith('include:') ) {
-        // includes should already be resolved; render verbatim fallback
+      const raw = match[1];
+
+      const token = raw.trim();
+
+      // Include directives: leave verbatim (should be pre-resolved server-side)
+      if( /^include:\s*["'][^"']+["']$/i.test(token) ) {
         out += this.escapeHtml(match[0]);
+        lastIndex = regex.lastIndex;
+        continue;
       }
-      else if( token.includes('=') ) {
-        const [rawName, rawDefault] = token.split('=', 2);
-        const name = rawName.trim();
-        const def = rawDefault;
+
+      const simpleRe = /^[A-Za-z0-9_.-]+$/;
+      const withDefaultRe = /^([A-Za-z0-9_.-]+)=(.+)$/;
+
+      const m = token.match(withDefaultRe);
+      if( m ) {
+        const name = m[1];
+        const def = m[2];
         if( def.includes('|') ) {
           const choices = def.split('|').map(s => s.trim());
           const defChoice = choices[0] || '';
@@ -448,9 +457,13 @@ class SnippetManager {
           out += `<span class="ph ph-text" contenteditable="true" tabindex="0" data-ph="${this.escapeHtml(name)}" data-default="${this.escapeHtml(defVal)}">${this.escapeHtml(defVal)}</span>`;
         }
       }
-      else {
-        const name = token.trim();
+      else if( simpleRe.test(token) ) {
+        const name = token;
         out += `<span class="ph ph-text" contenteditable="true" tabindex="0" data-ph="${this.escapeHtml(name)}" data-default="" data-ph-label="${this.escapeHtml(name)}"></span>`;
+      }
+      else {
+        // Not a valid placeholder token; render verbatim
+        out += this.escapeHtml(match[0]);
       }
       lastIndex = regex.lastIndex;
     }
@@ -804,7 +817,7 @@ class SnippetManager {
     const data = {
       _type: type,
       _name: name,
-      content: type === 'yml' ? 'Some {var} snippet content...' : '# New Markdown File\n\nContent here...'
+      content: type === 'yml' ? 'Some {{ var }} snippet content...' : '# New Markdown File\n\nContent here...'
     };
 
     if( type === 'yml' ) {

@@ -7,8 +7,8 @@ content: |
   /**
    * Simple logger
    */
-  function log_{channel=app}( string $message, string $level = '{level=INFO|DEBUG|WARN|ERROR}' ) : void
+  function log_{{ channel=app }}( string $message, string $level = '{{ level=INFO|DEBUG|WARN|ERROR }}' ) : void
   {
     $ts = date('c');
-    error_log("[$ts] [$level] {channel}: $message");
+    error_log("[$ts] [$level] {{ channel }}: $message");
   }

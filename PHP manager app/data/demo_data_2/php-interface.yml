@@ -4,22 +4,22 @@ usage: |
   Customize names and method signature.
 
 content: |
-  interface {interfaceName=MyRepositoryInterface}
+  interface {{ interfaceName=MyRepositoryInterface }}
   {
-    public function {methodName=findById}( int $id ) : {returnType=mixed};
+    public function {{ methodName=findById }}( int $id ) : {{ returnType=mixed }};
   }
   
-  class {className=MyRepository} implements {interfaceName}
+  class {{ className=MyRepository }} implements {{ interfaceName }}
   {
     public function __construct()
     {
       // init resources
     }
     
-    public function {methodName}( int $id ) : {returnType}
+    public function {{ methodName }}( int $id ) : {{ returnType }}
     {
-      {include: "logger"}
-      // TODO: implement lookup
+      {{ include: "logger" }}
+      // TASK: implement lookup
       return null;
     }
   }

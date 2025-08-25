@@ -349,7 +349,8 @@ class SnippetManager
 
   private function processIncludes( string $content ) : string
   {
-    return preg_replace_callback('/\{include:\s*["\']([^"\']+)["\']\s*\}/', function($matches) {
+    // Double-brace include: {{ include: "Snippet name" }} (allow inner spaces)
+    return preg_replace_callback('/\{\{\s*include:\s*["\']([^"\']+)["\']\s*\}\}/', function($matches) {
       $includeName = $matches[1];
       $includeSnippet = $this->findSnippetByName($includeName);
       
@@ -377,73 +378,92 @@ class SnippetManager
 
   private function processPlaceholders( string $content, array $placeholders ) : string
   {
-    return preg_replace_callback('/\{([^}]+)\}/', function($matches) use ($placeholders) {
-      $placeholder = $matches[1];
-      
-      // Check if it's a placeholder with default value or choices
-      if( strpos($placeholder, '=') !== false )
+    // Double-brace placeholders: {{ name }}, {{ name=default }}, {{ name=a|b|c }}
+    return preg_replace_callback('/\{\{\s*([^}]*)\s*\}\}/', function($matches) use ($placeholders) {
+      $token = trim($matches[1]);
+
+      // Skip include directives (handled elsewhere)
+      if( stripos($token, 'include:') === 0 )
+        return $matches[0];
+
+      // name: [A-Za-z0-9_.-]+; default/choices: any chars (no '}}' inside single token)
+      if( preg_match('/^([A-Za-z0-9_.-]+)(?:=(.+))?$/', $token, $m) )
       {
-        list($name, $default) = explode('=', $placeholder, 2);
-        $name = trim($name);
-        
+        $name = $m[1];
+
         if( isset($placeholders[$name]) )
           return $placeholders[$name];
-          
-        // Handle choices (pipe-separated)
-        if( strpos($default, '|') !== false )
+
+        if( isset($m[2]) )
         {
-          $choices = explode('|', $default);
-          return trim($choices[0]); // Return first choice as default
+          $default = $m[2];
+
+          // Handle choices (pipe-separated)
+          if( strpos($default, '|') !== false )
+          {
+            $choices = array_map('trim', explode('|', $default));
+            return $choices[0]; // first choice as default
+          }
+
+          return $default; // text default
         }
-        
-        return $default;
+
+        // Simple placeholder without provided value: keep as-is with double braces
+        return "{{{$name}}}";
       }
-      
-      // Simple placeholder
-      return $placeholders[$placeholder] ?? "{$placeholder}";
+
+      // Not a valid placeholder per syntax: leave verbatim
+      return $matches[0];
     }, $content);
   }
 
   public function extractPlaceholders( string $content ) : array
   {
     $placeholders = [];
+    // Double-brace tokens only
+    preg_match_all('/\{\{\s*([^}]*)\s*\}\}/', $content, $matches);
     
-    preg_match_all('/\{([^}]+)\}/', $content, $matches);
-    
-    foreach( $matches[1] as $match )
+    foreach( $matches[1] as $raw )
     {
-      if( strpos($match, 'include:') === 0 )
-        continue; // Skip includes
-        
-      if( strpos($match, '=') !== false )
+      $token = trim($raw);
+
+      // Skip includes
+      if( stripos($token, 'include:') === 0 )
+        continue;
+
+      if( preg_match('/^([A-Za-z0-9_.-]+)(?:=(.+))?$/', $token, $m) )
       {
-        list($name, $default) = explode('=', $match, 2);
-        $name = trim($name);
-        
-        if( strpos($default, '|') !== false )
+        $name = $m[1];
+
+        if( isset($m[2]) )
         {
-          $choices = array_map('trim', explode('|', $default));
-          $placeholders[$name] = [
-            'type' => 'choice',
-            'choices' => $choices,
-            'default' => $choices[0]
-          ];
+          $default = $m[2];
+          if( strpos($default, '|') !== false )
+          {
+            $choices = array_map('trim', explode('|', $default));
+            $placeholders[$name] = [
+              'type' => 'choice',
+              'choices' => $choices,
+              'default' => $choices[0] ?? ''
+            ];
+          }
+          else
+          {
+            $placeholders[$name] = [
+              'type' => 'text',
+              'default' => $default
+            ];
+          }
         }
         else
         {
           $placeholders[$name] = [
             'type' => 'text',
-            'default' => $default
+            'default' => ''
           ];
         }
       }
-      else
-      {
-        $placeholders[$match] = [
-          'type' => 'text',
-          'default' => ''
-        ];
-      }
+      // else: not a valid placeholder, skip
     }
     
     return $placeholders;

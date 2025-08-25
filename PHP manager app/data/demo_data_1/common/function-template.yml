@@ -5,17 +5,17 @@ usage: |
 
 content: |
   /**
-   * {description=Function description}
+   * {{ description=Function description }}
    * 
-   * @param {paramType=string} ${paramName=param} {paramDesc=Parameter description}
-   * @return {returnType=void} {returnDesc=Return description}
+   * @param {{ paramType=string }} ${{ paramName=param }} {{ paramDesc=Parameter description }}
+   * @return {{ returnType=void }} {{ returnDesc=Return description }}
    */
-  function {functionName=myFunction}( ${paramName} )
+  function {{ functionName=myFunction }}( ${{ paramName }} )
   {
-    {include: "error-handling"}
+    {{ include: "error-handling" }}
     
     // Function body
-    {body=// TODO: Implement function logic}
+    {{ body=// TASK: Implement function logic }}
     
-    return {returnValue=null};
+    return {{ returnValue=null }};
   }

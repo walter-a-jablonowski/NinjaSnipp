@@ -5,6 +5,6 @@ usage: |
 
 content: |
   // Input validation
-  if( ! {paramName} ) {
-    throw new {errorType=Error|TypeError|RangeError}('{errorMessage=Invalid parameter provided}');
+  if( ! {{ paramName }} ) {
+    throw new {{errorType=Error|TypeError|RangeError}}('{{ errorMessage=Invalid parameter provided }}');
   }

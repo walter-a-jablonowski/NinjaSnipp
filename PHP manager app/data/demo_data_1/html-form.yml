@@ -1,14 +1,14 @@
 sh: form--
 usage: |
   Creates an HTML form with common input fields.
-  Use {formName} for form name, {action} for form action.
-  Choose {method} for HTTP method.
+  Use {{ formName }} for form name, {{ action }} for form action.
+  Choose {{ method }} for HTTP method.
 
 content: |
-  <form name="{formName}" action="{action=/submit}" method="{method=post|get}">
+  <form name="{{ formName }}" action="{{ action=/submit }}" method="{{ method=post|get }}">
     <div class="form-group">
-      <label for="{fieldName=name}">Name:</label>
-      <input type="text" id="{fieldName}" name="{fieldName}" required>
+      <label for="{{ fieldName=name }}">Name:</label>
+      <input type="text" id="{{ fieldName }}" name="{{ fieldName }}" required>
     </div>
     
     <div class="form-group">
@@ -21,5 +21,5 @@ content: |
       <textarea id="message" name="message" rows="4"></textarea>
     </div>
     
-    <button type="submit">{submitText=Submit}</button>
+    <button type="submit">{{ submitText=Submit }}</button>
   </form>

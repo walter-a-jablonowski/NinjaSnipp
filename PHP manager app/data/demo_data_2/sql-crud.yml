@@ -4,10 +4,10 @@ usage: |
   Choose operation and provide table and columns.
 
 content: |
-  -- {operation=SELECT|INSERT|UPDATE|DELETE} on {table=users}
-  {operation=SELECT} {columns= id, name, email }
-  FROM {table}
-  WHERE {where=id = :id};
+  -- {{ operation=SELECT|INSERT|UPDATE|DELETE }} on {{ table=users }}
+  {{ operation=SELECT }} {{ columns= id, name, email }}
+  FROM {{ table }}
+  WHERE {{ where=id = :id }};
   
   -- Example parameters
-  -- :id = {id=1}
+  -- :id = {{ id=1 }}
