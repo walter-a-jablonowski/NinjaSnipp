@@ -145,6 +145,14 @@
   padding: 0 0.25rem;
 }
 
+/* Ghost label for empty text placeholders (no default) */
+.inline-snippet .ph-text:empty::before {
+  content: attr(data-ph-label);
+  color: #6c757d;
+  opacity: 0.7;
+  font-style: italic;
+}
+
 #phChoiceMenu {
   z-index: 1070; /* above cards */
 }

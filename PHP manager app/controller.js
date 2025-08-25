@@ -450,7 +450,7 @@ class SnippetManager {
       }
       else {
         const name = token.trim();
-        out += `<span class="ph ph-text" contenteditable="true" tabindex="0" data-ph="${this.escapeHtml(name)}" data-default="">` + `</span>`;
+        out += `<span class="ph ph-text" contenteditable="true" tabindex="0" data-ph="${this.escapeHtml(name)}" data-default="" data-ph-label="${this.escapeHtml(name)}"></span>`;
       }
       lastIndex = regex.lastIndex;
     }
