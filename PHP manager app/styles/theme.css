@@ -56,25 +56,25 @@
 }
 
 .nav-tabs {
-  --bs-nav-link-color: var(--bs-primary);
-  --bs-nav-link-hover-color: var(--bs-primary);
-  --bs-nav-tabs-link-hover-border-color: rgba(var(--bs-primary-rgb), 0.5);
-  --bs-nav-tabs-link-active-color: var(--bs-primary);
-  --bs-nav-tabs-link-active-border-color: var(--bs-primary) var(--bs-primary) var(--bs-body-bg);
+  --bs-nav-link-color: #e03131; /* reddish */
+  --bs-nav-link-hover-color: #e03131;
+  --bs-nav-tabs-link-hover-border-color: rgba(224, 49, 49, 0.4);
+  --bs-nav-tabs-link-active-color: #e03131;
+  --bs-nav-tabs-link-active-border-color: #e03131 #e03131 var(--bs-body-bg);
 }
 
 .nav-tabs .nav-link {
-  color: var(--bs-primary);
+  color: var(--bs-nav-link-color);
 }
 
 .nav-tabs .nav-link:hover,
 .nav-tabs .nav-link:focus {
-  color: var(--bs-primary);
+  color: var(--bs-nav-link-hover-color);
 }
 
-/* Ensure inactive tab text is orange */
+/* Ensure inactive tab text is red */
 .nav-tabs .nav-link:not(.active) {
-  color: var(--bs-primary);
+  color: var(--bs-nav-link-color);
 }
 
 /* List group: active item themed with primary orange */
