@@ -11,7 +11,7 @@
 
 /* Buttons: align with primary orange */
 .btn-primary {
-  --bs-btn-color: #fff;
+   --bs-btn-color: #fff;
   --bs-btn-bg: #fd7e14;
   --bs-btn-border-color: #fd7e14;
   --bs-btn-hover-color: #fff;

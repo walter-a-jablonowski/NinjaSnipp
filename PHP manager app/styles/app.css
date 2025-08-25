@@ -5,6 +5,8 @@
 
 .sidebar .position-sticky {
   top: 76px;
+  max-height: calc(100vh - 76px);
+  overflow-y: auto;
 }
 
 /* Search input styling */
