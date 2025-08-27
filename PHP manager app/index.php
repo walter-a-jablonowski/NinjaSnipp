@@ -101,8 +101,11 @@ if( isset($config['foldersFirst']) )
                 <button class="btn btn-sm btn-primary" id="newFolderBtn" title="New Folder">
                   <i class="bi bi-folder-plus"></i>
                 </button>
-                <button class="btn btn-sm btn-warning" id="bulkActionsBtn" title="Bulk Actions" disabled>
+                <button class="btn btn-sm btn-warning" id="selectBtn" title="Select" disabled>
                   <i class="bi bi-list-check"></i>
+                </button>
+                <button class="btn btn-sm" id="bulkActionsBtn" title="Bulk actions" disabled>
+                  Actions
                 </button>
               </div>
 

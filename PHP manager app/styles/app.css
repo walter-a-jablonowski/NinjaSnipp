@@ -263,6 +263,22 @@
   --bs-btn-disabled-border-color: #ffa94d;
 }
 
+/* Delete Selected button accent (harmonized red) */
+#bulkActionsBtn {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: #fa5252; /* soft red */
+  --bs-btn-border-color: #fa5252;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #f03e3e; /* deeper red on hover */
+  --bs-btn-hover-border-color: #f03e3e;
+  --bs-btn-focus-shadow-rgb: 250, 82, 82;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #e03131;
+  --bs-btn-active-border-color: #c92a2a;
+  --bs-btn-disabled-bg: #fa5252;
+  --bs-btn-disabled-border-color: #fa5252;
+}
+
 /* Loading states */
 .loading {
   opacity: 0.6;
