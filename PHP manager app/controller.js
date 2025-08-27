@@ -859,7 +859,7 @@ class SnippetManager
     const result = await this.apiCall('saveSnippet', { path, data });
     
     if( result.success ) {
-      this.showSuccess('Snippet created successfully');
+      // this.showSuccess('Snippet created successfully');
       this.loadFiles(this.currentPath);
       
       // Close modal
