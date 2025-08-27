@@ -5,7 +5,8 @@ use Symfony\Component\Yaml\Yaml;
 
 require_once 'vendor/autoload.php';
 
-$config  = Yaml::parseFile('config.yml');
+
+$config  = Yaml::parseFile('users/default/config.yml');
 $manager = new SnippetManager( $config['dataPaths'] ?? ['data']);
 
 ?>

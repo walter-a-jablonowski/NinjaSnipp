@@ -12,7 +12,7 @@ header('Content-Type: application/json');
 $input  = json_decode( file_get_contents('php://input'), true);
 $action = $input['action'] ?? '';
 
-$config  = Yaml::parseFile('config.yml');
+$config  = Yaml::parseFile('users/default/config.yml');
 $manager = new SnippetManager( $config['dataPaths'] ?? ['data']);
 
 // Set current data path if provided, or ensure we're using the first path
