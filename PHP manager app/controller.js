@@ -129,6 +129,8 @@ class SnippetManager
     
     // Global document events
     document.addEventListener('click', (e) => {
+      // If the click is inside any dropdown control or its menu, do not trigger navigation
+      if( e.target.closest('.dropdown') || e.target.closest('.dropdown-menu') ) return;
       if( e.target.closest('.file-item') ) this.handleFileClick(e);
       else this.hideContextMenu();
     });
@@ -210,7 +212,14 @@ class SnippetManager
               <div class="fw-medium">${file.name}${includedIcon}</div>
               ${file.type === 'file' ? `<div class="file-meta">${file.extension.toUpperCase()} • ${modified}</div>` : ''}
             </div>
-            ${file.type === 'file' ? `<small class="text-muted">${file.extension}</small>` : ''}
+            <div class="dropdown ms-2">
+              <button class="btn btn-sm btn-link text-muted p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="More actions">
+                <i class="bi bi-three-dots-vertical"></i>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="#" data-action="delete">Delete</a></li>
+              </ul>
+            </div>
           </div>
         </div>
       `;

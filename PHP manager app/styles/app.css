@@ -87,7 +87,7 @@
 
 .file-item:hover {
   background-color: #e9ecef;
-  transform: translateX(2px);
+  padding-left: 2px; /* subtle shift without creating a new stacking context */
 }
 
 .file-item.active {
