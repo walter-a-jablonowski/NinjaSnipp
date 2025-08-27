@@ -1,0 +1,21 @@
+sh: func--
+usage: |
+  Creates a function template with documentation.
+  Includes common function patterns.
+
+content: |
+  /**
+   * {{ description=Function description }}
+   * 
+   * @param {{ paramType=string }} ${{ paramName=param }} {{ paramDesc=Parameter description }}
+   * @return {{ returnType=void }} {{ returnDesc=Return description }}
+   */
+  function {{ functionName=myFunction }}( ${{ paramName }} )
+  {
+    {{ include: "error-handling" }}
+    
+    // Function body
+    {{ body=// TASK: Implement function logic }}
+    
+    return {{ returnValue=null }};
+  }

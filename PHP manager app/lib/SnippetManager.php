@@ -121,6 +121,12 @@ class SnippetManager
           'path' => $relativePath
         ];
       }
+      elseif( strpos($file, 'INCLUDE') !== false )
+      {
+        // Handle INCLUDE files first - resolve the referenced file/folder
+        $includeItems = $this->resolveIncludeFile($file, $relativePath, $subPath);
+        $items = array_merge($items, $includeItems);
+      }
       elseif( pathinfo($file, PATHINFO_EXTENSION) === 'yml' || pathinfo($file, PATHINFO_EXTENSION) === 'md' )
       {
         $items[] = [
@@ -139,6 +145,133 @@ class SnippetManager
         return $a['type'] === 'folder' ? -1 : 1;
       return strcasecmp($a['name'], $b['name']);
     });
+    
+    return $items;
+  }
+
+  private function resolveIncludeFile( string $includeFileName, string $includeRelativePath, string $currentSubPath ) : array
+  {
+    // Extract the target path from the INCLUDE filename
+    // Format: "anything INCLUDE target-path"
+    $includePos = strpos($includeFileName, 'INCLUDE');
+    if( $includePos === false )
+      return [];
+      
+    $targetPath = trim(substr($includeFileName, $includePos + 7)); // 7 = length of "INCLUDE"
+    if( empty($targetPath) )
+      return [];
+    
+    // Build full path to the target (relative to data root, not current subpath)
+    $targetFullPath = $this->currentDataPath . "/$targetPath";
+    
+    // Try different path variations
+    $possiblePaths = [
+      "$targetPath.yml",
+      "$targetPath.md", 
+      "common/$targetPath.yml",
+      "common/$targetPath.md"
+    ];
+    
+    $items = [];
+    
+    if( is_dir($targetFullPath) )
+    {
+      // If target is a directory, include it as a single folder entry
+      $items[] = [
+        'type' => 'folder',
+        'name' => pathinfo($targetPath, PATHINFO_FILENAME),
+        'path' => $targetPath,
+        'isIncluded' => true
+      ];
+    }
+    elseif( file_exists($targetFullPath) )
+    {
+      // If target is a file, include it
+      $extension = pathinfo($targetPath, PATHINFO_EXTENSION);
+      if( $extension === 'yml' || $extension === 'md' )
+      {
+        $items[] = [
+          'type' => 'file',
+          'name' => pathinfo($targetPath, PATHINFO_FILENAME),
+          'extension' => $extension,
+          'path' => $targetPath,
+          'modified' => filemtime($targetFullPath),
+          'isIncluded' => true // Mark as included for UI distinction
+        ];
+      }
+    }
+    else
+    {
+      // Try possible path variations
+      foreach( $possiblePaths as $possiblePath )
+      {
+        $possibleFullPath = $this->currentDataPath . "/$possiblePath";
+        
+        if( file_exists($possibleFullPath) )
+        {
+          $extension = pathinfo($possiblePath, PATHINFO_EXTENSION);
+          if( $extension === 'yml' || $extension === 'md' )
+          {
+            $items[] = [
+              'type' => 'file',
+              'name' => pathinfo($possiblePath, PATHINFO_FILENAME),
+              'extension' => $extension,
+              'path' => $possiblePath,
+              'modified' => filemtime($possibleFullPath),
+              'isIncluded' => true
+            ];
+            break;
+          }
+        }
+      }
+    }
+    return $items;
+  }
+
+  private function getDirectoryContentsRecursively( string $dirPath ) : array
+  {
+    $items = [];
+    $fullPath = $this->currentDataPath . "/$dirPath";
+    
+    if( ! is_dir($fullPath) )
+      return [];
+      
+    $files = scandir($fullPath);
+    
+    foreach( $files as $file )
+    {
+      if( $file === '.' || $file === '..' )
+        continue;
+        
+      $filePath = "$fullPath/$file";
+      $relativePath = "$dirPath/$file";
+      
+      if( is_dir($filePath) )
+      {
+        // Add folder
+        $items[] = [
+          'type' => 'folder',
+          'name' => $file,
+          'path' => $relativePath,
+          'isIncluded' => true
+        ];
+        
+        // Recursively add folder contents
+        $subItems = $this->getDirectoryContentsRecursively($relativePath);
+        $items = array_merge($items, $subItems);
+      }
+      elseif( pathinfo($file, PATHINFO_EXTENSION) === 'yml' || pathinfo($file, PATHINFO_EXTENSION) === 'md' )
+      {
+        $items[] = [
+          'type' => 'file',
+          'name' => pathinfo($file, PATHINFO_FILENAME),
+          'extension' => pathinfo($file, PATHINFO_EXTENSION),
+          'path' => $relativePath,
+          'modified' => filemtime($filePath),
+          'isIncluded' => true
+        ];
+      }
+    }
     
     return $items;
   }

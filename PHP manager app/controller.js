@@ -10,6 +10,7 @@ class SnippetManager {
     this.selectedFiles = new Set();
     this.placeholderGroups = new Map(); // name => [elements]
     this.renderedText = '';
+    this.navigationHistory = []; // Track navigation history for included folders
     
     this.init();
   }
@@ -133,13 +134,16 @@ class SnippetManager {
       const icon = file.type === 'folder' ? 'bi-folder' : 
                    file.extension === 'yml' ? 'bi-file-code' : 'bi-file-text';
       const modified = file.modified ? new Date(file.modified * 1000).toLocaleDateString() : '';
+      // here
+      const includedClass = file.isIncluded ? ' file-item-included' : '';
+      const includedIcon = file.isIncluded ? '<i class="bi bi-link-45deg text-primary me-1" title="Included file"></i>' : '';
       
       return `
-        <div class="list-group-item file-item" data-path="${file.path}" data-type="${file.type}" data-extension="${file.extension || ''}">
+        <div class="list-group-item file-item${includedClass}" data-path="${file.path}" data-type="${file.type}" data-extension="${file.extension || ''}">
           <div class="d-flex align-items-center">
             <i class="bi ${icon} file-icon me-2"></i>
             <div class="flex-grow-1">
-              <div class="fw-medium">${file.name}</div>
+              <div class="fw-medium">${includedIcon}${file.name}</div>
               ${file.type === 'file' ? `<div class="file-meta">${file.extension.toUpperCase()} • ${modified}</div>` : ''}
             </div>
             ${file.type === 'file' ? `<small class="text-muted">${file.extension}</small>` : ''}
@@ -151,6 +155,15 @@ class SnippetManager {
 
   goBack() {
     if( ! this.currentPath ) return; // already at base
+    
+    // Check if we have navigation history (for included folders)
+    if( this.navigationHistory.length > 0 ) {
+      const previousPath = this.navigationHistory.pop();
+      this.loadFiles(previousPath);
+      return;
+    }
+    
+    // Default behavior: go up one level
     const parts = this.currentPath.split('/');
     parts.pop();
     const parent = parts.join('/');
@@ -166,13 +179,18 @@ class SnippetManager {
     fileItem.classList.add('active');
 
     if( type === 'folder' ) {
+      // Check if this is an included folder
+      if( fileItem.classList.contains('file-item-included') ) {
+        // Save current path to navigation history before navigating to included folder
+        this.navigationHistory.push(this.currentPath);
+      }
       this.loadFiles(path);
     }
     else {
       this.loadSnippet(path);
       
       // Auto-close sidebar on mobile when a file is selected
-      // check if we're on mobile (screen width < 992px, Bootstrap's lg breakpoint)
+      // check if we're on mobile (screen width < 992px, BS's lg breakpoint)
       if( window.innerWidth < 992 ) {
         const sidebar = document.getElementById('sidebarNav');
         const offcanvas = bootstrap.Offcanvas.getInstance(sidebar);
