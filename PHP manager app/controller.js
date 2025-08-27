@@ -908,8 +908,19 @@ class SnippetManager
     const result = await this.apiCall('saveSnippet', { path, data });
     
     if( result.success ) {
-      this.loadFiles(this.currentPath);
-      
+      // Reload files so the new snippet appears
+      await this.loadFiles(this.currentPath);
+
+      // Select and open the newly created snippet, then switch to Edit tab
+      const list = document.getElementById('fileList');
+      if( list ) {
+        document.querySelectorAll('.file-item.active').forEach(item => item.classList.remove('active'));
+        const newItem = list.querySelector(`.file-item[data-path="${path}"]`);
+        if( newItem ) newItem.classList.add('active');
+      }
+      await this.loadSnippet(path);
+      this.activateTab('edit-tab');
+
       // Close modal
       const modal = bootstrap.Modal.getInstance(document.getElementById('newSnippetModal'));
       modal.hide();
