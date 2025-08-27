@@ -14,6 +14,8 @@ $action = $input['action'] ?? '';
 
 $config  = Yaml::parseFile('users/default/config.yml');
 $manager = new SnippetManager( $config['dataPaths'] ?? ['data']);
+if( isset($config['foldersFirst']) )
+  $manager->setFoldersFirst( (bool)$config['foldersFirst'] );
 
 // Set current data path if provided, or ensure we're using the first path
 if( isset($input['dataPath']) && !empty($input['dataPath']) )

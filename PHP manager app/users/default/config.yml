@@ -1,3 +1,5 @@
+foldersFirst: false
+
 dataPaths:
   Demo 1: 'data/demo_data_1'
   Demo 2: 'data/demo_data_2'

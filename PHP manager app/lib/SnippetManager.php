@@ -9,6 +9,7 @@ class SnippetManager
   private array $dataPaths; // associative: label => path
   private string $currentDataPath;
   private string $currentDataLabel;
+  private bool $foldersFirst = true;
 
   public function __construct( array $dataPaths = ['data'] )
   {
@@ -59,6 +60,11 @@ class SnippetManager
   {
     // Returns associative label => path
     return $this->dataPaths;
+  }
+
+  public function setFoldersFirst( bool $foldersFirst ) : void
+  {
+    $this->foldersFirst = $foldersFirst;
   }
 
   public function setCurrentDataPath( string $pathOrLabel ) : bool
@@ -139,12 +145,21 @@ class SnippetManager
       }
     }
     
-    // Sort folders first, then files
-    usort($items, function($a, $b) {
-      if( $a['type'] !== $b['type'] )
-        return $a['type'] === 'folder' ? -1 : 1;
-      return strcasecmp($a['name'], $b['name']);
-    });
+    // Sorting: folders-first (default) or by name only when configured
+    if( $this->foldersFirst )
+    {
+      usort($items, function($a, $b) {
+        if( $a['type'] !== $b['type'] )
+          return $a['type'] === 'folder' ? -1 : 1;
+        return strcasecmp($a['name'], $b['name']);
+      });
+    }
+    else
+    {
+      usort($items, function($a, $b) {
+        return strcasecmp($a['name'], $b['name']);
+      });
+    }
     
     return $items;
   }
