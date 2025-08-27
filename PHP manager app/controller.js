@@ -74,6 +74,38 @@ class SnippetManager
       if( element ) element.addEventListener(event, handler);
     });
 
+    // Allow pressing Enter to submit the New Snippet and New Folder forms
+    const newSnippetForm = document.getElementById('newSnippetForm');
+    if( newSnippetForm ) {
+      // Submit event (covers Enter in most browsers)
+      newSnippetForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        this.createSnippet();
+      });
+      // Keydown fallback to ensure Enter triggers create
+      newSnippetForm.addEventListener('keydown', (e) => {
+        // Avoid interfering with multiline inputs (none here) and modifiers
+        if( e.key === 'Enter' && ! e.shiftKey && ! e.ctrlKey && ! e.altKey && ! e.metaKey ) {
+          e.preventDefault();
+          this.createSnippet();
+        }
+      });
+    }
+
+    const newFolderForm = document.getElementById('newFolderForm');
+    if( newFolderForm ) {
+      newFolderForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        this.createFolder();
+      });
+      newFolderForm.addEventListener('keydown', (e) => {
+        if( e.key === 'Enter' && ! e.shiftKey && ! e.ctrlKey && ! e.altKey && ! e.metaKey ) {
+          e.preventDefault();
+          this.createFolder();
+        }
+      });
+    }
+
     // Tab switching visibility
     document.querySelectorAll('#contentTabs [data-bs-toggle="tab"]')
       .forEach(btn => btn.addEventListener('shown.bs.tab', () => this.updateActionButtonsVisibility()));
