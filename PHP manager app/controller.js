@@ -134,7 +134,6 @@ class SnippetManager {
       const icon = file.type === 'folder' ? 'bi-folder' : 
                    file.extension === 'yml' ? 'bi-file-code' : 'bi-file-text';
       const modified = file.modified ? new Date(file.modified * 1000).toLocaleDateString() : '';
-      // here
       const includedClass = file.isIncluded ? ' file-item-included' : '';
       const includedIcon = file.isIncluded ? '<i class="bi bi-link-45deg text-primary me-1" title="Included file"></i>' : '';
       
