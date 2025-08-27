@@ -170,6 +170,14 @@ class SnippetManager {
     }
     else {
       this.loadSnippet(path);
+      
+      // Auto-close sidebar on mobile when a file is selected
+      // check if we're on mobile (screen width < 992px, Bootstrap's lg breakpoint)
+      if( window.innerWidth < 992 ) {
+        const sidebar = document.getElementById('sidebarNav');
+        const offcanvas = bootstrap.Offcanvas.getInstance(sidebar);
+        if( offcanvas )  offcanvas.hide();
+      }
     }
   }
 
