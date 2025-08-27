@@ -1,12 +1,13 @@
 // Snippet Manager App JavaScript
 
-class SnippetManager {
+class SnippetManager
+{
   constructor() {
     this.currentPath = '';
     this.currentSnippet = null;
     this.currentDataPath = '';
-    this.searchHistory = JSON.parse(localStorage.getItem('searchHistory') || '[]');
-    this.recentSnippets = JSON.parse(localStorage.getItem('recentSnippets') || '[]');
+    this.searchHistory = [];
+    this.recentSnippets = [];
     this.selectedFiles = new Set();
     this.placeholderGroups = new Map(); // name => [elements]
     this.renderedText = '';
@@ -15,10 +16,23 @@ class SnippetManager {
     this.init();
   }
 
-  init() {
+  async init() {
     this.bindEvents();
     const dataFolderSelect = document.getElementById('dataFolderSelect');
     this.currentDataPath = dataFolderSelect?.value || '';
+    // Load server-backed user lists (single user)
+    try {
+      const [h, r] = await Promise.all([
+        this.apiCall('getSearchHistory'),
+        this.apiCall('getRecentSnippets')
+      ]);
+      this.searchHistory = (h && h.success && Array.isArray(h.data)) ? h.data : [];
+      this.recentSnippets = (r && r.success && Array.isArray(r.data)) ? r.data : [];
+    }
+    catch( e ) {
+      this.searchHistory = [];
+      this.recentSnippets = [];
+    }
     this.loadFiles();
     this.loadRecentSnippets();
     this.setupSearchHistory();
@@ -81,6 +95,8 @@ class SnippetManager {
     this.updateActionButtonsVisibility();
     this.setActionButtonsEnabled(false);
   }
+
+  
 
   async apiCall(action, data = {}) {
     try {
@@ -206,7 +222,12 @@ class SnippetManager {
     if( result.success ) {
       this.currentSnippet = result.snippet;
       this.renderEditForm(result.snippet);
-      this.addToRecentSnippets(path, result.snippet._name);
+      // Inline: add to recent snippets and persist
+      const item = { path, name: result.snippet._name, timestamp: Date.now() };
+      this.recentSnippets = this.recentSnippets.filter(snippet => snippet.path !== path);
+      this.recentSnippets.unshift(item);
+      this.recentSnippets = this.recentSnippets.slice(0, 10);
+      await this.apiCall('saveRecentSnippets', { data: this.recentSnippets });
       
       // Enable render tab for yml files
       const renderTab = document.getElementById('render-tab');
@@ -645,7 +666,11 @@ class SnippetManager {
     const query = searchInput?.value.trim();
     if( ! query ) return;
 
-    this.addToSearchHistory(query);
+    // Inline: update search history and persist
+    this.searchHistory = this.searchHistory.filter(item => item !== query);
+    this.searchHistory.unshift(query);
+    this.searchHistory = this.searchHistory.slice(0, 20);
+    await this.apiCall('saveSearchHistory', { data: this.searchHistory });
     
     const result = await this.apiCall('searchSnippets', { query });
     
@@ -754,29 +779,7 @@ class SnippetManager {
     }
   }
 
-  addToSearchHistory(query) {
-    // Remove if already exists
-    this.searchHistory = this.searchHistory.filter(item => item !== query);
-    // Add to beginning
-    this.searchHistory.unshift(query);
-    // Keep only last 20 items
-    this.searchHistory = this.searchHistory.slice(0, 20);
-    
-    localStorage.setItem('searchHistory', JSON.stringify(this.searchHistory));
-  }
-
-  addToRecentSnippets(path, name) {
-    const item = { path, name, timestamp: Date.now() };
-    
-    // Remove if already exists
-    this.recentSnippets = this.recentSnippets.filter(snippet => snippet.path !== path);
-    // Add to beginning
-    this.recentSnippets.unshift(item);
-    // Keep only last 10 items
-    this.recentSnippets = this.recentSnippets.slice(0, 10);
-    
-    localStorage.setItem('recentSnippets', JSON.stringify(this.recentSnippets));
-  }
+  
 
   loadRecentSnippets() {
     const recentList = document.getElementById('recentList');

@@ -4,6 +4,7 @@ use SnippetManager\SnippetManager;
 use Symfony\Component\Yaml\Yaml;
 
 require_once 'vendor/autoload.php';
+require_once 'lib/functions.php';
 
 
 header('Content-Type: application/json');
@@ -126,6 +127,38 @@ try {
         $response = ['success' => true, 'message' => 'Data path changed successfully'];
       else
         $response = ['success' => false, 'message' => 'Invalid data path'];
+      break;
+
+    // --- User data: search history ---
+    case 'getSearchHistory':
+      $file = 'users/default/search_history.json';
+      $history = read_json_file($file, []);
+      $response = ['success' => true, 'data' => $history];
+      break;
+
+    case 'saveSearchHistory':
+      $data = $input['data'] ?? [];
+      $file = 'users/default/search_history.json';
+      if( write_json_file($file, $data) )
+        $response = ['success' => true];
+      else
+        $response = ['success' => false, 'message' => 'Failed to save search history'];
+      break;
+
+    // --- User data: recent snippets ---
+    case 'getRecentSnippets':
+      $file = 'users/default/recent_snippets.json';
+      $recent = read_json_file($file, []);
+      $response = ['success' => true, 'data' => $recent];
+      break;
+
+    case 'saveRecentSnippets':
+      $data = $input['data'] ?? [];
+      $file = 'users/default/recent_snippets.json';
+      if( write_json_file($file, $data) )
+        $response = ['success' => true];
+      else
+        $response = ['success' => false, 'message' => 'Failed to save recent snippets'];
       break;
 
     default:
