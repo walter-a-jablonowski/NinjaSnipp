@@ -29,7 +29,7 @@ $manager = new SnippetManager( $config['dataPaths'] ?? ['data']);
         <span class="fw-bold">Ninja Snipp</span>
       </a>
       
-      <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarNav">
+      <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarNav">
         <span class="navbar-toggler-icon"></span>
       </button>
       
@@ -52,8 +52,12 @@ $manager = new SnippetManager( $config['dataPaths'] ?? ['data']);
   <div class="container-fluid">
     <div class="row">
       <!-- Sidebar Navigation -->
-      <nav id="sidebarNav" class="col-lg-3 col-xl-2 d-lg-block bg-light sidebar collapse">
-        <div class="position-sticky pt-1">
+      <nav id="sidebarNav" class="col-lg-3 col-xl-2 d-lg-block bg-light sidebar collapse offcanvas-lg offcanvas-start">
+        <div class="offcanvas-header d-lg-none">
+          <h5 class="offcanvas-title">Navigation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebarNav"></button>
+        </div>
+        <div class="position-sticky pt-1 offcanvas-body">
           <!-- Data Folder Selection -->
           <div class="mb-3">
             <select id="dataFolderSelect" class="form-select" title="Data folder">
