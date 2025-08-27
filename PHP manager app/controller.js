@@ -74,6 +74,23 @@ class SnippetManager
       if( element ) element.addEventListener(event, handler);
     });
 
+    // Auto-focus inputs when modals open
+    const newSnippetModalEl = document.getElementById('newSnippetModal');
+    if( newSnippetModalEl ) {
+      newSnippetModalEl.addEventListener('shown.bs.modal', () => {
+        const input = document.getElementById('snippetName');
+        if( input ) input.focus();
+      });
+    }
+
+    const newFolderModalEl = document.getElementById('newFolderModal');
+    if( newFolderModalEl ) {
+      newFolderModalEl.addEventListener('shown.bs.modal', () => {
+        const input = document.getElementById('folderName');
+        if( input ) input.focus();
+      });
+    }
+
     // Allow pressing Enter to submit the New Snippet and New Folder forms
     const newSnippetForm = document.getElementById('newSnippetForm');
     if( newSnippetForm ) {
