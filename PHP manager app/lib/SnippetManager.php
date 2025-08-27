@@ -337,6 +337,18 @@ class SnippetManager
       if( $data['_type'] === 'yml' )
       {
         unset($data['_type'], $data['_name']);
+        // Ensure key order: sh, usage, content come first
+        $ordered = [];
+        foreach( ['sh', 'usage', 'content'] as $k )
+        {
+          if( array_key_exists($k, $data) )
+          {
+            $ordered[$k] = $data[$k];
+            unset($data[$k]);
+          }
+        }
+        // Append any remaining keys in their existing order
+        $data = $ordered + $data;
         $yamlContent = Yaml::dump($data, 4, 2);
         return file_put_contents($fullPath, $yamlContent) !== false;
       }
