@@ -859,7 +859,6 @@ class SnippetManager
     const result = await this.apiCall('saveSnippet', { path, data });
     
     if( result.success ) {
-      // this.showSuccess('Snippet created successfully');
       this.loadFiles(this.currentPath);
       
       // Close modal
@@ -887,7 +886,6 @@ class SnippetManager
     const result = await this.apiCall('createFolder', { folderPath });
     
     if( result.success ) {
-      this.showSuccess('Folder created successfully');
       this.loadFiles(this.currentPath);
       
       // Close modal
