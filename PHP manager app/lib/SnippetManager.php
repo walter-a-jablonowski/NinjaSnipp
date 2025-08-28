@@ -523,13 +523,24 @@ class SnippetManager
 
   private function findSnippetByName( string $name ) : ?array
   {
-    $items = $this->listFiles();
+    return $this->searchSnippetRecursively($name, '');
+  }
+
+  private function searchSnippetRecursively( string $name, string $subPath ) : ?array
+  {
+    $items = $this->listFiles($subPath);
     
     foreach( $items as $item )
     {
       if( $item['type'] === 'file' && $item['name'] === $name )
       {
-        return $this->loadSnippet($item['path'] . '.' . $item['extension']);
+        return $this->loadSnippet($item['path']);
+      }
+      elseif( $item['type'] === 'folder' )
+      {
+        $result = $this->searchSnippetRecursively($name, $item['path']);
+        if( $result )
+          return $result;
       }
     }
     
