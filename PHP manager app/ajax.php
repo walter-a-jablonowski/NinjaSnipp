@@ -150,14 +150,19 @@ try {
     // --- User data: recent snippets ---
     case 'getRecentSnippets':
       $file = 'users/default/recent_snippets.json';
-      $recent = read_json_file($file, []);
+      $allRecent = read_json_file($file, []);
+      $currentDataLabel = $manager->getCurrentDataLabel();
+      $recent = $allRecent[$currentDataLabel] ?? [];
       $response = ['success' => true, 'data' => $recent];
       break;
 
     case 'saveRecentSnippets':
       $data = $input['data'] ?? [];
       $file = 'users/default/recent_snippets.json';
-      if( write_json_file($file, $data) )
+      $allRecent = read_json_file($file, []);
+      $currentDataLabel = $manager->getCurrentDataLabel();
+      $allRecent[$currentDataLabel] = $data;
+      if( write_json_file($file, $allRecent) )
         $response = ['success' => true];
       else
         $response = ['success' => false, 'message' => 'Failed to save recent snippets'];

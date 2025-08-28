@@ -976,6 +976,11 @@ class SnippetManager
     
     if( result.success ) {
       this.currentPath = '';
+      // Load recent snippets for the new data folder
+      const recentResult = await this.apiCall('getRecentSnippets');
+      if( recentResult.success ) {
+        this.recentSnippets = recentResult.data;
+      }
       this.loadFiles();
     }
     else {

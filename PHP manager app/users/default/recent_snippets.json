@@ -1,32 +1,21 @@
-[
-    {
-        "path": "la.yml",
-        "name": "la",
-        "timestamp": 1756314349747
-    },
-    {
-        "path": "html-form.yml",
-        "name": "html-form",
-        "timestamp": 1756302424277
-    },
-    {
-        "path": "example-array.yml",
-        "name": "example-array",
-        "timestamp": 1756302423037
-    },
-    {
-        "path": "common/sub_2/function-template_2.yml",
-        "name": "function-template_2",
-        "timestamp": 1756301675086
-    },
-    {
-        "path": "common/function-template.yml",
-        "name": "function-template",
-        "timestamp": 1756301663568
-    },
-    {
-        "path": "common/error-handling.yml",
-        "name": "error-handling",
-        "timestamp": 1756301655998
-    }
-]
+{
+    "Demo 1": [
+        {
+            "path": "html-form.yml",
+            "name": "html-form",
+            "timestamp": 1756386982598
+        },
+        {
+            "path": "example-array.yml",
+            "name": "example-array",
+            "timestamp": 1756386947412
+        }
+    ],
+    "Demo 2": [
+        {
+            "path": "README.md",
+            "name": "README",
+            "timestamp": 1756386956975
+        }
+    ]
+}
