@@ -10,8 +10,9 @@ class SnippetManager
   private string $currentDataPath;
   private string $currentDataLabel;
   private bool $foldersFirst = true;
+  private array $config = [];
 
-  public function __construct( array $dataPaths = ['data'] )
+  public function __construct( array $dataPaths = ['data'], array $config = [] )
   {
     // Normalize into associative array label => path
     $normalized = [];
@@ -38,6 +39,7 @@ class SnippetManager
       $normalized = ['data' => 'data'];
 
     $this->dataPaths = $normalized;
+    $this->config = $config;
 
     // Initialize current selection to first entry
     $firstLabel = array_key_first($this->dataPaths);
@@ -510,12 +512,25 @@ class SnippetManager
   private function processIncludes( string $content ) : string
   {
     // Double-brace include: {{ include: "Snippet name" }} (allow inner spaces)
-    return preg_replace_callback('/\{\{\s*include:\s*["\']([^"\']+)["\']\s*\}\}/', function($matches) {
-      $includeName = $matches[1];
+    return preg_replace_callback('/^(\s*)\{\{\s*include:\s*["\']([^"\']+)["\']\s*\}\}/m', function($matches) {
+      $indent = $matches[1];
+      $includeName = $matches[2];
       $includeSnippet = $this->findSnippetByName($includeName);
       
-      if( $includeSnippet )
-        return $this->processIncludes($includeSnippet['content'] ?? '');
+      if( $includeSnippet ) {
+        $includedContent = $this->processIncludes($includeSnippet['content'] ?? '');
+        
+        // Apply same indentation if config setting is enabled
+        if( isset($this->config['render']['includedSameIndent']) && $this->config['render']['includedSameIndent'] ) {
+          $lines = explode("\n", $includedContent);
+          $indentedLines = array_map(function($line) use ($indent) {
+            return $line === '' ? $line : $indent . $line;
+          }, $lines);
+          return implode("\n", $indentedLines);
+        }
+        
+        return $includedContent;
+      }
         
       return $matches[0]; // Return original if missing
     }, $content);

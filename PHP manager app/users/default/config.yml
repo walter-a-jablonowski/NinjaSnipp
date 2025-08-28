@@ -2,8 +2,9 @@
 nav:
   foldersFirst: false
 
-# render:
-#   highlightInclude: true  # light grey, currently left out cause we already have placeholder color (see tesks)
+render:
+  includedSameIndent: true
+  # highlightInclude: true  # light grey, currently left out cause we already have placeholder color (see tesks)
 
 dataPaths:
   Demo 1: 'data/demo_data_1'
