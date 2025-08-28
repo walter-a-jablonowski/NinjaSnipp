@@ -8,8 +8,8 @@ require_once 'vendor/autoload.php';
 
 $config  = Yaml::parseFile('users/default/config.yml');
 $manager = new SnippetManager( $config['dataPaths'] ?? ['data']);
-if( isset($config['foldersFirst']) )
-  $manager->setFoldersFirst( (bool)$config['foldersFirst'] );
+if( isset($config['nav']['foldersFirst']) )
+  $manager->setFoldersFirst( (bool)$config['nav']['foldersFirst'] );
 
 ?>
 <!DOCTYPE html>

@@ -1,5 +1,9 @@
 
-foldersFirst: false
+nav:
+  foldersFirst: false
+
+render:
+  highlightInclude: true
 
 dataPaths:
   Demo 1: 'data/demo_data_1'
