@@ -147,8 +147,6 @@ class SnippetManager
     this.setActionButtonsEnabled(false);
   }
 
-  
-
   async apiCall(action, data = {}) {
     try {
       const response = await fetch('ajax.php', {
