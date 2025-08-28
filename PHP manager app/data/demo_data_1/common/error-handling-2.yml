@@ -1,0 +1,7 @@
+sh: err--
+usage: |
+  Basic error handling pattern for functions.
+  Can be included in misc snippets.
+
+content: |
+  // Some {{var}} comment

@@ -4,7 +4,7 @@ usage: |
   Can be included in misc snippets.
 
 content: |
-  // Input validation
+  {{ include: "error-handling-2" }}
   if( ! {{ paramName }} ) {
     throw new {{errorType=Error|TypeError|RangeError}}('{{ errorMessage=Invalid parameter provided }}');
   }

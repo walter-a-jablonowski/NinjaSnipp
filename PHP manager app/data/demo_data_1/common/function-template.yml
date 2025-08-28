@@ -1,7 +1,6 @@
 sh: func--
 usage: |
-  Creates a function template with documentation.
-  Includes common function patterns.
+  Included in error-handling.yml as a sub include
 
 content: |
   /**
