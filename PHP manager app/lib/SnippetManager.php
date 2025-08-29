@@ -178,7 +178,7 @@ class SnippetManager
     if( empty($targetPath) )
       return [];
     
-    // Build full path to the target (relative to data root, not current subpath)
+    // Build full path to the target (relative to data base, ins of current subpath)
     $targetFullPath = $this->currentDataPath . "/$targetPath";
     
     // Try different path variations
