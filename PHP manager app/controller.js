@@ -52,13 +52,17 @@ class SnippetManager
       });
     }
     
-    // Button event bindings
+    // Button event bindings - handle desktop and mobile versions
     const buttonEvents = [
       ['searchBtn', 'click', () => this.performSearch()],
       ['dataFolderSelect', 'change', (e) => this.changeDataFolder(e.target.value)],
+      ['dataFolderSelectDesktop', 'change', (e) => this.changeDataFolder(e.target.value)],
       ['newSnippetBtn', 'click', () => this.showModal('newSnippetModal')],
+      ['newSnippetBtnDesktop', 'click', () => this.showModal('newSnippetModal')],
       ['newFolderBtn', 'click', () => this.showModal('newFolderModal')],
+      ['newFolderBtnDesktop', 'click', () => this.showModal('newFolderModal')],
       ['backBtn', 'click', () => this.goBack()],
+      ['backBtnDesktop', 'click', () => this.goBack()],
       ['createSnippetBtn', 'click', () => this.createSnippet()],
       ['createFolderBtn', 'click', () => this.createFolder()],
       ['render-tab', 'click', () => this.composeAndRenderInline()],
@@ -66,7 +70,8 @@ class SnippetManager
       ['saveSnippetBtn', 'click', () => this.saveCurrentSnippet()],
       ['duplicateSnippetBtn', 'click', () => this.duplicateCurrentSnippet()],
       ['deleteSnippetBtn', 'click', () => this.deleteCurrentSnippet()],
-      ['recent-tab', 'click', () => this.loadRecentSnippets()]
+      ['recent-tab', 'click', () => this.loadRecentSnippets()],
+      ['recent-tab-desktop', 'click', () => this.loadRecentSnippets()]
     ];
 
     buttonEvents.forEach(([elementId, event, handler]) => {
@@ -129,7 +134,7 @@ class SnippetManager
     
     // Global document events
     document.addEventListener('click', (e) => {
-      // If the click is inside any dropdown control or its menu, do not trigger navigation
+      // If the click is inside any dropdown control or its menu, no trigger of navigation
       if( e.target.closest('.dropdown') || e.target.closest('.dropdown-menu') ) return;
       if( e.target.closest('.file-item') ) this.handleFileClick(e);
       else this.hideContextMenu();
@@ -167,6 +172,7 @@ class SnippetManager
 
   async loadFiles(subPath = '') {
     this.showLoading('fileList');
+    this.showLoading('fileListDesktop');
     
     const result = await this.apiCall('listFiles', { subPath });
     
@@ -179,49 +185,55 @@ class SnippetManager
     }
     
     this.hideLoading('fileList');
+    this.hideLoading('fileListDesktop');
   }
 
   renderFileList(files) {
-    const fileList = document.getElementById('fileList');
-    if( ! fileList ) return;
+    // Render to mobile and desktop file lists
+    const containers = ['fileList', 'fileListDesktop'];
     
-    if( files.length === 0 ) {
-      fileList.innerHTML = `
-        <div class="empty-state">
-          <i class="bi bi-folder-x"></i>
-          <p>No files found in this folder</p>
-        </div>
-      `;
-      return;
-    }
-
-    fileList.innerHTML = files.map(file => {
-      const icon = file.type === 'folder' ? 'bi-folder' : 
-                   file.extension === 'yml' ? 'bi-file-code' : 'bi-file-text';
-      const modified = file.modified ? new Date(file.modified * 1000).toLocaleDateString() : '';
-      const includedClass = file.isIncluded ? ' file-item-included' : '';
-      const includedIcon = file.isIncluded ? '<i class="bi bi-link-45deg text-primary ms-1" title="Included file"></i>' : '';
+    containers.forEach(containerId => {
+      const fileList = document.getElementById(containerId);
+      if( ! fileList ) return;
       
-      return `
-        <div class="list-group-item file-item${includedClass}" data-path="${file.path}" data-type="${file.type}" data-extension="${file.extension || ''}">
-          <div class="d-flex align-items-center">
-            <i class="bi ${icon} file-icon me-2"></i>
-            <div class="flex-grow-1">
-              <div class="fw-medium">${file.name}${includedIcon}</div>
-              ${file.type === 'file' ? `<div class="file-meta">${file.extension.toUpperCase()} • ${modified}</div>` : ''}
-            </div>
-            <div class="dropdown ms-2">
-              <button class="btn btn-sm btn-link text-muted p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="More actions">
-                <i class="bi bi-three-dots-vertical"></i>
-              </button>
-              <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" href="#" data-action="delete">Delete</a></li>
-              </ul>
+      if( files.length === 0 ) {
+        fileList.innerHTML = `
+          <div class="empty-state">
+            <i class="bi bi-folder-x"></i>
+            <p>No files found in this folder</p>
+          </div>
+        `;
+        return;
+      }
+
+      fileList.innerHTML = files.map(file => {
+        const icon = file.type === 'folder' ? 'bi-folder' : 
+                     file.extension === 'yml' ? 'bi-file-code' : 'bi-file-text';
+        const modified = file.modified ? new Date(file.modified * 1000).toLocaleDateString() : '';
+        const includedClass = file.isIncluded ? ' file-item-included' : '';
+        const includedIcon = file.isIncluded ? '<i class="bi bi-link-45deg text-primary ms-1" title="Included file"></i>' : '';
+        
+        return `
+          <div class="list-group-item file-item${includedClass}" data-path="${file.path}" data-type="${file.type}" data-extension="${file.extension || ''}">
+            <div class="d-flex align-items-center">
+              <i class="bi ${icon} file-icon me-2"></i>
+              <div class="flex-grow-1">
+                <div class="fw-medium">${file.name}${includedIcon}</div>
+                ${file.type === 'file' ? `<div class="file-meta">${file.extension.toUpperCase()} • ${modified}</div>` : ''}
+              </div>
+              <div class="dropdown ms-2">
+                <button class="btn btn-sm btn-link text-muted p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="More actions">
+                  <i class="bi bi-three-dots-vertical"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  <li><a class="dropdown-item" href="#" data-action="delete">Delete</a></li>
+                </ul>
+              </div>
             </div>
           </div>
-        </div>
-      `;
-    }).join('');
+        `;
+      }).join('');
+    });
   }
 
   goBack() {
@@ -494,7 +506,7 @@ class SnippetManager
       tab.show();
     }
     catch(e) {
-      // No-op if Bootstrap is unavailable
+      // No-op if BS is unavailable
     }
   }
 
@@ -739,35 +751,40 @@ class SnippetManager
   }
 
   renderSearchResults(results) {
-    const fileList = document.getElementById('fileList');
-    if( ! fileList ) return;
+    // Render mobile and desktop file lists
+    const containers = ['fileList', 'fileListDesktop'];
     
-    if( results.length === 0 ) {
-      fileList.innerHTML = `
-        <div class="empty-state">
-          <i class="bi bi-search"></i>
-          <p>No snippets found matching your search</p>
-        </div>
-      `;
-      return;
-    }
-
-    fileList.innerHTML = results.map(result => {
-      const icon = result.type === 'yml' ? 'bi-file-code' : 'bi-file-text';
+    containers.forEach(containerId => {
+      const fileList = document.getElementById(containerId);
+      if( ! fileList ) return;
       
-      return `
-        <div class="list-group-item file-item" data-path="${result.path}" 
-             data-type="file" data-extension="${result.type}">
-          <div class="d-flex align-items-center">
-            <i class="bi ${icon} file-icon me-2"></i>
-            <div class="flex-grow-1">
-              <div class="fw-medium">${result.name}</div>
-              <div class="file-meta">${result.type.toUpperCase()} • ${result.path}</div>
+      if( results.length === 0 ) {
+        fileList.innerHTML = `
+          <div class="empty-state">
+            <i class="bi bi-search"></i>
+            <p>No snippets found matching your search</p>
+          </div>
+        `;
+        return;
+      }
+
+      fileList.innerHTML = results.map(result => {
+        const icon = result.type === 'yml' ? 'bi-file-code' : 'bi-file-text';
+        
+        return `
+          <div class="list-group-item file-item" data-path="${result.path}" 
+               data-type="file" data-extension="${result.type}">
+            <div class="d-flex align-items-center">
+              <i class="bi ${icon} file-icon me-2"></i>
+              <div class="flex-grow-1">
+                <div class="fw-medium">${result.name}</div>
+                <div class="file-meta">${result.type.toUpperCase()} • ${result.path}</div>
+              </div>
             </div>
           </div>
-        </div>
-      `;
-    }).join('');
+        `;
+      }).join('');
+    });
   }
 
   handleSearch(query) {
@@ -838,37 +855,42 @@ class SnippetManager
   
 
   loadRecentSnippets() {
-    const recentList = document.getElementById('recentList');
-    if( ! recentList ) return;
+    // Update mobile and desktop recent lists
+    const containers = ['recentList', 'recentListDesktop'];
     
-    if( this.recentSnippets.length === 0 ) {
-      recentList.innerHTML = `
-        <div class="empty-state">
-          <i class="bi bi-clock-history"></i>
-          <p>No recent snippets</p>
-        </div>
-      `;
-      return;
-    }
-
-    recentList.innerHTML = this.recentSnippets.map(item => {
-      const extension = item.path.split('.').pop();
-      const icon = extension === 'yml' ? 'bi-file-code' : 'bi-file-text';
-      const timeAgo = this.timeAgo(item.timestamp);
+    containers.forEach(containerId => {
+      const recentList = document.getElementById(containerId);
+      if( ! recentList ) return;
       
-      return `
-        <div class="list-group-item file-item" data-path="${item.path}" 
-             data-type="file" data-extension="${extension}">
-          <div class="d-flex align-items-center">
-            <i class="bi ${icon} file-icon me-2"></i>
-            <div class="flex-grow-1">
-              <div class="fw-medium">${item.name}</div>
-              <div class="file-meta">${timeAgo}</div>
+      if( this.recentSnippets.length === 0 ) {
+        recentList.innerHTML = `
+          <div class="empty-state">
+            <i class="bi bi-clock-history"></i>
+            <p>No recent snippets</p>
+          </div>
+        `;
+        return;
+      }
+
+      recentList.innerHTML = this.recentSnippets.map(item => {
+        const extension = item.path.split('.').pop();
+        const icon = extension === 'yml' ? 'bi-file-code' : 'bi-file-text';
+        const timeAgo = this.timeAgo(item.timestamp);
+        
+        return `
+          <div class="list-group-item file-item" data-path="${item.path}" 
+               data-type="file" data-extension="${extension}">
+            <div class="d-flex align-items-center">
+              <i class="bi ${icon} file-icon me-2"></i>
+              <div class="flex-grow-1">
+                <div class="fw-medium">${item.name}</div>
+                <div class="file-meta">${timeAgo}</div>
+              </div>
             </div>
           </div>
-        </div>
-      `;
-    }).join('');
+        `;
+      }).join('');
+    });
   }
 
   timeAgo(timestamp) {
@@ -919,12 +941,15 @@ class SnippetManager
       await this.loadFiles(this.currentPath);
 
       // Select and open the newly created snippet, then switch to Edit tab
-      const list = document.getElementById('fileList');
-      if( list ) {
-        document.querySelectorAll('.file-item.active').forEach(item => item.classList.remove('active'));
-        const newItem = list.querySelector(`.file-item[data-path="${path}"]`);
-        if( newItem ) newItem.classList.add('active');
-      }
+      const listContainers = ['fileList', 'fileListDesktop'];
+      listContainers.forEach(containerId => {
+        const list = document.getElementById(containerId);
+        if( list ) {
+          document.querySelectorAll(`#${containerId} .file-item.active`).forEach(item => item.classList.remove('active'));
+          const newItem = list.querySelector(`.file-item[data-path="${path}"]`);
+          if( newItem ) newItem.classList.add('active');
+        }
+      });
       await this.loadSnippet(path);
       this.activateTab('edit-tab');
 
@@ -980,6 +1005,15 @@ class SnippetManager
         this.recentSnippets = recentResult.data;
       }
       this.loadFiles();
+      
+      // Sync the misc select element
+      const selects = ['dataFolderSelect', 'dataFolderSelectDesktop'];
+      selects.forEach(selectId => {
+        const select = document.getElementById(selectId);
+        if( select && select.value !== dataPath ) {
+          select.value = dataPath;
+        }
+      });
     }
     else {
       this.showError('Failed to change data folder: ' + result.message);
