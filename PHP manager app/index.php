@@ -32,7 +32,7 @@ if( isset($config['nav']['foldersFirst']) )
         <span class="fw-bold">Ninja Snipp</span>
       </a>
       
-      <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarNav">
+      <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarNav" aria-controls="sidebarNav" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
       
@@ -52,81 +52,84 @@ if( isset($config['nav']['foldersFirst']) )
   <!-- Search History Dropdown -->
   <div id="searchHistory" class="dropdown-menu position-absolute" style="display: none; z-index: 1050;"></div>
 
-  <div class="container-fluid">
-    <div class="row">
-      <!-- Sidebar Navigation -->
-      <nav id="sidebarNav" class="col-lg-3 col-xl-2 d-lg-block bg-light sidebar collapse offcanvas-lg offcanvas-start">
-        <div class="offcanvas-header d-lg-none">
-          <h5 class="offcanvas-title">Navigation</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebarNav"></button>
-        </div>
-        <div class="position-sticky pt-1 offcanvas-body">
-          <!-- Data Folder Selection -->
-          <div class="mb-3">
-            <select id="dataFolderSelect" class="form-select" title="Data folder">
-              <?php foreach( $manager->getDataPaths() as $label => $path ): ?>
-                <option value="<?= htmlspecialchars($path) ?>" <?= $path === $manager->getCurrentDataPath() ? 'selected' : '' ?>>
-                  <?= htmlspecialchars($label) ?>
-                </option>
-              <?php endforeach; ?>
-            </select>
+  <div class="app-shell layout">
+      <!-- Sidebar / Offcanvas (overlay on <lg, static on >=lg) -->
+      <div class="app-sidebar">
+        <div class="offcanvas offcanvas-start offcanvas-lg" tabindex="-1" id="sidebarNav" aria-labelledby="sidebarNavLabel">
+          <div class="offcanvas-header border-bottom">
+            <h5 class="offcanvas-title" id="sidebarNavLabel">Navigation</h5>
+            <button type="button" class="btn-close d-lg-none" data-bs-dismiss="offcanvas" aria-label="Close"></button>
           </div>
-
-          <!-- Tab Control -->
-          <ul class="nav nav-pills mb-3 gap-1 flex-lg-row flex-nowrap" id="sidebarTabs" role="tablist">
-            <li class="nav-item" role="presentation">
-              <button class="nav-link small py-1 px-2 active" id="files-tab" data-bs-toggle="pill" data-bs-target="#files-pane" type="button" role="tab">
-                <i class="bi bi-folder me-2"></i>Files
-              </button>
-            </li>
-            <li class="nav-item" role="presentation">
-              <button class="nav-link small py-1 px-2" id="recent-tab" data-bs-toggle="pill" data-bs-target="#recent-pane" type="button" role="tab">
-                <i class="bi bi-clock-history me-2"></i>Recent
-              </button>
-            </li>
-          </ul>
-
-          <!-- Tab Content -->
-          <div class="tab-content">
-            <!-- Files & Folders Tab -->
-            <div class="tab-pane fade show active" id="files-pane" role="tabpanel">
-              <!-- Action Buttons -->
-              <div class="d-flex gap-2 mb-3">
-                <button class="btn btn-sm btn-outline-secondary" id="backBtn" title="Back">
-                  <i class="bi bi-arrow-left"></i>
-                </button>
-                <button class="btn btn-sm btn-success" id="newSnippetBtn" title="New Snippet">
-                  <i class="bi bi-plus"></i>
-                </button>
-                <button class="btn btn-sm btn-primary" id="newFolderBtn" title="New Folder">
-                  <i class="bi bi-folder-plus"></i>
-                </button>
-                <button class="btn btn-sm btn-warning" id="selectBtn" title="Select" disabled>
-                  <i class="bi bi-list-check"></i>
-                </button>
-                <button class="btn btn-sm" id="bulkActionsBtn" title="Bulk actions" disabled>
-                  Actions
-                </button>
+          <div class="offcanvas-body p-0">
+            <div class="p-3">
+              <!-- Data Folder Selection -->
+              <div class="mb-3">
+                <select id="dataFolderSelect" class="form-select" title="Data folder">
+                  <?php foreach( $manager->getDataPaths() as $label => $path ): ?>
+                    <option value="<?= htmlspecialchars($path) ?>" <?= $path === $manager->getCurrentDataPath() ? 'selected' : '' ?>>
+                      <?= htmlspecialchars($label) ?>
+                    </option>
+                  <?php endforeach; ?>
+                </select>
               </div>
 
-              <!-- File List -->
-              <div id="fileList" class="list-group">
-                <!-- Files will be loaded here -->
+              <!-- Tab Control -->
+              <ul class="nav nav-pills mb-3 gap-1 flex-lg-row flex-nowrap" id="sidebarTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link small py-1 px-2 active" id="files-tab" data-bs-toggle="pill" data-bs-target="#files-pane" type="button" role="tab">
+                    <i class="bi bi-folder me-2"></i>Files
+                  </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link small py-1 px-2" id="recent-tab" data-bs-toggle="pill" data-bs-target="#recent-pane" type="button" role="tab">
+                    <i class="bi bi-clock-history me-2"></i>Recent
+                  </button>
+                </li>
+              </ul>
+
+              <!-- Tab Content -->
+              <div class="tab-content">
+                <!-- Files & Folders Tab -->
+                <div class="tab-pane fade show active" id="files-pane" role="tabpanel">
+                  <!-- Action Buttons -->
+                  <div class="d-flex gap-2 mb-3">
+                    <button class="btn btn-sm btn-outline-secondary" id="backBtn" title="Back">
+                      <i class="bi bi-arrow-left"></i>
+                    </button>
+                    <button class="btn btn-sm btn-success" id="newSnippetBtn" title="New Snippet">
+                      <i class="bi bi-plus"></i>
+                    </button>
+                    <button class="btn btn-sm btn-primary" id="newFolderBtn" title="New Folder">
+                      <i class="bi bi-folder-plus"></i>
+                    </button>
+                    <button class="btn btn-sm btn-warning" id="selectBtn" title="Select" disabled>
+                      <i class="bi bi-list-check"></i>
+                    </button>
+                    <button class="btn btn-sm" id="bulkActionsBtn" title="Bulk actions" disabled>
+                      Actions
+                    </button>
+                  </div>
+
+                  <!-- File List -->
+                  <div id="fileList" class="list-group">
+                    <!-- Files will be loaded here -->
+                  </div>
+                </div>
+
+                <!-- Recent Tab -->
+                <div class="tab-pane fade" id="recent-pane" role="tabpanel">
+                  <div id="recentList" class="list-group">
+                    <!-- Recent snippets will be loaded here -->
+                  </div>
+                </div>
               </div>
             </div>
-
-            <!-- Recent Tab -->
-            <div class="tab-pane fade" id="recent-pane" role="tabpanel">
-              <div id="recentList" class="list-group">
-                <!-- Recent snippets will be loaded here -->
-              </div>
-            </div>
           </div>
         </div>
-      </nav>
+      </div>
 
       <!-- Main Content -->
-      <main class="col-lg-9 col-xl-10 ms-sm-auto px-md-4">
+      <main class="app-content px-3 pb-4 overflow-auto">
         <div class="pt-3">
           <!-- Content Tab Control -->
           <ul class="nav nav-tabs mb-3" id="contentTabs" role="tablist">
@@ -209,7 +212,6 @@ if( isset($config['nav']['foldersFirst']) )
           </div>
         </div>
       </main>
-    </div>
   </div>
 
   <!-- Modals -->

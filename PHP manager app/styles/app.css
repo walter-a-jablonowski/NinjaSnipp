@@ -1,37 +1,60 @@
-.sidebar {
-  min-height: calc(100vh - 56px);
-  border-right: 1px solid #dee2e6;
-  padding-right: 0; /* remove gutter space on the right */
+/* Layout helpers for navbar + sidebar */
+body {
+  min-height: 100vh;
+}
+.layout {
+  height: calc(100vh - 56px); /* default navbar height */
 }
 
-.sidebar .position-sticky {
-  top: 76px;
-  height: calc(100vh - 76px);
+/* App shell: flex-based layout instead of grid */
+.app-shell {
   display: flex;
-  flex-direction: column;
-  overflow: hidden; /* only inner lists scroll */
 }
 
-/* Sidebar tab content fills remaining height */
-.sidebar .tab-content {
-  flex: 1;
-  min-height: 0;
+.app-content {
+  flex: 1 1 auto;
+  min-width: 0; /* allow flex child to shrink properly */
 }
 
-/* Only the visible pane becomes a flex column */
-.sidebar .tab-pane.active,
-.sidebar .tab-pane.show {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-height: 0;
+.app-sidebar {
+  position: relative; /* container for static offcanvas on lg+ */
 }
 
-/* Lists scroll independently */
+/* Offcanvas base styling: keep light background on all sizes */
+.app-sidebar .offcanvas {
+  background-color: var(--bs-light);
+}
+
+@media (min-width: 992px) { /* lg */
+  /* On lg+ make the offcanvas behave like a static sidebar */
+  .offcanvas-lg.offcanvas-start {
+    position: static;
+    transform: none;
+    visibility: visible !important;
+  }
+  .offcanvas-lg .offcanvas-body {
+    overflow-y: auto; /* scroll menu if needed */
+  }
+
+  /* Static sidebar panel (lg+) */
+  .app-sidebar {
+    --sidebar-width: 280px;
+    flex: 0 0 var(--sidebar-width);
+    width: var(--sidebar-width);
+    background-color: var(--bs-light);
+    border-right: 1px solid #dee2e6;
+  }
+  .app-sidebar .offcanvas {
+    height: 100%;
+    width: 100%;
+  }
+}
+
+/* Sidebar tab content no special flex needed; offcanvas-body scrolls */
+
+/* Lists scroll */
 #fileList,
 #recentList {
-  flex: 1;
-  min-height: 0; /* important for flex scrolling */
   overflow-y: auto;
   scrollbar-gutter: stable;
 }
@@ -290,39 +313,10 @@
   height: 1rem;
 }
 
-/* Offcanvas sidebar styling */
-.sidebar.offcanvas-lg {
-  width: 280px;
-}
-
-.sidebar .offcanvas-header {
-  border-bottom: 1px solid #dee2e6;
-  padding: 1rem;
-}
-
-.sidebar .offcanvas-body {
-  padding: 0;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
+/* Offcanvas sidebar styling is mostly Bootstrap defaults */
 
 /* Responsive adjustments */
 @media (max-width: 991.98px) {
-  .sidebar {
-    min-height: auto;
-  }
-  
-  .sidebar .position-sticky {
-    position: relative !important;
-    top: auto !important;
-    height: auto !important;
-  }
-  
-  .sidebar .offcanvas-body {
-    padding: 1rem;
-  }
-  
   #searchInput {
     width: 200px;
   }
@@ -332,7 +326,6 @@
   #searchInput {
     width: 150px;
   }
-  
   .navbar-brand span {
     display: none;
   }
