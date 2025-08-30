@@ -1,6 +1,7 @@
 /* Layout helpers for navbar + sidebar */
 body {
   min-height: 100vh;
+  overflow: hidden;
 }
 .layout {
   height: calc(100vh - 56px); /* default navbar height */
