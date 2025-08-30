@@ -14,6 +14,8 @@
   - first currently is default
 - `{{include: "Snippet name"}}`
 
+### Sample
+
 ![alt text](misc/img.png)
 
 
