@@ -1,5 +1,11 @@
 # NinjaSnipp
 
+A snippet manager app that has some special features
+
+- File system based, multiple source folders
+- Nested includes
+- "Soft links": Files and folders can be used multiple times
+
 ### File system include feature
 
 - File: `11 INCLUDE error-handling`
