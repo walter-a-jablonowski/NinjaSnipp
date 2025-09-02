@@ -2,7 +2,8 @@
 
 class SnippetManager
 {
-  constructor() {
+  constructor()
+  {
     this.currentPath = '';
     this.currentSnippet = null;
     this.currentDataPath = '';
@@ -16,7 +17,8 @@ class SnippetManager
     this.init();
   }
 
-  async init() {
+  async init()
+  {
     this.bindEvents();
     const dataFolderSelect = document.getElementById('dataFolderSelect');
     this.currentDataPath = dataFolderSelect?.value || '';
@@ -38,7 +40,8 @@ class SnippetManager
     this.setupSearchHistory();
   }
 
-  bindEvents() {
+  bindEvents()
+  {
     // Search functionality
     const searchInput = document.getElementById('searchInput');
     if( searchInput ) {
@@ -224,7 +227,8 @@ class SnippetManager
     }).join('');
   }
 
-  goBack() {
+  goBack()
+  {
     if( ! this.currentPath ) return; // already at base
     
     // Check if we have navigation history (for included folders)
@@ -241,7 +245,8 @@ class SnippetManager
     this.loadFiles(parent);
   }
 
-  handleFileClick(e) {
+  handleFileClick(e)
+  {
     const fileItem = e.target.closest('.file-item');
     const { path, type } = fileItem.dataset;
 
@@ -270,7 +275,8 @@ class SnippetManager
     }
   }
 
-  async loadSnippet(path) {
+  async loadSnippet(path)
+  {
     this.showLoading('editContent');
     
     const result = await this.apiCall('loadSnippet', { path });
@@ -309,7 +315,8 @@ class SnippetManager
     this.hideLoading('editContent');
   }
 
-  renderEditForm(snippet) {
+  renderEditForm(snippet)
+  {
     const editEmptyState = document.getElementById('editEmptyState');
     const editForm = document.getElementById('editForm');
     const snippetNameEdit = document.getElementById('snippetNameEdit');
@@ -346,7 +353,8 @@ class SnippetManager
     this.setActionButtonsEnabled(true);
   }
 
-  configureRenderTab(enabled) {
+  configureRenderTab(enabled)
+  {
     const renderTab = document.getElementById('render-tab');
     if( renderTab ) {
       renderTab.disabled = !enabled;
@@ -354,7 +362,8 @@ class SnippetManager
     }
   }
 
-  async saveCurrentSnippet() {
+  async saveCurrentSnippet()
+  {
     if( ! this.currentSnippet ) return;
 
     const nameInput = document.getElementById('snippetNameEdit');
@@ -399,7 +408,8 @@ class SnippetManager
     }
   }
 
-  async duplicateCurrentSnippet() {
+  async duplicateCurrentSnippet()
+  {
     if( ! this.currentSnippet ) return;
 
     const newName = prompt('Enter new name for the duplicate:', this.currentSnippet._name + '_copy');
@@ -420,7 +430,8 @@ class SnippetManager
     }
   }
 
-  async deleteCurrentSnippet() {
+  async deleteCurrentSnippet()
+  {
     if( ! this.currentSnippet ) return;
 
     if( ! confirm(`Are you sure you want to delete "${this.currentSnippet._name}"?`) ) return;
@@ -441,7 +452,8 @@ class SnippetManager
     }
   }
 
-  clearEditForm() {
+  clearEditForm()
+  {
     const editEmptyState = document.getElementById('editEmptyState');
     const editForm = document.getElementById('editForm');
     
@@ -461,7 +473,8 @@ class SnippetManager
     this.setActionButtonsEnabled(false);
   }
 
-  updateActionButtonsVisibility() {
+  updateActionButtonsVisibility()
+  {
     const activeTab = document.querySelector('#contentTabs .nav-link.active');
     const show = activeTab && activeTab.id === 'edit-tab';
     
@@ -479,14 +492,16 @@ class SnippetManager
     }
   }
 
-  setActionButtonsEnabled(enabled) {
+  setActionButtonsEnabled(enabled)
+  {
     ['saveSnippetBtn', 'duplicateSnippetBtn', 'deleteSnippetBtn'].forEach(id => {
       const btn = document.getElementById(id);
       if( btn ) btn.disabled = !enabled;
     });
   }
 
-  activateTab(tabButtonId) {
+  activateTab(tabButtonId)
+  {
     const btn = document.getElementById(tabButtonId);
     if( ! btn ) return;
     try {
@@ -498,7 +513,8 @@ class SnippetManager
     }
   }
 
-  async composeAndRenderInline() {
+  async composeAndRenderInline()
+  {
     if( ! this.currentSnippet || this.currentSnippet._type !== 'yml' ) return;
     const snippetContent = document.getElementById('snippetContent');
     const inlineContainer = document.getElementById('inlineSnippet');
@@ -513,7 +529,8 @@ class SnippetManager
     }
   }
 
-  renderInlineSnippet(composedText) {
+  renderInlineSnippet(composedText)
+  {
     const container = document.getElementById('inlineSnippet');
     if( ! container ) return;
     // Build HTML with editable placeholders
@@ -580,7 +597,8 @@ class SnippetManager
     return out;
   }
 
-  bindInlinePlaceholderEvents() {
+  bindInlinePlaceholderEvents()
+  {
     this.placeholderGroups = new Map();
     const nodes = document.querySelectorAll('#inlineSnippet .ph');
     nodes.forEach(el => {
@@ -660,7 +678,8 @@ class SnippetManager
     });
   }
 
-  openChoiceMenu(el) {
+  openChoiceMenu(el)
+  {
     const menu = document.getElementById('phChoiceMenu');
     if( ! menu ) return;
     const choices = JSON.parse(el.dataset.choices || '[]');
@@ -693,7 +712,8 @@ class SnippetManager
     document.addEventListener('click', clickOutside);
   }
 
-  closeChoiceMenu() {
+  closeChoiceMenu()
+  {
     const menu = document.getElementById('phChoiceMenu');
     if( ! menu ) return;
     menu.classList.remove('show');
@@ -704,7 +724,8 @@ class SnippetManager
     }
   }
 
-  getCurrentPlaceholderValues() {
+  getCurrentPlaceholderValues()
+  {
     const values = {};
     this.placeholderGroups.forEach((nodes, name) => {
       const el = nodes[0];
@@ -714,7 +735,8 @@ class SnippetManager
     return values;
   }
 
-  async updateRenderedOutput() {
+  async updateRenderedOutput()
+  {
     if( ! this.currentSnippet ) return;
     // Build final text from inline DOM: placeholders -> current values, literals -> their text
     const container = document.getElementById('inlineSnippet');
@@ -739,7 +761,8 @@ class SnippetManager
     if( copyRenderedBtn ) copyRenderedBtn.disabled = this.renderedText.length === 0;
   }
 
-  async copyRenderedContent() {
+  async copyRenderedContent()
+  {
     if( ! this.renderedText ) return;
     
     try {
@@ -751,7 +774,8 @@ class SnippetManager
     }
   }
 
-  async performSearch() {
+  async performSearch()
+  {
     const searchInput = document.getElementById('searchInput');
     const query = searchInput?.value.trim();
     if( ! query ) return;
@@ -772,7 +796,8 @@ class SnippetManager
     }
   }
 
-  renderSearchResults(results) {
+  renderSearchResults(results)
+  {
     const fileList = document.getElementById('fileList');
     if( ! fileList ) return;
     
@@ -804,7 +829,8 @@ class SnippetManager
     }).join('');
   }
 
-  handleSearch(query) {
+  handleSearch(query)
+  {
     if( query.length > 0 ) {
       this.showSearchHistory();
     }
@@ -813,7 +839,8 @@ class SnippetManager
     }
   }
 
-  showSearchHistory() {
+  showSearchHistory()
+  {
     const searchHistory = document.getElementById('searchHistory');
     const searchInput = document.getElementById('searchInput');
     if( ! searchHistory || ! searchInput ) return;
@@ -842,11 +869,13 @@ class SnippetManager
     });
   }
 
-  hideSearchHistory() {
+  hideSearchHistory()
+  {
     document.getElementById('searchHistory').style.display = 'none';
   }
 
-  setupSearchHistory() {
+  setupSearchHistory()
+  {
     // Hide search history when clicking outside
     document.addEventListener('click', (e) => {
       if( ! e.target.closest('#searchInput') && ! e.target.closest('#searchHistory') ) {
@@ -855,13 +884,15 @@ class SnippetManager
     });
   }
 
-  showContextMenu(e) {
+  showContextMenu(e)
+  {
     // Context menu functionality can be implemented here
     // For now, just prevent the default context menu
     e.preventDefault();
   }
 
-  hideContextMenu() {
+  hideContextMenu()
+  {
     // Hide any custom context menu if implemented
     const contextMenu = document.querySelector('.context-menu');
     if( contextMenu ) {
@@ -869,9 +900,8 @@ class SnippetManager
     }
   }
 
-  
-
-  loadRecentSnippets() {
+  loadRecentSnippets()
+  {
     const recentList = document.getElementById('recentList');
     if( ! recentList ) return;
     
@@ -905,7 +935,8 @@ class SnippetManager
     }).join('');
   }
 
-  timeAgo(timestamp) {
+  timeAgo(timestamp)
+  {
     const now = Date.now();
     const diff = now - timestamp;
     const minutes = Math.floor(diff / 60000);
@@ -918,12 +949,14 @@ class SnippetManager
     return `${days}d ago`;
   }
 
-  showModal(modalId) {
+  showModal(modalId)
+  {
     const modal = new bootstrap.Modal(document.getElementById(modalId));
     modal.show();
   }
 
-  async createSnippet() {
+  async createSnippet()
+  {
     const name = document.getElementById('snippetName').value.trim();
     const type = document.getElementById('snippetType').value;
     
@@ -974,7 +1007,8 @@ class SnippetManager
     }
   }
 
-  async createFolder() {
+  async createFolder()
+  {
     const name = document.getElementById('folderName').value.trim();
     
     if( ! name ) {
@@ -1001,7 +1035,8 @@ class SnippetManager
     }
   }
 
-  async changeDataFolder(dataPath) {
+  async changeDataFolder(dataPath)
+  {
     // Update local state and inform server for consistency
     this.currentDataPath = dataPath;
     const result = await this.apiCall('setDataPath', { dataPath });
@@ -1020,25 +1055,30 @@ class SnippetManager
     }
   }
 
-  showLoading(elementId) {
+  showLoading(elementId)
+  {
     const element = document.getElementById(elementId);
     element.classList.add('loading');
   }
 
-  hideLoading(elementId) {
+  hideLoading(elementId)
+  {
     const element = document.getElementById(elementId);
     element.classList.remove('loading');
   }
 
-  showSuccess(message) {
+  showSuccess(message)
+  {
     this.showAlert(message, 'success');
   }
 
-  showError(message) {
+  showError(message)
+  {
     this.showAlert(message, 'danger');
   }
 
-  showAlert(message, type) {
+  showAlert(message, type)
+  {
     const alertHtml = `
       <div class="alert alert-${type} alert-floating alert-dismissible fade show" role="alert">
         ${message}
@@ -1058,7 +1098,8 @@ class SnippetManager
     }, 5000);
   }
 
-  escapeHtml(text) {
+  escapeHtml(text)
+  {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
