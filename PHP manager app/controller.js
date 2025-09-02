@@ -1,5 +1,3 @@
-// Snippet Manager App JavaScript
-
 class SnippetManager
 {
   constructor()
