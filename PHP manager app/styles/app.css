@@ -205,6 +205,20 @@ body {
   background-color: #e7f1ff;
 }
 
+/* Literal editable chunks: look like normal text, but focusable */
+.ph-literal {
+  display: inline;
+  min-width: 0.1rem;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+}
+
+.ph-literal:focus {
+  outline: 1px dotted #bbb;
+  outline-offset: 1px;
+}
+
 .ph-choice {
   cursor: pointer;
   padding: 0 0.25rem;

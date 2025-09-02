@@ -522,16 +522,18 @@ class SnippetManager
     this.bindInlinePlaceholderEvents();
   }
 
-  buildInlineHtmlFromComposed(text) {
+  buildInlineHtmlFromComposed(text)
+  {
     const regex = /\{\{\s*([^}]*)\s*\}\}/g;
     let lastIndex = 0;
     let match;
     let out = '';
     while( (match = regex.exec(text)) ) {
       const before = text.slice(lastIndex, match.index);
-      out += this.escapeHtml(before);
-      const raw = match[1];
+      if( before )
+        out += `<span class="ph-literal" contenteditable="true" tabindex="0" data-chunk="${lastIndex}">${this.escapeHtml(before)}</span>`;
 
+      const raw   = match[1];
       const token = raw.trim();
 
       // Include directives: leave verbatim (should be pre-resolved server-side)
@@ -565,11 +567,16 @@ class SnippetManager
       }
       else {
         // No valid placeholder token; render verbatim
-        out += this.escapeHtml(match[0]);
+        out += `<span class="ph-literal" contenteditable="true" tabindex="0">${this.escapeHtml(match[0])}</span>`;
       }
       lastIndex = regex.lastIndex;
     }
-    out += this.escapeHtml(text.slice(lastIndex));
+
+    const tail = text.slice(lastIndex);
+
+    if( tail )
+      out += `<span class="ph-literal" contenteditable="true" tabindex="0" data-chunk="tail">${this.escapeHtml(tail)}</span>`;
+
     return out;
   }
 
@@ -599,22 +606,31 @@ class SnippetManager
     };
     const onBlur = (e) => {
       const el = e.currentTarget;
-      const name = el.dataset.ph;
-      const edited = el.dataset.edited === '1';
-      const defVal = el.dataset.default || '';
-      let value = (el.textContent || '').trim();
-      if( ! edited || value === '' ) value = defVal;
-      setGroupValue(name, value);
+      if( el.classList.contains('ph') ) {
+        const name = el.dataset.ph;
+        const edited = el.dataset.edited === '1';
+        const defVal = el.dataset.default || '';
+        let value = (el.textContent || '').trim();
+        if( ! edited || value === '' ) value = defVal;
+        setGroupValue(name, value);
+      }
+      else if( el.classList.contains('ph-literal') ) {
+        // Just update rendered output to reflect literal edits
+        this.updateRenderedOutput();
+      }
       this.closeChoiceMenu();
     };
     const onInput = (e) => {
       const el = e.currentTarget;
-      el.dataset.edited = '1';
-      const name = el.dataset.ph;
-      const value = el.textContent;
-      // mirror to siblings (avoid recursion by direct assignment)
-      const group = this.placeholderGroups.get(name) || [];
-      group.forEach(node => { if( node !== el ) node.textContent = value; });
+      if( el.classList.contains('ph') ) {
+        el.dataset.edited = '1';
+        const name = el.dataset.ph;
+        const value = el.textContent;
+        // mirror to siblings (avoid recursion by direct assignment)
+        const group = this.placeholderGroups.get(name) || [];
+        group.forEach(node => { if( node !== el ) node.textContent = value; });
+      }
+      // For both ph and ph-literal, recompute rendered output
       this.updateRenderedOutput();
     };
     const onKeyDown = (e) => {
@@ -632,6 +648,15 @@ class SnippetManager
       el.addEventListener('blur', onBlur);
       el.addEventListener('keydown', onKeyDown);
       if( el.classList.contains('ph-text') ) el.addEventListener('input', onInput);
+    });
+
+    // Bind events for literal editable spans
+    const literalNodes = document.querySelectorAll('#inlineSnippet .ph-literal');
+    literalNodes.forEach(el => {
+      el.addEventListener('focus', onFocus);
+      el.addEventListener('blur', onBlur);
+      el.addEventListener('input', onInput);
+      el.addEventListener('keydown', onKeyDown);
     });
   }
 
@@ -691,18 +716,27 @@ class SnippetManager
 
   async updateRenderedOutput() {
     if( ! this.currentSnippet ) return;
-    const snippetContent = document.getElementById('snippetContent');
-    const snippet = { ...this.currentSnippet, content: snippetContent?.value || this.currentSnippet.content };
-    const placeholders = this.getCurrentPlaceholderValues();
-    const result = await this.apiCall('renderSnippet', { snippet, placeholders });
-    if( result.success ) {
-      this.renderedText = result.rendered || '';
-      const copyRenderedBtn = document.getElementById('copyRenderedBtn');
-      if( copyRenderedBtn ) copyRenderedBtn.disabled = this.renderedText.length === 0;
-    }
-    else {
-      this.showError('Failed to render snippet: ' + result.message);
-    }
+    // Build final text from inline DOM: placeholders -> current values, literals -> their text
+    const container = document.getElementById('inlineSnippet');
+    if( ! container ) return;
+    const parts = [];
+    container.childNodes.forEach(node => {
+      if( node.nodeType === Node.TEXT_NODE ) {
+        parts.push(node.nodeValue);
+      }
+      else if( node.nodeType === Node.ELEMENT_NODE ) {
+        const el = node;
+        if( el.classList.contains('ph') || el.classList.contains('ph-literal') ) {
+          parts.push(el.textContent || '');
+        }
+        else {
+          parts.push(el.textContent || '');
+        }
+      }
+    });
+    this.renderedText = parts.join('');
+    const copyRenderedBtn = document.getElementById('copyRenderedBtn');
+    if( copyRenderedBtn ) copyRenderedBtn.disabled = this.renderedText.length === 0;
   }
 
   async copyRenderedContent() {
