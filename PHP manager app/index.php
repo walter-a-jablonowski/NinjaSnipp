@@ -217,7 +217,7 @@ if( isset($config['nav']['foldersFirst']) )
   <!-- Modals -->
   <!-- New Snippet Modal -->
   <div class="modal fade" id="newSnippetModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">New Snippet</h5>
@@ -248,7 +248,7 @@ if( isset($config['nav']['foldersFirst']) )
 
   <!-- New Folder Modal -->
   <div class="modal fade" id="newFolderModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">New Folder</h5>
@@ -272,7 +272,7 @@ if( isset($config['nav']['foldersFirst']) )
 
   <!-- Duplicate Snippet Modal -->
   <div class="modal fade" id="duplicateSnippetModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">Duplicate Snippet</h5>
@@ -296,7 +296,7 @@ if( isset($config['nav']['foldersFirst']) )
 
   <!-- Delete Snippet Modal -->
   <div class="modal fade" id="deleteSnippetModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">Delete Snippet</h5>
