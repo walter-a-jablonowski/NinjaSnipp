@@ -409,16 +409,28 @@ class SnippetManager
     {
       if( $item['type'] === 'folder' )
       {
+        // Check if folder name matches query
+        if( $this->matchesFolderQuery($item, $query) )
+        {
+          $results[] = [
+            'path' => $item['path'],
+            'name' => $item['name'],
+            'type' => 'folder',
+            'snippet' => null
+          ];
+        }
+        
+        // Continue searching in subdirectory
         $this->searchInDirectory($item['path'], $query, $results);
       }
       else
       {
-        $snippet = $this->loadSnippet($item['path'] . '.' . $item['extension']);
+        $snippet = $this->loadSnippet($item['path']);
         
         if( $snippet && $this->matchesQuery($snippet, $query) )
         {
           $results[] = [
-            'path' => $item['path'] . '.' . $item['extension'],
+            'path' => $item['path'],
             'name' => $item['name'],
             'type' => $snippet['_type'],
             'snippet' => $snippet
@@ -451,11 +463,38 @@ class SnippetManager
     return false;
   }
 
+  private function matchesFolderQuery( array $folder, string $query ) : bool
+  {
+    $query = strtolower($query);
+    
+    // Search in folder name
+    if( strpos(strtolower($folder['name']), $query) !== false )
+      return true;
+      
+    return false;
+  }
+
   private function calculateRelevanceScore( array $result, string $query ) : int
   {
     $score = 0;
     $query = strtolower($query);
+    
+    // Handle folder results
+    if( $result['type'] === 'folder' )
+    {
+      $name = strtolower($result['name']);
+      if( $name === $query )
+        $score += 80;
+      elseif( strpos($name, $query) === 0 )
+        $score += 40;
+      elseif( strpos($name, $query) !== false )
+        $score += 20;
+      return $score;
+    }
+    
+    // Handle file results
     $snippet = $result['snippet'];
+    if( ! $snippet ) return 0;
     
     // Exact name match gets highest score
     if( strtolower($snippet['_name']) === $query )

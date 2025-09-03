@@ -11,6 +11,7 @@ class SnippetManager
     this.placeholderGroups = new Map(); // name => [elements]
     this.renderedText = '';
     this.navigationHistory = []; // Track navigation history for included folders
+    this.isSearchMode = false; // Track if we're showing search results
     
     this.init();
   }
@@ -172,6 +173,7 @@ class SnippetManager
     const result = await this.apiCall('listFiles', { subPath });
     
     if( result.success ) {
+      this.isSearchMode = false; // Exit search mode when loading normal files
       this.renderFileList(result.files);
       this.currentPath = subPath;
     }
@@ -227,6 +229,15 @@ class SnippetManager
 
   goBack()
   {
+    // If we're in search mode, exit search and return to normal file listing
+    if( this.isSearchMode ) {
+      this.isSearchMode = false;
+      const searchInput = document.getElementById('searchInput');
+      if( searchInput ) searchInput.value = '';
+      this.loadFiles(this.currentPath);
+      return;
+    }
+    
     if( ! this.currentPath ) return; // already at base
     
     // Check if we have navigation history (for included folders)
@@ -787,6 +798,7 @@ class SnippetManager
     const result = await this.apiCall('searchSnippets', { query });
     
     if( result.success ) {
+      this.isSearchMode = true;
       this.renderSearchResults(result.results);
     }
     else {
@@ -810,16 +822,29 @@ class SnippetManager
     }
 
     fileList.innerHTML = results.map(result => {
-      const icon = result.type === 'yml' ? 'bi-file-code' : 'bi-file-text';
+      let icon, dataType, dataExtension, metaInfo;
+      
+      if( result.type === 'folder' ) {
+        icon = 'bi-folder';
+        dataType = 'folder';
+        dataExtension = '';
+        metaInfo = 'FOLDER • ' + result.path;
+      }
+      else {
+        icon = result.type === 'yml' ? 'bi-file-code' : 'bi-file-text';
+        dataType = 'file';
+        dataExtension = result.type;
+        metaInfo = result.type.toUpperCase() + ' • ' + result.path;
+      }
       
       return `
         <div class="list-group-item file-item" data-path="${result.path}" 
-             data-type="file" data-extension="${result.type}">
+             data-type="${dataType}" data-extension="${dataExtension}">
           <div class="d-flex align-items-center">
             <i class="bi ${icon} file-icon me-2"></i>
             <div class="flex-grow-1">
               <div class="fw-medium">${result.name}</div>
-              <div class="file-meta">${result.type.toUpperCase()} • ${result.path}</div>
+              <div class="file-meta">${metaInfo}</div>
             </div>
           </div>
         </div>
@@ -834,6 +859,11 @@ class SnippetManager
     }
     else {
       this.hideSearchHistory();
+      // If search input is cleared and we're in search mode, return to normal listing
+      if( this.isSearchMode ) {
+        this.isSearchMode = false;
+        this.loadFiles(this.currentPath);
+      }
     }
   }
 
