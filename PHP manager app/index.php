@@ -270,6 +270,49 @@ if( isset($config['nav']['foldersFirst']) )
     </div>
   </div>
 
+  <!-- Duplicate Snippet Modal -->
+  <div class="modal fade" id="duplicateSnippetModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Duplicate Snippet</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="duplicateSnippetForm">
+            <div class="mb-3">
+              <label for="duplicateNameInput" class="form-label">New Name</label>
+              <input type="text" class="form-control" id="duplicateNameInput" required>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="confirmDuplicateBtn">Duplicate</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Snippet Modal -->
+  <div class="modal fade" id="deleteSnippetModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Delete Snippet</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to delete <strong id="deleteSnippetName"></strong>?</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="controller.js?v=<?= time() ?>"></script>
 </body>

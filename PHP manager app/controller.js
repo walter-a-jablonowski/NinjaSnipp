@@ -68,6 +68,8 @@ class SnippetManager
       ['saveSnippetBtn', 'click', () => this.saveCurrentSnippet()],
       ['duplicateSnippetBtn', 'click', () => this.duplicateCurrentSnippet()],
       ['deleteSnippetBtn', 'click', () => this.deleteCurrentSnippet()],
+      ['confirmDuplicateBtn', 'click', () => this.performDuplicate()],
+      ['confirmDeleteBtn', 'click', () => this.performDelete()],
       ['recent-tab', 'click', () => this.loadRecentSnippets()]
     ];
 
@@ -90,6 +92,29 @@ class SnippetManager
       newFolderModalEl.addEventListener('shown.bs.modal', () => {
         const input = document.getElementById('folderName');
         if( input ) input.focus();
+      });
+    }
+
+    // Duplicate modal: prefill and focus
+    const dupModalEl = document.getElementById('duplicateSnippetModal');
+    if( dupModalEl ) {
+      dupModalEl.addEventListener('shown.bs.modal', () => {
+        const input = document.getElementById('duplicateNameInput');
+        if( input ) {
+          const base = this.currentSnippet ? (this.currentSnippet._name + '_copy') : '';
+          if( base ) input.value = base;
+          input.focus();
+          input.select();
+        }
+      });
+    }
+
+    // Delete modal: inject name
+    const delModalEl = document.getElementById('deleteSnippetModal');
+    if( delModalEl ) {
+      delModalEl.addEventListener('show.bs.modal', () => {
+        const nameEl = document.getElementById('deleteSnippetName');
+        if( nameEl && this.currentSnippet ) nameEl.textContent = this.currentSnippet._name;
       });
     }
 
@@ -121,6 +146,21 @@ class SnippetManager
         if( e.key === 'Enter' && ! e.shiftKey && ! e.ctrlKey && ! e.altKey && ! e.metaKey ) {
           e.preventDefault();
           this.createFolder();
+        }
+      });
+    }
+
+    // Duplicate form: submit with Enter
+    const dupForm = document.getElementById('duplicateSnippetForm');
+    if( dupForm ) {
+      dupForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        this.performDuplicate();
+      });
+      dupForm.addEventListener('keydown', (e) => {
+        if( e.key === 'Enter' && ! e.shiftKey && ! e.ctrlKey && ! e.altKey && ! e.metaKey ) {
+          e.preventDefault();
+          this.performDuplicate();
         }
       });
     }
@@ -420,8 +460,15 @@ class SnippetManager
   async duplicateCurrentSnippet()
   {
     if( ! this.currentSnippet ) return;
+    // Open modal; confirm handled by performDuplicate()
+    this.showModal('duplicateSnippetModal');
+  }
 
-    const newName = prompt('Enter new name for the duplicate:', this.currentSnippet._name + '_copy');
+  async performDuplicate()
+  {
+    if( ! this.currentSnippet ) return;
+    const input = document.getElementById('duplicateNameInput');
+    const newName = input ? input.value.trim() : '';
     if( ! newName ) return;
 
     const extension = this.currentSnippet._type === 'yml' ? 'yml' : 'md';
@@ -429,9 +476,12 @@ class SnippetManager
     const targetPath = (this.currentPath ? this.currentPath + '/' : '') + newName + '.' + extension;
 
     const result = await this.apiCall('duplicateSnippet', { sourcePath, targetPath });
-    
     if( result.success ) {
       this.showSuccess('Snippet duplicated successfully');
+      // Close modal
+      const modal = bootstrap.Modal.getInstance(document.getElementById('duplicateSnippetModal'));
+      if( modal ) modal.hide();
+      // Refresh list
       this.loadFiles(this.currentPath);
     }
     else {
@@ -442,16 +492,21 @@ class SnippetManager
   async deleteCurrentSnippet()
   {
     if( ! this.currentSnippet ) return;
+    // Open confirmation modal; confirm handled by performDelete()
+    this.showModal('deleteSnippetModal');
+  }
 
-    if( ! confirm(`Are you sure you want to delete "${this.currentSnippet._name}"?`) ) return;
-
+  async performDelete()
+  {
+    if( ! this.currentSnippet ) return;
     const extension = this.currentSnippet._type === 'yml' ? 'yml' : 'md';
     const path = (this.currentPath ? this.currentPath + '/' : '') + this.currentSnippet._name + '.' + extension;
-
     const result = await this.apiCall('deleteSnippet', { path });
-    
     if( result.success ) {
       this.showSuccess('Snippet deleted successfully');
+      // Close modal
+      const modal = bootstrap.Modal.getInstance(document.getElementById('deleteSnippetModal'));
+      if( modal ) modal.hide();
       this.currentSnippet = null;
       this.clearEditForm();
       this.loadFiles(this.currentPath);
