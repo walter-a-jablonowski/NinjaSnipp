@@ -12,7 +12,7 @@ class SnippetManager
     this.renderedText = '';
     this.navigationHistory = []; // Track navigation history for included folders
     this.isSearchMode = false; // Track if we're showing search results
-    this._mdAutoHeight = false;
+    this._mdAutoHeight = false; // reuse flag for content auto-height
     this._onResizeHandler = null;
     
     this.init();
@@ -23,10 +23,14 @@ class SnippetManager
     this._mdAutoHeight = true;
     // Apply immediately
     this.resizeMdTextarea();
+    this.resizeInlineSnippet();
     // Bind resize once
     if( ! this._onResizeHandler ) {
       this._onResizeHandler = () => {
-        if( this._mdAutoHeight ) this.resizeMdTextarea();
+        if( this._mdAutoHeight ) {
+          this.resizeMdTextarea();
+          this.resizeInlineSnippet();
+        }
       };
       window.addEventListener('resize', this._onResizeHandler);
     }
@@ -45,13 +49,25 @@ class SnippetManager
   {
     const ta = document.getElementById('snippetContent');
     if( ! ta ) return;
-    // Only apply for Markdown context
-    if( ! this.currentSnippet || this.currentSnippet._type !== 'md' ) return;
+    if( ! this.currentSnippet ) return;
     // Compute available height from textarea top to viewport bottom with a small padding
     const rect = ta.getBoundingClientRect();
     const bottomPadding = 24; // space for bottom padding/margins
     const available = Math.max(200, Math.floor(window.innerHeight - rect.top - bottomPadding));
     ta.style.height = available + 'px';
+  }
+
+  resizeInlineSnippet()
+  {
+    const el = document.getElementById('inlineSnippet');
+    if( ! el ) return;
+    // Only relevant if a snippet is loaded (typically YAML for preview)
+    if( ! this.currentSnippet ) return;
+    const rect = el.getBoundingClientRect();
+    const bottomPadding = 24;
+    const available = Math.max(200, Math.floor(window.innerHeight - rect.top - bottomPadding));
+    el.style.height = available + 'px';
+    el.style.overflowY = 'auto';
   }
 
   async init()
@@ -402,9 +418,8 @@ class SnippetManager
     if( labelSnippetName ) labelSnippetName.style.display = isYaml ? '' : 'none';
     if( labelSnippetContent ) labelSnippetContent.style.display = isYaml ? '' : 'none';
 
-    // Markdown: make textarea taller to fill available vertical space
-    if( isYaml ) this.disableMdTextareaAutoHeight();
-    else this.enableMdTextareaAutoHeight();
+    // Make editors taller to fill available vertical space for both YAML and Markdown
+    this.enableMdTextareaAutoHeight();
 
     // Show form, hide empty state
     if( editEmptyState ) editEmptyState.style.display = 'none';
@@ -606,6 +621,8 @@ class SnippetManager
       this.renderInlineSnippet(result.composed || '');
       // Also update live preview initially with defaults
       this.updateRenderedOutput();
+      // Adjust preview height after (re)render
+      this.resizeInlineSnippet();
     }
   }
 
