@@ -341,9 +341,9 @@ body {
   #searchInput {
     width: 150px;
   }
-  .navbar-brand span {
-    display: none;
-  }
+  /* On smartphones: hide full brand, show short brand */
+  .navbar-brand .brand-full { display: none !important; }
+  .navbar-brand .brand-short { display: inline !important; }
   
   .action-buttons .btn {
     padding: 0.375rem 0.5rem;
@@ -354,6 +354,10 @@ body {
 .tab-content {
   min-height: 400px;
 }
+
+/* Default (>= sm): show full brand, hide short brand */
+.navbar-brand .brand-full { display: inline; }
+.navbar-brand .brand-short { display: none; }
 
 /* Code highlighting */
 .highlight {

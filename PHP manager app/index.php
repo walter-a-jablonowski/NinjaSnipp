@@ -42,7 +42,8 @@ if( isset($_GET['data']) ) {
 
       <a class="navbar-brand d-flex align-items-center" href="#">
         <i class="bi bi-code-square me-2 fs-4"></i>
-        <span class="fw-bold">Ninja Snipp</span>
+        <span class="fw-bold brand-full">Ninja Snipp</span>
+        <span class="fw-bold brand-short">Ninja</span>
       </a>
       
       <div class="navbar-nav ms-auto">
