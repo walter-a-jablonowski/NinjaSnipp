@@ -11,6 +11,15 @@ $manager = new SnippetManager( $config['dataPaths'] ?? ['data'], $config);
 if( isset($config['nav']['foldersFirst']) )
   $manager->setFoldersFirst( (bool)$config['nav']['foldersFirst'] );
 
+// Optional URL param: select initial data folder by label key from config (e.g., ?data=Demo%201)
+if( isset($_GET['data']) ) {
+  $label = (string)$_GET['data'];
+  $paths = $manager->getDataPaths(); // label => path
+  if( isset($paths[$label]) ) {
+    $manager->setCurrentDataPath($paths[$label]);
+  }
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="en">

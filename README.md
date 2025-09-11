@@ -20,6 +20,10 @@ A snippet manager app that has some special features
   - first currently is default
 - `{{include: "Snippet name"}}`
 
+### Misc
+
+- initially load data folder `index.php?data=Demo%202` (key from config)
+
 ### Sample
 
 ![alt text](misc/img.png)
