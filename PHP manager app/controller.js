@@ -369,11 +369,13 @@ class SnippetManager
     const editEmptyState = document.getElementById('editEmptyState');
     const editForm = document.getElementById('editForm');
     const snippetNameEdit = document.getElementById('snippetNameEdit');
+    const labelSnippetName = document.getElementById('labelSnippetName');
     const fieldSh = document.getElementById('fieldSh');
     const fieldUsage = document.getElementById('fieldUsage');
     const snippetSh = document.getElementById('snippetSh');
     const snippetUsage = document.getElementById('snippetUsage');
     const snippetContent = document.getElementById('snippetContent');
+    const labelSnippetContent = document.getElementById('labelSnippetContent');
 
     if( ! editForm || ! snippetNameEdit || ! snippetContent ) return;
 
@@ -392,6 +394,10 @@ class SnippetManager
     [fieldSh, fieldUsage].forEach(field => {
       if( field ) field.style.display = isYaml ? '' : 'none';
     });
+
+    // Hide Name and Content labels for Markdown to save space
+    if( labelSnippetName ) labelSnippetName.style.display = isYaml ? '' : 'none';
+    if( labelSnippetContent ) labelSnippetContent.style.display = isYaml ? '' : 'none';
 
     // Show form, hide empty state
     if( editEmptyState ) editEmptyState.style.display = 'none';

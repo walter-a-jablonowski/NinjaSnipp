@@ -187,7 +187,7 @@ if( isset($config['nav']['foldersFirst']) )
                   <!-- Group Name and Short Code on one line (Short Code is YAML-only) -->
                   <div class="row g-2 mb-3 align-items-end">
                     <div class="col-12 col-md-8">
-                      <label for="snippetNameEdit" class="form-label">Name</label>
+                      <label for="snippetNameEdit" class="form-label" id="labelSnippetName">Name</label>
                       <input type="text" class="form-control" id="snippetNameEdit" required>
                     </div>
                     <!-- YAML-only fields -->
@@ -203,7 +203,7 @@ if( isset($config['nav']['foldersFirst']) )
                   </div>
 
                   <div class="mb-3">
-                    <label for="snippetContent" class="form-label">Content</label>
+                    <label for="snippetContent" class="form-label" id="labelSnippetContent">Content</label>
                     <textarea class="form-control" id="snippetContent" rows="12" placeholder="Some {{ var }} snippet..." required></textarea>
                   </div>
                 </form>
