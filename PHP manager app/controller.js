@@ -227,41 +227,6 @@ class SnippetManager
     this.setActionButtonsEnabled(false);
   }
 
-  async apiCall(action, data = {}) {
-    try {
-      const response = await fetch('ajax.php', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ action, dataPath: this.currentDataPath, ...data })
-      });
-      
-      return await response.json();
-    }
-    catch( error ) {
-      console.error('API call failed:', error);
-      return { success: false, message: 'Network error' };
-    }
-  }
-
-  async loadFiles(subPath = '') {
-    this.showLoading('fileList');
-    
-    const result = await this.apiCall('listFiles', { subPath });
-    
-    if( result.success ) {
-      this.isSearchMode = false; // Exit search mode when loading normal files
-      this.renderFileList(result.files);
-      this.currentPath = subPath;
-    }
-    else {
-      this.showError('Failed to load files: ' + result.message);
-    }
-    
-    this.hideLoading('fileList');
-  }
-
   renderFileList(files) {
     const fileList = document.getElementById('fileList');
     if( ! fileList ) return;
@@ -1187,6 +1152,41 @@ class SnippetManager
     else {
       this.showError('Failed to change data folder: ' + result.message);
     }
+  }
+
+  async apiCall(action, data = {}) {
+    try {
+      const response = await fetch('ajax.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action, dataPath: this.currentDataPath, ...data })
+      });
+      
+      return await response.json();
+    }
+    catch( error ) {
+      console.error('API call failed:', error);
+      return { success: false, message: 'Network error' };
+    }
+  }
+
+  async loadFiles(subPath = '') {
+    this.showLoading('fileList');
+    
+    const result = await this.apiCall('listFiles', { subPath });
+    
+    if( result.success ) {
+      this.isSearchMode = false; // Exit search mode when loading normal files
+      this.renderFileList(result.files);
+      this.currentPath = subPath;
+    }
+    else {
+      this.showError('Failed to load files: ' + result.message);
+    }
+    
+    this.hideLoading('fileList');
   }
 
   showLoading(elementId)
