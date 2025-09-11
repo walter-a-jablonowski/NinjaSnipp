@@ -24,6 +24,13 @@ class SnippetManager
     // Apply immediately
     this.resizeMdTextarea();
     this.resizeInlineSnippet();
+    // Extra delayed recalculation to account for late layout/Font/Bootstrap paints
+    setTimeout(() => {
+      if( this._mdAutoHeight ) {
+        this.resizeMdTextarea();
+        this.resizeInlineSnippet();
+      }
+    }, 120);
     // Bind resize once
     if( ! this._onResizeHandler ) {
       this._onResizeHandler = () => {
@@ -220,8 +227,14 @@ class SnippetManager
     }
 
     // Tab switching visibility
-    document.querySelectorAll('#contentTabs [data-bs-toggle="tab"]')
-      .forEach(btn => btn.addEventListener('shown.bs.tab', () => this.updateActionButtonsVisibility()));
+    document.querySelectorAll('#contentTabs [data-bs-toggle="tab"]').forEach(btn =>
+      btn.addEventListener('shown.bs.tab', (e) => {
+        this.updateActionButtonsVisibility();
+        // Recompute heights when switching tabs
+        this.resizeMdTextarea();
+        this.resizeInlineSnippet();
+      })
+    );
     
     // Global document events
     document.addEventListener('click', (e) => {
@@ -241,6 +254,12 @@ class SnippetManager
     // Initial state
     this.updateActionButtonsVisibility();
     this.setActionButtonsEnabled(false);
+
+    // After full page load (fonts, bootstrap), recalc heights once
+    window.addEventListener('load', () => {
+      this.resizeMdTextarea();
+      this.resizeInlineSnippet();
+    });
   }
 
   renderFileList(files) {
@@ -418,12 +437,25 @@ class SnippetManager
     if( labelSnippetName ) labelSnippetName.style.display = isYaml ? '' : 'none';
     if( labelSnippetContent ) labelSnippetContent.style.display = isYaml ? '' : 'none';
 
-    // Make editors taller to fill available vertical space for both YAML and Markdown
-    this.enableMdTextareaAutoHeight();
-
     // Show form, hide empty state
     if( editEmptyState ) editEmptyState.style.display = 'none';
     editForm.style.display = 'block';
+
+    // Make editors taller to fill available vertical space for both YAML and Markdown
+    // Do it after the form becomes visible to get correct element geometry
+    requestAnimationFrame(() => {
+      this.enableMdTextareaAutoHeight();
+      // One more frame to ensure layout has fully settled
+      requestAnimationFrame(() => {
+        this.resizeMdTextarea();
+        if( this.currentSnippet && this.currentSnippet._type === 'yml' ) this.resizeInlineSnippet();
+      });
+      // And once more after a brief delay to fix initial load oversizing
+      setTimeout(() => {
+        this.resizeMdTextarea();
+        if( this.currentSnippet && this.currentSnippet._type === 'yml' ) this.resizeInlineSnippet();
+      }, 150);
+    });
 
     // Configure render tab
     this.configureRenderTab(isYaml);
