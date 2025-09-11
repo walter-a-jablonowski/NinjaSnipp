@@ -36,14 +36,14 @@ if( isset($_GET['data']) ) {
   <!-- Header -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
     <div class="container-fluid">
+      <button class="navbar-toggler ps-0 d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarNav" aria-controls="sidebarNav" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
       <a class="navbar-brand d-flex align-items-center" href="#">
         <i class="bi bi-code-square me-2 fs-4"></i>
         <span class="fw-bold">Ninja Snipp</span>
       </a>
-      
-      <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarNav" aria-controls="sidebarNav" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
       
       <div class="navbar-nav ms-auto">
         <div class="nav-item">
