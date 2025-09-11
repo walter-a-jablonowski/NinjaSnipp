@@ -48,7 +48,7 @@ if( isset($_GET['data']) ) {
       <div class="navbar-nav ms-auto">
         <div class="nav-item">
           <div class="input-group">
-            <input type="text" class="form-control" id="searchInput" placeholder="Search snippets..." autocomplete="off">
+            <input type="text" class="form-control" id="searchInput" placeholder="Search ..." autocomplete="off">
             <button class="btn btn-outline-light" type="button" id="searchBtn">
               <i class="bi bi-search"></i>
             </button>
