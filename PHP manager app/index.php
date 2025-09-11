@@ -36,7 +36,7 @@ if( isset($_GET['data']) ) {
   <!-- Header -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
     <div class="container-fluid">
-      <button class="navbar-toggler ps-0 d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarNav" aria-controls="sidebarNav" aria-label="Toggle navigation">
+      <button class="navbar-toggler ps-0 pe-0 me-2 d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarNav" aria-controls="sidebarNav" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
 
