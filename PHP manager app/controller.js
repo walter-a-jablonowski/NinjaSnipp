@@ -414,6 +414,9 @@ class SnippetManager
     if( renderTab ) {
       renderTab.disabled = !enabled;
       renderTab.classList.toggle('disabled', !enabled);
+      // Hide the tab entirely when disabled (e.g., for Markdown files)
+      const tabLi = renderTab.closest('li');
+      if( tabLi ) tabLi.style.display = enabled ? '' : 'none';
     }
   }
 
