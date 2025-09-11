@@ -12,8 +12,46 @@ class SnippetManager
     this.renderedText = '';
     this.navigationHistory = []; // Track navigation history for included folders
     this.isSearchMode = false; // Track if we're showing search results
+    this._mdAutoHeight = false;
+    this._onResizeHandler = null;
     
     this.init();
+  }
+
+  enableMdTextareaAutoHeight()
+  {
+    this._mdAutoHeight = true;
+    // Apply immediately
+    this.resizeMdTextarea();
+    // Bind resize once
+    if( ! this._onResizeHandler ) {
+      this._onResizeHandler = () => {
+        if( this._mdAutoHeight ) this.resizeMdTextarea();
+      };
+      window.addEventListener('resize', this._onResizeHandler);
+    }
+  }
+
+  disableMdTextareaAutoHeight()
+  {
+    this._mdAutoHeight = false;
+    const ta = document.getElementById('snippetContent');
+    if( ta ) {
+      ta.style.height = '';
+    }
+  }
+
+  resizeMdTextarea()
+  {
+    const ta = document.getElementById('snippetContent');
+    if( ! ta ) return;
+    // Only apply for Markdown context
+    if( ! this.currentSnippet || this.currentSnippet._type !== 'md' ) return;
+    // Compute available height from textarea top to viewport bottom with a small padding
+    const rect = ta.getBoundingClientRect();
+    const bottomPadding = 24; // space for bottom padding/margins
+    const available = Math.max(200, Math.floor(window.innerHeight - rect.top - bottomPadding));
+    ta.style.height = available + 'px';
   }
 
   async init()
@@ -398,6 +436,10 @@ class SnippetManager
     // Hide Name and Content labels for Markdown to save space
     if( labelSnippetName ) labelSnippetName.style.display = isYaml ? '' : 'none';
     if( labelSnippetContent ) labelSnippetContent.style.display = isYaml ? '' : 'none';
+
+    // Markdown: make textarea taller to fill available vertical space
+    if( isYaml ) this.disableMdTextareaAutoHeight();
+    else this.enableMdTextareaAutoHeight();
 
     // Show form, hide empty state
     if( editEmptyState ) editEmptyState.style.display = 'none';
