@@ -464,7 +464,7 @@ class SnippetManager
           const expandBtn = document.getElementById('expandContentBtn');
           if( expandBtn ) {
             const icon = expandBtn.querySelector('i');
-            if( icon ) icon.className = 'bi bi-chevron-down';
+            if( icon ) icon.className = 'bi bi-caret-down fs-5 text-muted';
           }
         }
       }
@@ -1300,7 +1300,7 @@ class SnippetManager
     if( this._contentExpanded ) {
       // Restore to initial height
       snippetContent.style.height = this._initialContentHeight + 'px';
-      icon.className = 'bi bi-caret-down';
+      icon.className = 'bi bi-caret-down fs-5 text-muted';
       this._contentExpanded = false;
     } else {
       // Expand to available height
@@ -1308,7 +1308,7 @@ class SnippetManager
       const bottomPadding = 24;
       const available = Math.max(400, Math.floor(window.innerHeight - rect.top - bottomPadding));
       snippetContent.style.height = available + 'px';
-      icon.className = 'bi bi-caret-up';
+      icon.className = 'bi bi-caret-up fs-5 text-muted';
       this._contentExpanded = true;
     }
   }

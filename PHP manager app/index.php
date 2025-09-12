@@ -216,7 +216,7 @@ if( isset($_GET['data']) ) {
                     <div class="d-flex justify-content-between align-items-center">
                       <label for="snippetContent" class="form-label" id="labelSnippetContent">Content</label>
                       <button type="button" class="btn btn-sm btn-link" id="expandContentBtn" title="Expand content area" style="display: none;">
-                        <i class="bi bi-caret-down"></i>
+                        <i class="bi bi-caret-down fs-5 text-muted"></i>
                       </button>
                     </div>
                     <textarea class="form-control" id="snippetContent" rows="12" placeholder="Some {{ var }} snippet..." required></textarea>
