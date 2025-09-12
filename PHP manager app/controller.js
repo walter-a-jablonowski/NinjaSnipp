@@ -441,6 +441,10 @@ class SnippetManager
     if( labelSnippetName ) labelSnippetName.style.display = isYaml ? '' : 'none';
     if( labelSnippetContent ) labelSnippetContent.style.display = isYaml ? '' : 'none';
 
+    // Hide name row for Markdown files
+    const fieldNameRow = document.getElementById('fieldNameRow');
+    if( fieldNameRow ) fieldNameRow.style.display = isYaml ? '' : 'none';
+
     // Toggle expand button visibility
     const expandBtn = document.getElementById('expandContentBtn');
     if( expandBtn ) expandBtn.style.display = isYaml ? '' : 'none';

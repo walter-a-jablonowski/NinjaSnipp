@@ -195,7 +195,7 @@ if( isset($_GET['data']) ) {
                 <form id="editForm" class="snippet-form" style="display: none;">
 
                   <!-- Group Name and Short Code on one line (Short Code is YAML-only) -->
-                  <div class="row g-2 mb-3 align-items-end">
+                  <div class="row g-2 mb-3 align-items-end" id="fieldNameRow">
                     <div class="col-12 col-md-8">
                       <label for="snippetNameEdit" class="form-label" id="labelSnippetName">Name</label>
                       <input type="text" class="form-control" id="snippetNameEdit" required>
