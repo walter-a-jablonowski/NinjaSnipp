@@ -285,6 +285,30 @@ if( isset($_GET['data']) ) {
     </div>
   </div>
 
+  <!-- Rename Item Modal -->
+  <div class="modal fade" id="renameItemModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Rename</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="renameItemForm">
+            <div class="mb-3">
+              <label for="renameNameInput" class="form-label">New Name</label>
+              <input type="text" class="form-control" id="renameNameInput" required>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="confirmRenameBtn">Rename</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Duplicate Snippet Modal -->
   <div class="modal fade" id="duplicateSnippetModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">

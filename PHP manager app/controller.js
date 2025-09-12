@@ -21,6 +21,34 @@ class SnippetManager
     this.init();
   }
 
+  handleFileListDropdownClick(e)
+  {
+    const actionEl = e.target.closest('.dropdown-item');
+    if( ! actionEl ) return;
+    const action = actionEl.getAttribute('data-action');
+    const item = actionEl.closest('.file-item');
+    if( ! item ) return;
+    const oldPath = item.getAttribute('data-path');
+    const type = item.getAttribute('data-type');
+    const ext = item.getAttribute('data-extension') || '';
+
+    if( action === 'rename' ) {
+      // Prepare context and show modal
+      const parts = oldPath.split('/');
+      const filename = parts.pop();
+      const parent = parts.join('/');
+      let base = filename;
+      if( type === 'file' && ext ) {
+        const dotExt = '.' + ext;
+        if( base.toLowerCase().endsWith(dotExt) ) base = base.slice(0, -dotExt.length);
+      }
+      this._renameContext = { oldPath, parent, type, ext };
+      const input = document.getElementById('renameNameInput');
+      if( input ) input.value = base;
+      this.showModal('renameItemModal');
+    }
+  }
+
   enableMdTextareaAutoHeight()
   {
     this._mdAutoHeight = true;
@@ -135,6 +163,7 @@ class SnippetManager
       ['confirmDuplicateBtn', 'click', () => this.performDuplicate()],
       ['confirmDeleteBtn', 'click', () => this.performDelete()],
       ['recent-tab', 'click', () => this.loadRecentSnippets()],
+      ['confirmRenameBtn', 'click', () => this.performRename()],
       ['expandContentBtn', 'click', () => this.toggleContentExpansion()]
     ];
 
@@ -168,6 +197,18 @@ class SnippetManager
         if( input ) {
           const base = this.currentSnippet ? (this.currentSnippet._name + '_copy') : '';
           if( base ) input.value = base;
+          input.focus();
+          input.select();
+        }
+      });
+    }
+
+    // Rename modal: focus input
+    const renameModalEl = document.getElementById('renameItemModal');
+    if( renameModalEl ) {
+      renameModalEl.addEventListener('shown.bs.modal', () => {
+        const input = document.getElementById('renameNameInput');
+        if( input ) {
           input.focus();
           input.select();
         }
@@ -230,6 +271,21 @@ class SnippetManager
       });
     }
 
+    // Rename form: submit with Enter
+    const renameForm = document.getElementById('renameItemForm');
+    if( renameForm ) {
+      renameForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        this.performRename();
+      });
+      renameForm.addEventListener('keydown', (e) => {
+        if( e.key === 'Enter' && ! e.shiftKey && ! e.ctrlKey && ! e.altKey && ! e.metaKey ) {
+          e.preventDefault();
+          this.performRename();
+        }
+      });
+    }
+
     // Tab switching visibility
     document.querySelectorAll('#contentTabs [data-bs-toggle="tab"]').forEach(btn =>
       btn.addEventListener('shown.bs.tab', (e) => {
@@ -264,6 +320,35 @@ class SnippetManager
       this.resizeMdTextarea();
       this.resizeInlineSnippet();
     });
+
+    // File list dropdown actions (delegate)
+    const fileList = document.getElementById('fileList');
+    if( fileList ) fileList.addEventListener('click', (e) => this.handleFileListDropdownClick(e));
+  }
+
+  async performRename()
+  {
+    const ctx = this._renameContext;
+    if( ! ctx ) return;
+    const input = document.getElementById('renameNameInput');
+    const safeName = (input?.value || '').trim();
+    if( ! safeName ) return;
+    const newPath = (ctx.parent ? ctx.parent + '/' : '') + (ctx.type === 'file' && ctx.ext ? (safeName + '.' + ctx.ext) : safeName);
+    const result = await this.apiCall('renameItem', { oldPath: ctx.oldPath, newPath });
+    if( result && result.success ) {
+      const modal = bootstrap.Modal.getInstance(document.getElementById('renameItemModal')) || new bootstrap.Modal(document.getElementById('renameItemModal'));
+      if( modal ) modal.hide();
+      await this.loadFiles(this.currentPath);
+      const newItem = document.querySelector(`.file-item[data-path="${newPath}"]`);
+      if( newItem ) {
+        document.querySelectorAll('.file-item.active').forEach(n => n.classList.remove('active'));
+        newItem.classList.add('active');
+      }
+      this.showSuccess('Renamed successfully');
+    }
+    else {
+      this.showError('Failed to rename: ' + (result?.message || 'Unknown error'));
+    }
   }
 
   renderFileList(files) {
@@ -300,6 +385,7 @@ class SnippetManager
                 <i class="bi bi-three-dots-vertical"></i>
               </button>
               <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="#" data-action="rename">Rename</a></li>
                 <li><a class="dropdown-item" href="#" data-action="delete">Delete</a></li>
               </ul>
             </div>

@@ -86,6 +86,46 @@ try {
         $response = ['success' => false, 'message' => 'Failed to duplicate snippet'];
       break;
 
+    case 'renameItem':
+      $oldPath = $input['oldPath'] ?? '';
+      $newPath = $input['newPath'] ?? '';
+      $base    = rtrim($manager->getCurrentDataPath(), '/');
+
+      // Build absolute paths
+      $oldFull = $base . '/' . ltrim($oldPath, '/');
+      $newFull = $base . '/' . ltrim($newPath, '/');
+
+      // Basic validation
+      if( $oldPath === '' || $newPath === '' ) {
+        $response = ['success' => false, 'message' => 'Invalid parameters'];
+        break;
+      }
+
+      // Ensure old exists and new does not
+      if( ! file_exists($oldFull) ) {
+        $response = ['success' => false, 'message' => 'Source does not exist'];
+        break;
+      }
+      if( file_exists($newFull) ) {
+        $response = ['success' => false, 'message' => 'Target already exists'];
+        break;
+      }
+
+      // Ensure the target's parent directory exists (for nested renames)
+      $parentDir = dirname($newFull);
+      if( ! is_dir($parentDir) ) {
+        if( ! mkdir($parentDir, 0755, true) ) {
+          $response = ['success' => false, 'message' => 'Failed to prepare target directory'];
+          break;
+        }
+      }
+
+      if( @rename($oldFull, $newFull) )
+        $response = ['success' => true, 'message' => 'Renamed successfully'];
+      else
+        $response = ['success' => false, 'message' => 'Failed to rename'];
+      break;
+
     case 'searchSnippets':
       $query = $input['query'] ?? '';
       $results = $manager->searchSnippets($query);
