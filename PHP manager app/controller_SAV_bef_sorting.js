@@ -45,7 +45,7 @@ class SnippetManager
       this._renameContext = { oldPath, parent, type, ext };
       const input = document.getElementById('renameNameInput');
       if( input ) input.value = base;
-      showModal('renameItemModal');
+      this.showModal('renameItemModal');
     }
   }
 
@@ -116,8 +116,8 @@ class SnippetManager
     // Load server-backed user lists (single user)
     try {
       const [h, r] = await Promise.all([
-        apiCall(this.currentDataPath, 'getSearchHistory'),
-        apiCall(this.currentDataPath, 'getRecentSnippets')
+        this.apiCall('getSearchHistory'),
+        this.apiCall('getRecentSnippets')
       ]);
       this.searchHistory = (h && h.success && Array.isArray(h.data)) ? h.data : [];
       this.recentSnippets = (r && r.success && Array.isArray(r.data)) ? r.data : [];
@@ -150,8 +150,8 @@ class SnippetManager
     const buttonEvents = [
       ['searchBtn', 'click', () => this.performSearch()],
       ['dataFolderSelect', 'change', (e) => this.changeDataFolder(e.target.value)],
-      ['newSnippetBtn', 'click', () => showModal('newSnippetModal')],
-      ['newFolderBtn', 'click', () => showModal('newFolderModal')],
+      ['newSnippetBtn', 'click', () => this.showModal('newSnippetModal')],
+      ['newFolderBtn', 'click', () => this.showModal('newFolderModal')],
       ['backBtn', 'click', () => this.goBack()],
       ['createSnippetBtn', 'click', () => this.createSnippet()],
       ['createFolderBtn', 'click', () => this.createFolder()],
@@ -334,7 +334,7 @@ class SnippetManager
     const safeName = (input?.value || '').trim();
     if( ! safeName ) return;
     const newPath = (ctx.parent ? ctx.parent + '/' : '') + (ctx.type === 'file' && ctx.ext ? (safeName + '.' + ctx.ext) : safeName);
-    const result = await apiCall(this.currentDataPath, 'renameItem', { oldPath: ctx.oldPath, newPath });
+    const result = await this.apiCall('renameItem', { oldPath: ctx.oldPath, newPath });
     if( result && result.success ) {
       const modal = bootstrap.Modal.getInstance(document.getElementById('renameItemModal')) || new bootstrap.Modal(document.getElementById('renameItemModal'));
       if( modal ) modal.hide();
@@ -344,10 +344,10 @@ class SnippetManager
         document.querySelectorAll('.file-item.active').forEach(n => n.classList.remove('active'));
         newItem.classList.add('active');
       }
-      showSuccess('Renamed successfully');
+      this.showSuccess('Renamed successfully');
     }
     else {
-      showError('Failed to rename: ' + (result?.message || 'Unknown error'));
+      this.showError('Failed to rename: ' + (result?.message || 'Unknown error'));
     }
   }
 
@@ -454,9 +454,9 @@ class SnippetManager
 
   async loadSnippet(path)
   {
-    showLoading('editContent');
+    this.showLoading('editContent');
     
-    const result = await apiCall(this.currentDataPath, 'loadSnippet', { path });
+    const result = await this.apiCall('loadSnippet', { path });
     
     if( result.success ) {
       this.currentSnippet = result.snippet;
@@ -466,7 +466,7 @@ class SnippetManager
       this.recentSnippets = this.recentSnippets.filter(snippet => snippet.path !== path);
       this.recentSnippets.unshift(item);
       this.recentSnippets = this.recentSnippets.slice(0, 10);
-      await apiCall(this.currentDataPath, 'saveRecentSnippets', { data: this.recentSnippets });
+      await this.apiCall('saveRecentSnippets', { data: this.recentSnippets });
       
       // Enable render tab for yml files
       const renderTab = document.getElementById('render-tab');
@@ -482,14 +482,14 @@ class SnippetManager
         renderTab.disabled = true;
         renderTab.classList.add('disabled');
         // Switch to Edit tab for non-YAML files
-        activateTab('edit-tab');
+        this.activateTab('edit-tab');
       }
     }
     else {
-      showError('Failed to load snippet: ' + result.message);
+      this.showError('Failed to load snippet: ' + result.message);
     }
     
-    hideLoading('editContent');
+    this.hideLoading('editContent');
   }
 
   renderEditForm(snippet)
@@ -597,7 +597,7 @@ class SnippetManager
     const contentInput = document.getElementById('snippetContent');
     
     if( ! nameInput.value.trim() || ! contentInput.value.trim() ) {
-      showError('Name and content are required');
+      this.showError('Name and content are required');
       return;
     }
 
@@ -618,10 +618,10 @@ class SnippetManager
     const extension = this.currentSnippet._type === 'yml' ? 'yml' : 'md';
     const path = (this.currentPath ? this.currentPath + '/' : '') + data._name + '.' + extension;
 
-    const result = await apiCall(this.currentDataPath, 'saveSnippet', { path, data });
+    const result = await this.apiCall('saveSnippet', { path, data });
     
     if( result.success ) {
-      showSuccess('Snippet saved successfully');
+      this.showSuccess('Snippet saved successfully');
       this.currentSnippet = data;
       this.loadFiles(this.currentPath); // Refresh file list
 
@@ -631,7 +631,7 @@ class SnippetManager
       }
     }
     else {
-      showError('Failed to save snippet: ' + result.message);
+      this.showError('Failed to save snippet: ' + result.message);
     }
   }
 
@@ -639,7 +639,7 @@ class SnippetManager
   {
     if( ! this.currentSnippet ) return;
     // Open modal; confirm handled by performDuplicate()
-    showModal('duplicateSnippetModal');
+    this.showModal('duplicateSnippetModal');
   }
 
   async performDuplicate()
@@ -653,9 +653,9 @@ class SnippetManager
     const sourcePath = (this.currentPath ? this.currentPath + '/' : '') + this.currentSnippet._name + '.' + extension;
     const targetPath = (this.currentPath ? this.currentPath + '/' : '') + newName + '.' + extension;
 
-    const result = await apiCall(this.currentDataPath, 'duplicateSnippet', { sourcePath, targetPath });
+    const result = await this.apiCall('duplicateSnippet', { sourcePath, targetPath });
     if( result.success ) {
-      showSuccess('Snippet duplicated successfully');
+      this.showSuccess('Snippet duplicated successfully');
       // Close modal
       const modal = bootstrap.Modal.getInstance(document.getElementById('duplicateSnippetModal'));
       if( modal ) modal.hide();
@@ -663,7 +663,7 @@ class SnippetManager
       this.loadFiles(this.currentPath);
     }
     else {
-      showError('Failed to duplicate snippet: ' + result.message);
+      this.showError('Failed to duplicate snippet: ' + result.message);
     }
   }
 
@@ -671,7 +671,7 @@ class SnippetManager
   {
     if( ! this.currentSnippet ) return;
     // Open confirmation modal; confirm handled by performDelete()
-    showModal('deleteSnippetModal');
+    this.showModal('deleteSnippetModal');
   }
 
   async performDelete()
@@ -679,9 +679,9 @@ class SnippetManager
     if( ! this.currentSnippet ) return;
     const extension = this.currentSnippet._type === 'yml' ? 'yml' : 'md';
     const path = (this.currentPath ? this.currentPath + '/' : '') + this.currentSnippet._name + '.' + extension;
-    const result = await apiCall(this.currentDataPath, 'deleteSnippet', { path });
+    const result = await this.apiCall('deleteSnippet', { path });
     if( result.success ) {
-      showSuccess('Snippet deleted successfully');
+      this.showSuccess('Snippet deleted successfully');
       // Close modal
       const modal = bootstrap.Modal.getInstance(document.getElementById('deleteSnippetModal'));
       if( modal ) modal.hide();
@@ -690,7 +690,7 @@ class SnippetManager
       this.loadFiles(this.currentPath);
     }
     else {
-      showError('Failed to delete snippet: ' + result.message);
+      this.showError('Failed to delete snippet: ' + result.message);
     }
   }
 
@@ -742,7 +742,18 @@ class SnippetManager
     });
   }
 
-  // activateTab moved to global helper in lib/functions.js
+  activateTab(tabButtonId)
+  {
+    const btn = document.getElementById(tabButtonId);
+    if( ! btn ) return;
+    try {
+      const tab = new bootstrap.Tab(btn);
+      tab.show();
+    }
+    catch(e) {
+      // No-op if Bootstrap is unavailable
+    }
+  }
 
   async composeAndRenderInline()
   {
@@ -752,7 +763,7 @@ class SnippetManager
     if( ! snippetContent || ! inlineContainer ) return;
 
     const snippet = { ...this.currentSnippet, content: snippetContent.value };
-    const result = await apiCall(this.currentDataPath, 'composeContent', { snippet });
+    const result = await this.apiCall('composeContent', { snippet });
     if( result.success ) {
       this.renderInlineSnippet(result.composed || '');
       // Also update live preview initially with defaults
@@ -781,14 +792,14 @@ class SnippetManager
     while( (match = regex.exec(text)) ) {
       const before = text.slice(lastIndex, match.index);
       if( before )
-        out += `<span class="ph-literal" contenteditable="true" tabindex="0" data-chunk="${lastIndex}">${escapeHtml(before)}</span>`;
+        out += `<span class="ph-literal" contenteditable="true" tabindex="0" data-chunk="${lastIndex}">${this.escapeHtml(before)}</span>`;
 
       const raw   = match[1];
       const token = raw.trim();
 
       // Include directives: leave verbatim (should be pre-resolved server-side)
       if( /^include:\s*["'][^"']+["']$/i.test(token) ) {
-        out += escapeHtml(match[0]);
+        out += this.escapeHtml(match[0]);
         lastIndex = regex.lastIndex;
         continue;
       }
@@ -803,21 +814,21 @@ class SnippetManager
         if( def.includes('|') ) {
           const choices = def.split('|').map(s => s.trim());
           const defChoice = choices[0] || '';
-          const dataChoices = escapeHtml(JSON.stringify(choices));
-          out += `<span class="ph ph-choice" tabindex="0" data-ph="${escapeHtml(name)}" data-default="${escapeHtml(defChoice)}" data-choices='${dataChoices}'>${escapeHtml(defChoice)}</span>`;
+          const dataChoices = this.escapeHtml(JSON.stringify(choices));
+          out += `<span class="ph ph-choice" tabindex="0" data-ph="${this.escapeHtml(name)}" data-default="${this.escapeHtml(defChoice)}" data-choices='${dataChoices}'>${this.escapeHtml(defChoice)}</span>`;
         }
         else {
           const defVal = def;
-          out += `<span class="ph ph-text" contenteditable="true" tabindex="0" data-ph="${escapeHtml(name)}" data-default="${escapeHtml(defVal)}">${escapeHtml(defVal)}</span>`;
+          out += `<span class="ph ph-text" contenteditable="true" tabindex="0" data-ph="${this.escapeHtml(name)}" data-default="${this.escapeHtml(defVal)}">${this.escapeHtml(defVal)}</span>`;
         }
       }
       else if( simpleRe.test(token) ) {
         const name = token;
-        out += `<span class="ph ph-text" contenteditable="true" tabindex="0" data-ph="${escapeHtml(name)}" data-default="" data-ph-label="${escapeHtml(name)}"></span>`;
+        out += `<span class="ph ph-text" contenteditable="true" tabindex="0" data-ph="${this.escapeHtml(name)}" data-default="" data-ph-label="${this.escapeHtml(name)}"></span>`;
       }
       else {
         // No valid placeholder token; render verbatim
-        out += `<span class="ph-literal" contenteditable="true" tabindex="0">${escapeHtml(match[0])}</span>`;
+        out += `<span class="ph-literal" contenteditable="true" tabindex="0">${this.escapeHtml(match[0])}</span>`;
       }
       lastIndex = regex.lastIndex;
     }
@@ -825,7 +836,7 @@ class SnippetManager
     const tail = text.slice(lastIndex);
 
     if( tail )
-      out += `<span class=\"ph-literal\" contenteditable=\"true\" tabindex=\"0\" data-chunk=\"tail\">${escapeHtml(tail)}</span>`;
+      out += `<span class="ph-literal" contenteditable="true" tabindex="0" data-chunk="tail">${this.escapeHtml(tail)}</span>`;
 
     return out;
   }
@@ -918,7 +929,7 @@ class SnippetManager
     const choices = JSON.parse(el.dataset.choices || '[]');
     const name = el.dataset.ph;
     const rect = el.getBoundingClientRect();
-    menu.innerHTML = choices.map(ch => `<button type=\"button\" class=\"dropdown-item\" data-value=\"${escapeHtml(ch)}\">${escapeHtml(ch)}</button>`).join('');
+    menu.innerHTML = choices.map(ch => `<button type="button" class="dropdown-item" data-value="${this.escapeHtml(ch)}">${this.escapeHtml(ch)}</button>`).join('');
     menu.style.display = 'block';
     menu.style.position = 'absolute';
     menu.style.left = (rect.left + window.scrollX) + 'px';
@@ -1000,10 +1011,10 @@ class SnippetManager
     
     try {
       await navigator.clipboard.writeText(this.renderedText);
-      showSuccess('Content copied to clipboard');
+      this.showSuccess('Content copied to clipboard');
     }
     catch( error ) {
-      showError('Failed to copy content');
+      this.showError('Failed to copy content');
     }
   }
 
@@ -1017,16 +1028,16 @@ class SnippetManager
     this.searchHistory = this.searchHistory.filter(item => item !== query);
     this.searchHistory.unshift(query);
     this.searchHistory = this.searchHistory.slice(0, 20);
-    await apiCall(this.currentDataPath, 'saveSearchHistory', { data: this.searchHistory });
+    await this.apiCall('saveSearchHistory', { data: this.searchHistory });
     
-    const result = await apiCall(this.currentDataPath, 'searchSnippets', { query });
+    const result = await this.apiCall('searchSnippets', { query });
     
     if( result.success ) {
       this.isSearchMode = true;
       this.renderSearchResults(result.results);
     }
     else {
-      showError('Search failed: ' + result.message);
+      this.showError('Search failed: ' + result.message);
     }
   }
 
@@ -1170,7 +1181,7 @@ class SnippetManager
     recentList.innerHTML = this.recentSnippets.map(item => {
       const extension = item.path.split('.').pop();
       const icon = extension === 'yml' ? 'bi-file-code' : 'bi-file-text';
-      const timeAgoText = timeAgo(item.timestamp);
+      const timeAgo = this.timeAgo(item.timestamp);
       
       return `
         <div class="list-group-item file-item" data-path="${item.path}" 
@@ -1179,7 +1190,7 @@ class SnippetManager
             <i class="bi ${icon} file-icon me-2"></i>
             <div class="flex-grow-1">
               <div class="fw-medium">${item.name}</div>
-              <div class="file-meta">${timeAgoText}</div>
+              <div class="file-meta">${timeAgo}</div>
             </div>
           </div>
         </div>
@@ -1187,7 +1198,25 @@ class SnippetManager
     }).join('');
   }
 
-  // timeAgo and showModal moved to global helpers in lib/functions.js
+  timeAgo(timestamp)
+  {
+    const now = Date.now();
+    const diff = now - timestamp;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+    
+    if( minutes < 1 ) return 'Just now';
+    if( minutes < 60 ) return `${minutes}m ago`;
+    if( hours < 24 ) return `${hours}h ago`;
+    return `${days}d ago`;
+  }
+
+  showModal(modalId)
+  {
+    const modal = new bootstrap.Modal(document.getElementById(modalId));
+    modal.show();
+  }
 
   async createSnippet()
   {
@@ -1195,7 +1224,7 @@ class SnippetManager
     const type = document.getElementById('snippetType').value;
     
     if( ! name ) {
-      showError('Snippet name is required');
+      this.showError('Snippet name is required');
       return;
     }
 
@@ -1213,7 +1242,7 @@ class SnippetManager
     const extension = type === 'yml' ? 'yml' : 'md';
     const path = (this.currentPath ? this.currentPath + '/' : '') + name + '.' + extension;
 
-    const result = await apiCall(this.currentDataPath, 'saveSnippet', { path, data });
+    const result = await this.apiCall('saveSnippet', { path, data });
     
     if( result.success ) {
       // Reload files so the new snippet appears
@@ -1227,7 +1256,7 @@ class SnippetManager
         if( newItem ) newItem.classList.add('active');
       }
       await this.loadSnippet(path);
-      activateTab('edit-tab');
+      this.activateTab('edit-tab');
 
       // Close modal
       const modal = bootstrap.Modal.getInstance(document.getElementById('newSnippetModal'));
@@ -1237,7 +1266,7 @@ class SnippetManager
       document.getElementById('newSnippetForm').reset();
     }
     else {
-      showError('Failed to create snippet: ' + result.message);
+      this.showError('Failed to create snippet: ' + result.message);
     }
   }
 
@@ -1246,12 +1275,13 @@ class SnippetManager
     const name = document.getElementById('folderName').value.trim();
     
     if( ! name ) {
-      showError('Folder name is required');
+      this.showError('Folder name is required');
       return;
     }
 
     const folderPath = (this.currentPath ? this.currentPath + '/' : '') + name;
-    const result     = await apiCall(this.currentDataPath, 'createFolder', { folderPath });
+
+    const result = await this.apiCall('createFolder', { folderPath });
     
     if( result.success ) {
       this.loadFiles(this.currentPath);
@@ -1264,7 +1294,7 @@ class SnippetManager
       document.getElementById('newFolderForm').reset();
     }
     else {
-      showError('Failed to create folder: ' + result.message);
+      this.showError('Failed to create folder: ' + result.message);
     }
   }
 
@@ -1272,28 +1302,44 @@ class SnippetManager
   {
     // Update local state and inform server for consistency
     this.currentDataPath = dataPath;
-    const result = await apiCall(this.currentDataPath, 'setDataPath', { dataPath });
+    const result = await this.apiCall('setDataPath', { dataPath });
     
     if( result.success ) {
       this.currentPath = '';
       // Load recent snippets for the new data folder
-      const recentResult = await apiCall(this.currentDataPath, 'getRecentSnippets');
+      const recentResult = await this.apiCall('getRecentSnippets');
       if( recentResult.success ) {
         this.recentSnippets = recentResult.data;
       }
       this.loadFiles();
     }
     else {
-      showError('Failed to change data folder: ' + result.message);
+      this.showError('Failed to change data folder: ' + result.message);
     }
   }
 
-  // apiCall moved to global helper in lib/functions.js
+  async apiCall(action, data = {}) {
+    try {
+      const response = await fetch('ajax.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action, dataPath: this.currentDataPath, ...data })
+      });
+      
+      return await response.json();
+    }
+    catch( error ) {
+      console.error('API call failed:', error);
+      return { success: false, message: 'Network error' };
+    }
+  }
 
   async loadFiles(subPath = '') {
-    showLoading('fileList');
+    this.showLoading('fileList');
     
-    const result = await apiCall(this.currentDataPath, 'listFiles', { subPath });
+    const result = await this.apiCall('listFiles', { subPath });
     
     if( result.success ) {
       this.isSearchMode = false; // Exit search mode when loading normal files
@@ -1315,13 +1361,23 @@ class SnippetManager
       }
     }
     else {
-      showError('Failed to load files: ' + result.message);
+      this.showError('Failed to load files: ' + result.message);
     }
     
-    hideLoading('fileList');
+    this.hideLoading('fileList');
   }
 
-  // showLoading/hideLoading moved to global helpers in lib/functions.js
+  showLoading(elementId)
+  {
+    const element = document.getElementById(elementId);
+    element.classList.add('loading');
+  }
+
+  hideLoading(elementId)
+  {
+    const element = document.getElementById(elementId);
+    element.classList.remove('loading');
+  }
 
   async toggleContentExpansion() {
     const snippetContent = document.getElementById('snippetContent');
@@ -1347,6 +1403,43 @@ class SnippetManager
     }
   }
 
+  showSuccess(message)
+  {
+    this.showAlert(message, 'success');
+  }
+
+  showError(message)
+  {
+    this.showAlert(message, 'danger');
+  }
+
+  showAlert(message, type)
+  {
+    const alertHtml = `
+      <div class="alert alert-${type} alert-floating alert-dismissible fade show" role="alert">
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', alertHtml);
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+      const alert = document.querySelector('.alert-floating');
+      if( alert ) {
+        const bsAlert = new bootstrap.Alert(alert);
+        bsAlert.close();
+      }
+    }, 5000);
+  }
+
+  escapeHtml(text)
+  {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
 }
 
 // Initialize the app when DOM is loaded
