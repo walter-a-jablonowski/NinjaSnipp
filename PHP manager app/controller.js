@@ -14,6 +14,7 @@ class SnippetManager
     this.isSearchMode = false; // Track if we're showing search results
     this._mdAutoHeight = false; // reuse flag for content auto-height
     this._onResizeHandler = null;
+    this._initialLoad = true; // Flag for initial page load
     
     this.init();
   }
@@ -1230,6 +1231,20 @@ class SnippetManager
       this.isSearchMode = false; // Exit search mode when loading normal files
       this.renderFileList(result.files);
       this.currentPath = subPath;
+
+      // Auto-load first yml/md file on initial page load
+      if( this._initialLoad && result.files.length > 0 ) {
+        const firstFile = result.files.find(f => f.type === 'file' && (f.extension === 'yml' || f.extension === 'md'));
+        if( firstFile ) {
+          const fileItem = document.querySelector(`.file-item[data-path="${firstFile.path}"]`);
+          if( fileItem ) {
+            document.querySelectorAll('.file-item.active').forEach(item => item.classList.remove('active'));
+            fileItem.classList.add('active');
+          }
+          this.loadSnippet(firstFile.path);
+        }
+        this._initialLoad = false;
+      }
     }
     else {
       this.showError('Failed to load files: ' + result.message);
