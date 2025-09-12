@@ -213,7 +213,12 @@ if( isset($_GET['data']) ) {
                   </div>
 
                   <div class="mb-3">
-                    <label for="snippetContent" class="form-label" id="labelSnippetContent">Content</label>
+                    <div class="d-flex justify-content-between align-items-center">
+                      <label for="snippetContent" class="form-label" id="labelSnippetContent">Content</label>
+                      <button type="button" class="btn btn-sm btn-outline-secondary" id="expandContentBtn" title="Expand content area" style="display: none;">
+                        <i class="bi bi-chevron-down"></i>
+                      </button>
+                    </div>
                     <textarea class="form-control" id="snippetContent" rows="12" placeholder="Some {{ var }} snippet..." required></textarea>
                   </div>
                 </form>

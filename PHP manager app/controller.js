@@ -15,6 +15,8 @@ class SnippetManager
     this._mdAutoHeight = false; // reuse flag for content auto-height
     this._onResizeHandler = null;
     this._initialLoad = true; // Flag for initial page load
+    this._initialContentHeight = null; // Initial height of content textarea
+    this._contentExpanded = false; // Flag for expanded content area
     
     this.init();
   }
@@ -132,7 +134,8 @@ class SnippetManager
       ['deleteSnippetBtn', 'click', () => this.deleteCurrentSnippet()],
       ['confirmDuplicateBtn', 'click', () => this.performDuplicate()],
       ['confirmDeleteBtn', 'click', () => this.performDelete()],
-      ['recent-tab', 'click', () => this.loadRecentSnippets()]
+      ['recent-tab', 'click', () => this.loadRecentSnippets()],
+      ['expandContentBtn', 'click', () => this.toggleContentExpansion()]
     ];
 
     buttonEvents.forEach(([elementId, event, handler]) => {
@@ -438,6 +441,10 @@ class SnippetManager
     if( labelSnippetName ) labelSnippetName.style.display = isYaml ? '' : 'none';
     if( labelSnippetContent ) labelSnippetContent.style.display = isYaml ? '' : 'none';
 
+    // Toggle expand button visibility
+    const expandBtn = document.getElementById('expandContentBtn');
+    if( expandBtn ) expandBtn.style.display = isYaml ? '' : 'none';
+
     // Show form, hide empty state
     if( editEmptyState ) editEmptyState.style.display = 'none';
     editForm.style.display = 'block';
@@ -445,6 +452,23 @@ class SnippetManager
     // Make editors taller to fill available vertical space for both YAML and Markdown
     // Do it after the form becomes visible to get correct element geometry
     requestAnimationFrame(() => {
+      // Handle content height for YAML files after layout settles
+      if( isYaml ) {
+        if( this._initialContentHeight === null ) {
+          this._initialContentHeight = 300;
+        }
+        // Reset to initial height if expanded
+        if( this._contentExpanded ) {
+          snippetContent.style.height = this._initialContentHeight + 'px';
+          this._contentExpanded = false;
+          const expandBtn = document.getElementById('expandContentBtn');
+          if( expandBtn ) {
+            const icon = expandBtn.querySelector('i');
+            if( icon ) icon.className = 'bi bi-chevron-down';
+          }
+        }
+      }
+
       this.enableMdTextareaAutoHeight();
       // One more frame to ensure layout has fully settled
       requestAnimationFrame(() => {
@@ -1263,6 +1287,30 @@ class SnippetManager
   {
     const element = document.getElementById(elementId);
     element.classList.remove('loading');
+  }
+
+  async toggleContentExpansion() {
+    const snippetContent = document.getElementById('snippetContent');
+    const expandBtn = document.getElementById('expandContentBtn');
+    if( ! snippetContent || ! expandBtn ) return;
+
+    const icon = expandBtn.querySelector('i');
+    if( ! icon ) return;
+
+    if( this._contentExpanded ) {
+      // Restore to initial height
+      snippetContent.style.height = this._initialContentHeight + 'px';
+      icon.className = 'bi bi-chevron-down';
+      this._contentExpanded = false;
+    } else {
+      // Expand to available height
+      const rect = snippetContent.getBoundingClientRect();
+      const bottomPadding = 24;
+      const available = Math.max(400, Math.floor(window.innerHeight - rect.top - bottomPadding));
+      snippetContent.style.height = available + 'px';
+      icon.className = 'bi bi-chevron-up';
+      this._contentExpanded = true;
+    }
   }
 
   showSuccess(message)
