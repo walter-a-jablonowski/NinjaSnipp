@@ -1,11 +1,10 @@
-
+dataPaths:
+  'Demo 1': data/demo_data_1
+  'Demo 2': data/demo_data_2
 nav:
   foldersFirst: false
-
 render:
   includedSameIndent: true
-  highlightInclude:   true  # light grey
-
-dataPaths:
-  Demo 1: 'data/demo_data_1'
-  Demo 2: 'data/demo_data_2'
+  highlightInclude: true
+edit:
+  autosave: true

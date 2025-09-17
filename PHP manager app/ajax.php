@@ -208,6 +208,30 @@ try {
         $response = ['success' => false, 'message' => 'Failed to save recent snippets'];
       break;
 
+    // --- User settings (YAML) ---
+    case 'getUserSettings':
+      $settingsFile = 'users/default/settings.yml';
+      if( is_file($settingsFile) )
+        $settings = Yaml::parseFile($settingsFile);
+      else
+        $settings = [];
+      $response = ['success' => true, 'settings' => $settings];
+      break;
+
+    case 'setUserSettings':
+      $settingsFile = 'users/default/settings.yml';
+      $current = is_file($settingsFile) ? Yaml::parseFile($settingsFile) : [];
+      $incoming = $input['settings'] ?? [];
+      if( ! is_array($incoming) ) $incoming = [];
+      // Merge recursively: incoming overrides current
+      $merged = array_replace_recursive($current, $incoming);
+      $yaml = Yaml::dump($merged, 4, 2);
+      if( file_put_contents($settingsFile, $yaml) !== false )
+        $response = ['success' => true, 'settings' => $merged];
+      else
+        $response = ['success' => false, 'message' => 'Failed to write settings'];
+      break;
+
     default:
       $response = ['success' => false, 'message' => "Unknown action: $action"];
   }

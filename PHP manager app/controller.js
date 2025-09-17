@@ -17,6 +17,7 @@ class SnippetManager
     this._initialLoad = true; // Flag for initial page load
     this._initialContentHeight = null; // Initial height of content textarea
     this._contentExpanded = false; // Flag for expanded content area
+    this.userSettings = {}; // loaded from users/default/settings.yml
     
     this.init();
   }
@@ -126,6 +127,8 @@ class SnippetManager
       this.searchHistory = [];
       this.recentSnippets = [];
     }
+    // Load user settings (e.g., edit.autosave)
+    await this.loadUserSettings();
     this.loadFiles();
     this.loadRecentSnippets();
     this.setupSearchHistory();
@@ -314,6 +317,15 @@ class SnippetManager
     // Initial state
     this.updateActionButtonsVisibility();
     this.setActionButtonsEnabled(false);
+
+    // Bind autosave toggle
+    const autosaveSwitch = document.getElementById('autosaveSwitch');
+    if( autosaveSwitch ) {
+      autosaveSwitch.addEventListener('change', async () => {
+        const enabled = !!autosaveSwitch.checked;
+        await this.setAutosave(enabled);
+      });
+    }
 
     // After full page load (fonts, bootstrap), recalc heights once
     window.addEventListener('load', () => {
@@ -731,6 +743,45 @@ class SnippetManager
       const renderActive = activeTab && activeTab.id === 'render-tab';
       const canRender = !!(this.currentSnippet && this.currentSnippet._type === 'yml');
       copyBtn.style.display = (renderActive && canRender) ? '' : 'none';
+    }
+
+    // Autosave switch is visible only on Edit tab
+    const autosaveWrap = document.getElementById('autosaveSwitchWrapper');
+    if( autosaveWrap ) autosaveWrap.style.display = show ? '' : 'none';
+  }
+
+  async loadUserSettings()
+  {
+    try {
+      const res = await apiCall(this.currentDataPath, 'getUserSettings');
+      if( res && res.success ) {
+        this.userSettings = res.settings || {};
+      }
+      else {
+        this.userSettings = {};
+      }
+    }
+    catch( e ) {
+      this.userSettings = {};
+    }
+    // Reflect autosave state
+    const autosaveSwitch = document.getElementById('autosaveSwitch');
+    if( autosaveSwitch ) {
+      const enabled = !!(this.userSettings.edit && this.userSettings.edit.autosave);
+      autosaveSwitch.checked = enabled;
+    }
+  }
+
+  async setAutosave(enabled)
+  {
+    // Update local cache
+    if( ! this.userSettings.edit ) this.userSettings.edit = {};
+    this.userSettings.edit.autosave = !!enabled;
+    // Persist to server
+    const payload = { settings: { edit: { autosave: !!enabled } } };
+    const res = await apiCall(this.currentDataPath, 'setUserSettings', payload);
+    if( ! (res && res.success) ) {
+      showError('Failed to save settings');
     }
   }
 

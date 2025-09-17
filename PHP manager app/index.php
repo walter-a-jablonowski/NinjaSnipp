@@ -155,6 +155,9 @@ if( isset($_GET['data']) ) {
             </li>
             <li class="nav-item ms-auto" role="presentation">
               <div class="d-flex gap-2 align-items-center">
+                <div id="autosaveSwitchWrapper" class="form-check form-switch" title="autosave" style="display: none;">
+                  <input class="form-check-input" type="checkbox" id="autosaveSwitch">
+                </div>
                 <button type="button" class="btn btn-sm btn-outline-primary" id="copyRenderedBtn" title="Copy rendered" aria-label="Copy rendered" style="display: none;" disabled>
                   <i class="bi bi-clipboard"></i>
                 </button>
