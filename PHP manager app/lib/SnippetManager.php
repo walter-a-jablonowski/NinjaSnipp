@@ -526,8 +526,8 @@ class SnippetManager
       
     $content = $snippet['content'];
     
-    // Handle includes first
-    $content = $this->processIncludes($content);
+    // Handle includes first (no inline markers for final render)
+    $content = $this->processIncludes($content, false);
     
     // Handle placeholders
     $content = $this->processPlaceholders($content, $placeholders);
@@ -542,22 +542,22 @@ class SnippetManager
 
     $content = $snippet['content'];
 
-    // Resolve includes only; placeholders remain intact for inline editing
-    $content = $this->processIncludes($content);
+    // Resolve includes only; placeholders remain intact for inline editing (emit markers)
+    $content = $this->processIncludes($content, true);
 
     return $content;
   }
 
-  private function processIncludes( string $content ) : string
+  private function processIncludes( string $content, bool $forInline ) : string
   {
     // Double-brace include: {{ include: "Snippet name" }} (allow inner spaces)
-    return preg_replace_callback('/^(\s*)\{\{\s*include:\s*["\']([^"\']+)["\']\s*\}\}/m', function($matches) {
+    return preg_replace_callback('/^(\s*)\{\{\s*include:\s*["\']([^"\']+)["\']\s*\}\}/m', function($matches) use ($forInline) {
       $indent = $matches[1];
       $includeName = $matches[2];
       $includeSnippet = $this->findSnippetByName($includeName);
       
       if( $includeSnippet ) {
-        $includedContent = $this->processIncludes($includeSnippet['content'] ?? '');
+        $includedContent = $this->processIncludes($includeSnippet['content'] ?? '', $forInline);
         
         // Apply same indentation if config setting is enabled
         if( isset($this->config['render']['includedSameIndent']) && $this->config['render']['includedSameIndent'] ) {
@@ -565,9 +565,16 @@ class SnippetManager
           $indentedLines = array_map(function($line) use ($indent) {
             return $line === '' ? $line : $indent . $line;
           }, $lines);
-          return implode("\n", $indentedLines);
+          $includedContent = implode("\n", $indentedLines);
         }
-        
+
+        // Optionally wrap with sentinel markers for highlighting in inline view
+        if( $forInline && isset($this->config['render']['highlightInclude']) && $this->config['render']['highlightInclude'] ) {
+          $start = "<<<INC:START:{$includeName}>>>";
+          $end   = "<<<INC:END>>>";
+          return $start . $includedContent . $end;
+        }
+
         return $includedContent;
       }
         

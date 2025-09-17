@@ -778,16 +778,49 @@ class SnippetManager
     let lastIndex = 0;
     let match;
     let out = '';
+    // Track open include wrappers across placeholder boundaries
+    const incStack = [];
+
+    // Helper to emit literal text that may contain include markers
+    const emitLiteralWithInc = (literal, idxTag) => {
+      if( ! literal ) return;
+      const markerRe = /(<<<INC:START:([^>]+)>>>|<<<INC:END>>>)/g;
+      let pos = 0;
+      let m;
+      while( (m = markerRe.exec(literal)) ) {
+        const before = literal.slice(pos, m.index);
+        if( before ) {
+          out += `<span class="ph-literal" contenteditable="true" tabindex="0" data-chunk="${idxTag}">${escapeHtml(before)}</span>`;
+        }
+        const token = m[1];
+        if( token.startsWith('<<<INC:START:') ) {
+          const name = m[2] || '';
+          out += `<span class="inc-block" data-inc="${escapeHtml(name)}">`;
+          incStack.push(name);
+        }
+        else { // <<<INC:END>>>
+          if( incStack.length > 0 ) {
+            incStack.pop();
+            out += `</span>`;
+          }
+        }
+        pos = markerRe.lastIndex;
+      }
+      const tail = literal.slice(pos);
+      if( tail ) {
+        out += `<span class="ph-literal" contenteditable="true" tabindex="0" data-chunk="${idxTag}-tail">${escapeHtml(tail)}</span>`;
+      }
+    };
     while( (match = regex.exec(text)) ) {
       const before = text.slice(lastIndex, match.index);
-      if( before )
-        out += `<span class="ph-literal" contenteditable="true" tabindex="0" data-chunk="${lastIndex}">${escapeHtml(before)}</span>`;
+      if( before ) emitLiteralWithInc(before, String(lastIndex));
 
       const raw   = match[1];
       const token = raw.trim();
 
       // Include directives: leave verbatim (should be pre-resolved server-side)
       if( /^include:\s*["'][^"']+["']$/i.test(token) ) {
+        // Render include directive verbatim (should not occur since server resolves)
         out += escapeHtml(match[0]);
         lastIndex = regex.lastIndex;
         continue;
@@ -823,9 +856,13 @@ class SnippetManager
     }
 
     const tail = text.slice(lastIndex);
+    if( tail ) emitLiteralWithInc(tail, 'tail');
 
-    if( tail )
-      out += `<span class=\"ph-literal\" contenteditable=\"true\" tabindex=\"0\" data-chunk=\"tail\">${escapeHtml(tail)}</span>`;
+    // Close any unclosed include wrappers (robustness)
+    while( incStack.length > 0 ) {
+      incStack.pop();
+      out += `</span>`;
+    }
 
     return out;
   }

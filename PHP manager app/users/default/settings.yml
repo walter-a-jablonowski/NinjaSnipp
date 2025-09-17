@@ -4,7 +4,7 @@ nav:
 
 render:
   includedSameIndent: true
-  # highlightInclude: true  # light grey, currently left out cause we already have placeholder color (see tesks)
+  highlightInclude:   true  # light grey
 
 dataPaths:
   Demo 1: 'data/demo_data_1'

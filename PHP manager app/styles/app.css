@@ -190,6 +190,15 @@ body {
   min-height: 100px;
 }
 
+/* Included regions highlighting (works with nested includes) */
+.inline-snippet .inc-block {
+  display: block; /* full-width grey box over the entire included area */
+  background-color: #f2f3f5; /* light grey */
+  border-left: 3px solid #ced4da;
+  padding: 0; /* no extra space */
+  margin: 0;  /* no extra space */
+}
+
 .ph {
   display: inline-block;
   min-width: 0.5rem;
