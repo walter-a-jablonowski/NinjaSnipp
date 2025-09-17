@@ -351,7 +351,8 @@ class SnippetManager
         }
         // Append any remaining keys in their existing order
         $data = $ordered + $data;
-        $yamlContent = Yaml::dump($data, 4, 2);
+        // Dump with literal block style for multi-line strings (usage, content, etc.)
+        $yamlContent = Yaml::dump($data, 4, 2, Yaml::DUMP_MULTI_LINE_LITERAL_BLOCK);
         return file_put_contents($fullPath, $yamlContent) !== false;
       }
       elseif( $data['_type'] === 'md' )
