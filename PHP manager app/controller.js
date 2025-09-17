@@ -18,6 +18,9 @@ class SnippetManager
     this._initialContentHeight = null; // Initial height of content textarea
     this._contentExpanded = false; // Flag for expanded content area
     this.userSettings = {}; // loaded from users/default/settings.yml
+    this._autosaveTimer = null; // debounce timer id
+    this._autosaveDelayMs = 800; // debounce delay for autosave
+    this._autosaveBound = false; // ensure we bind handlers once
     
     this.init();
   }
@@ -324,6 +327,7 @@ class SnippetManager
       autosaveSwitch.addEventListener('change', async () => {
         const enabled = !!autosaveSwitch.checked;
         await this.setAutosave(enabled);
+        if( ! enabled ) this.clearAutosaveTimer();
       });
     }
 
@@ -336,6 +340,9 @@ class SnippetManager
     // File list dropdown actions (delegate)
     const fileList = document.getElementById('fileList');
     if( fileList ) fileList.addEventListener('click', (e) => this.handleFileListDropdownClick(e));
+
+    // Bind autosave handlers to edit form inputs (once)
+    this.bindAutosaveHandlers();
   }
 
   async performRename()
@@ -633,7 +640,9 @@ class SnippetManager
     const result = await apiCall(this.currentDataPath, 'saveSnippet', { path, data });
     
     if( result.success ) {
-      showSuccess('Snippet saved successfully');
+      // If called with silent flag, do not pop success toast
+      const silent = arguments[0] === true || (typeof arguments[0] === 'object' && arguments[0]?.silent === true);
+      if( ! silent ) showSuccess('Snippet saved successfully');
       this.currentSnippet = data;
       this.loadFiles(this.currentPath); // Refresh file list
 
@@ -645,6 +654,61 @@ class SnippetManager
     else {
       showError('Failed to save snippet: ' + result.message);
     }
+  }
+
+  bindAutosaveHandlers()
+  {
+    if( this._autosaveBound ) return;
+    const nameEl = document.getElementById('snippetNameEdit');
+    const shEl = document.getElementById('snippetSh');
+    const usageEl = document.getElementById('snippetUsage');
+    const contentEl = document.getElementById('snippetContent');
+    const handler = () => this.onEditFieldChanged();
+    [nameEl, shEl, usageEl, contentEl].forEach(el => {
+      if( el ) {
+        el.addEventListener('input', handler);
+        el.addEventListener('blur', handler);
+      }
+    });
+    this._autosaveBound = true;
+  }
+
+  onEditFieldChanged()
+  {
+    if( ! this.getAutosaveEnabled() ) return;
+    if( ! this.currentSnippet ) return;
+    this.scheduleAutosave();
+  }
+
+  getAutosaveEnabled()
+  {
+    const sw = document.getElementById('autosaveSwitch');
+    return !!(sw && sw.checked);
+  }
+
+  scheduleAutosave()
+  {
+    this.clearAutosaveTimer();
+    this._autosaveTimer = setTimeout(() => {
+      this.autosaveIfEnabled();
+    }, this._autosaveDelayMs);
+  }
+
+  clearAutosaveTimer()
+  {
+    if( this._autosaveTimer ) {
+      clearTimeout(this._autosaveTimer);
+      this._autosaveTimer = null;
+    }
+  }
+
+  async autosaveIfEnabled()
+  {
+    this._autosaveTimer = null;
+    if( ! this.getAutosaveEnabled() ) return;
+    if( ! this.currentSnippet ) return;
+    // Save silently
+    await this.saveCurrentSnippet(true);
   }
 
   async duplicateCurrentSnippet()
