@@ -192,7 +192,7 @@ body {
 
 /* Included regions highlighting (works with nested includes) */
 .inline-snippet .inc-block {
-  display: block; /* full-width grey box over the entire included area */
+  display: inline-block; /* do not force a new line before/after the include */
   background-color: #f2f3f5; /* light grey */
   border-left: 3px solid #ced4da;
   padding: 0; /* no extra space */

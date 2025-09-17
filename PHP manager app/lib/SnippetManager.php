@@ -568,6 +568,10 @@ class SnippetManager
           $includedContent = implode("\n", $indentedLines);
         }
 
+        // Remove trailing newline(s) from the included block so the surrounding
+        // host snippet controls line breaks after the include directive.
+        $includedContent = preg_replace('/(\r?\n)+$/', '', $includedContent);
+
         // Optionally wrap with sentinel markers for highlighting in inline view
         if( $forInline && isset($this->config['render']['highlightInclude']) && $this->config['render']['highlightInclude'] ) {
           $start = "<<<INC:START:{$includeName}>>>";
