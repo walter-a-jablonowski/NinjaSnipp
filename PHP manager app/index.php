@@ -6,7 +6,7 @@ use Symfony\Component\Yaml\Yaml;
 require_once 'vendor/autoload.php';
 
 
-$config  = Yaml::parseFile('users/default/config.yml');
+$config  = Yaml::parseFile('users/default/settings.yml');
 $manager = new SnippetManager( $config['dataPaths'] ?? ['data'], $config);
 if( isset($config['nav']['foldersFirst']) )
   $manager->setFoldersFirst( (bool)$config['nav']['foldersFirst'] );
