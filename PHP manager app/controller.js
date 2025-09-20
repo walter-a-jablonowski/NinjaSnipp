@@ -1148,14 +1148,49 @@ class SnippetManager
 
   async copyRenderedContent()
   {
+    // Ensure we have the latest composed text from the inline DOM
+    await this.updateRenderedOutput();
     if( ! this.renderedText ) return;
-    
+
+    const text = this.renderedText;
+    let copied = false;
+
+    // Try modern Clipboard API first when available and in a secure context
     try {
-      await navigator.clipboard.writeText(this.renderedText);
-      showSuccess('Content copied to clipboard');
+      if( navigator.clipboard && typeof navigator.clipboard.writeText === 'function' && (window.isSecureContext || location.hostname === 'localhost') ) {
+        await navigator.clipboard.writeText(text);
+        copied = true;
+      }
     }
-    catch( error ) {
-      showError('Failed to copy content');
+    catch( e1 ) {
+      // Intentionally fall through to fallback below
+    }
+
+    // Fallback: use a temporary textarea and execCommand('copy')
+    if( ! copied ) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.top = '-1000px';
+        ta.style.left = '-1000px';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        const ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        if( ! ok ) throw new Error('execCommand(copy) returned false');
+        copied = true;
+      }
+      catch( e2 ) {
+        showError('Failed to copy content: ' + (e2?.message || 'Unknown error'));
+        return;
+      }
+    }
+
+    if( copied ) {
+      showSuccess('Content copied to clipboard');
     }
   }
 
