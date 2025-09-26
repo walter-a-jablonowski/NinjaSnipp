@@ -232,6 +232,26 @@ body {
   padding: 0 0.25rem;
 }
 
+/* Multi-instance placeholder colors - each group gets a different color */
+.ph.ph-group-0 { background-color: #e8f5e8; border-bottom: 1px dashed #28a745; } /* Light green */
+.ph.ph-group-1 { background-color: #e3f2fd; border-bottom: 1px dashed #2196f3; } /* Light blue */
+.ph.ph-group-2 { background-color: #fce4ec; border-bottom: 1px dashed #e91e63; } /* Light pink */
+.ph.ph-group-3 { background-color: #f3e5f5; border-bottom: 1px dashed #9c27b0; } /* Light purple */
+.ph.ph-group-4 { background-color: #fff3e0; border-bottom: 1px dashed #ff9800; } /* Light orange */
+.ph.ph-group-5 { background-color: #e0f2f1; border-bottom: 1px dashed #009688; } /* Light teal */
+.ph.ph-group-6 { background-color: #f1f8e9; border-bottom: 1px dashed #8bc34a; } /* Light lime */
+.ph.ph-group-7 { background-color: #fdf2e9; border-bottom: 1px dashed #795548; } /* Light brown */
+
+/* Focused states for multi-instance placeholders */
+.ph.ph-group-0:focus { background-color: #d4edda; }
+.ph.ph-group-1:focus { background-color: #bbdefb; }
+.ph.ph-group-2:focus { background-color: #f8bbd9; }
+.ph.ph-group-3:focus { background-color: #e1bee7; }
+.ph.ph-group-4:focus { background-color: #ffe0b2; }
+.ph.ph-group-5:focus { background-color: #b2dfdb; }
+.ph.ph-group-6:focus { background-color: #dcedc8; }
+.ph.ph-group-7:focus { background-color: #d7ccc8; }
+
 /* Ghost label for empty text placeholders (no default) */
 .inline-snippet .ph-text:empty::before {
   content: attr(data-ph-label);

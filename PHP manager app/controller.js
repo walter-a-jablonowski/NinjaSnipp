@@ -992,6 +992,29 @@ class SnippetManager
       this.placeholderGroups.get(name).push(el);
     });
 
+    // Assign different colors to each placeholder group
+    let groupIndex = 0;
+    this.placeholderGroups.forEach((group, name) => {
+      if( group.length > 1 ) {
+        // Multi-instance placeholder: assign a group color
+        const colorClass = `ph-group-${groupIndex % 8}`; // Cycle through 8 colors
+        group.forEach(el => {
+          // Remove any existing group classes
+          el.classList.remove('ph-group-0', 'ph-group-1', 'ph-group-2', 'ph-group-3', 
+                             'ph-group-4', 'ph-group-5', 'ph-group-6', 'ph-group-7');
+          el.classList.add(colorClass);
+        });
+        groupIndex++;
+      }
+      else {
+        // Single instance: remove any group classes (keep default yellow)
+        group.forEach(el => {
+          el.classList.remove('ph-group-0', 'ph-group-1', 'ph-group-2', 'ph-group-3', 
+                             'ph-group-4', 'ph-group-5', 'ph-group-6', 'ph-group-7');
+        });
+      }
+    });
+
     // helpers
     const setGroupValue = (name, value) => {
       const group = this.placeholderGroups.get(name) || [];
