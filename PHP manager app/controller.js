@@ -1005,7 +1005,18 @@ class SnippetManager
     const onFocus = (e) => {
       const el = e.currentTarget;
       el.dataset.edited = '0';
-      if( el.classList.contains('ph-choice') ) this.openChoiceMenu(el);
+      if( el.classList.contains('ph-choice') ) {
+        this.openChoiceMenu(el);
+      }
+    };
+    
+    const onClick = (e) => {
+      const el = e.currentTarget;
+      if( el.classList.contains('ph-choice') ) {
+        e.stopPropagation(); // Prevent the click from bubbling up
+        e.preventDefault(); // Prevent default click behavior
+        el.focus(); // Manually trigger focus which will open the menu
+      }
     };
     const onBlur = (e) => {
       const el = e.currentTarget;
@@ -1051,6 +1062,7 @@ class SnippetManager
       el.addEventListener('blur', onBlur);
       el.addEventListener('keydown', onKeyDown);
       if( el.classList.contains('ph-text') ) el.addEventListener('input', onInput);
+      if( el.classList.contains('ph-choice') ) el.addEventListener('click', onClick);
     });
 
     // Bind events for literal editable spans
@@ -1075,26 +1087,50 @@ class SnippetManager
     menu.style.position = 'absolute';
     menu.style.left = (rect.left + window.scrollX) + 'px';
     menu.style.top = (rect.bottom + window.scrollY) + 'px';
+    menu.style.zIndex = '1070';
     menu.classList.add('show');
+    // Set a flag to prevent immediate outside click detection
+    this._menuJustOpened = true;
 
-    const onClick = (e) => {
-      if( e.target.matches('.dropdown-item') ) {
+    // Add click handlers directly to each button (using mousedown since it works reliably)
+    const buttons = menu.querySelectorAll('.dropdown-item');
+    buttons.forEach((btn) => {
+      btn.addEventListener('mousedown', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
         const val = e.target.getAttribute('data-value');
         const group = this.placeholderGroups.get(name) || [];
-        group.forEach(node => node.textContent = val);
+        group.forEach(node => {
+          node.textContent = val;
+          node.dataset.edited = '1'; // Mark as edited so onBlur doesn't reset it
+        });
         this.updateRenderedOutput();
+        this.closeChoiceMenu();
+      });
+    });
+
+    const clickOutside = (evt) => {
+      // Skip if menu was just opened
+      if( this._menuJustOpened ) {
+        this._menuJustOpened = false;
+        return;
+      }
+      
+      // Don't close if clicking on the menu or its items
+      if( ! menu.contains(evt.target) && ! evt.target.closest('#phChoiceMenu') ) {
         this.closeChoiceMenu();
       }
     };
-    // Rebind each time to keep it simple
-    menu.onclick = onClick;
-
-    const clickOutside = (evt) => {
-      if( ! menu.contains(evt.target) && evt.target !== el ) this.closeChoiceMenu();
-    };
+    
     // Store to remove later
     this._choiceOutsideHandler = clickOutside;
+    // Add the outside click handler immediately but with the flag protection
     document.addEventListener('click', clickOutside);
+    
+    // Clear the flag after a short delay
+    setTimeout(() => {
+      this._menuJustOpened = false;
+    }, 50);
   }
 
   closeChoiceMenu()
@@ -1103,6 +1139,8 @@ class SnippetManager
     if( ! menu ) return;
     menu.classList.remove('show');
     menu.style.display = 'none';
+    
+    // Clean up event listeners
     if( this._choiceOutsideHandler ) {
       document.removeEventListener('click', this._choiceOutsideHandler);
       this._choiceOutsideHandler = null;
