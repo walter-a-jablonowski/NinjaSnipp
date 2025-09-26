@@ -905,7 +905,7 @@ class SnippetManager
       while( (m = markerRe.exec(literal)) ) {
         const before = literal.slice(pos, m.index);
         if( before ) {
-          out += `<span class="ph-literal" contenteditable="true" tabindex="0" data-chunk="${idxTag}">${escapeHtml(before)}</span>`;
+          out += `<span class="ph-literal" contenteditable="true" tabindex="-1" data-chunk="${idxTag}">${escapeHtml(before)}</span>`;
         }
         const token = m[1];
         if( token.startsWith('<<<INC:START:') ) {
@@ -923,7 +923,7 @@ class SnippetManager
       }
       const tail = literal.slice(pos);
       if( tail ) {
-        out += `<span class="ph-literal" contenteditable="true" tabindex="0" data-chunk="${idxTag}-tail">${escapeHtml(tail)}</span>`;
+        out += `<span class="ph-literal" contenteditable="true" tabindex="-1" data-chunk="${idxTag}-tail">${escapeHtml(tail)}</span>`;
       }
     };
     while( (match = regex.exec(text)) ) {
@@ -965,7 +965,7 @@ class SnippetManager
       }
       else {
         // No valid placeholder token; render verbatim
-        out += `<span class="ph-literal" contenteditable="true" tabindex="0">${escapeHtml(match[0])}</span>`;
+        out += `<span class="ph-literal" contenteditable="true" tabindex="-1">${escapeHtml(match[0])}</span>`;
       }
       lastIndex = regex.lastIndex;
     }
@@ -988,15 +988,39 @@ class SnippetManager
     const nodes = document.querySelectorAll('#inlineSnippet .ph');
     nodes.forEach(el => {
       const name = el.dataset.ph;
-      if( ! this.placeholderGroups.has(name) ) this.placeholderGroups.set(name, []);
-      this.placeholderGroups.get(name).push(el);
+      // Only process elements that have a valid placeholder name
+      if( name && name.trim() !== '' ) {
+        if( ! this.placeholderGroups.has(name) ) this.placeholderGroups.set(name, []);
+        this.placeholderGroups.get(name).push(el);
+      }
     });
 
-    // Assign different colors to each placeholder group
+    // Synchronize default values and assign colors to each placeholder group
     let groupIndex = 0;
     this.placeholderGroups.forEach((group, name) => {
       if( group.length > 1 ) {
-        // Multi-instance placeholder: assign a group color
+        // Multi-instance placeholder: synchronize default values
+        // Find the first element that has a non-empty default value
+        let sharedDefault = '';
+        for( const el of group ) {
+          const defaultVal = el.dataset.default || '';
+          if( defaultVal !== '' ) {
+            sharedDefault = defaultVal;
+            break;
+          }
+        }
+        
+        // Apply the shared default to all elements in the group
+        group.forEach(el => {
+          el.dataset.default = sharedDefault;
+          // If element is empty or has the placeholder label, set it to the shared default
+          const currentText = (el.textContent || '').trim();
+          if( currentText === '' || currentText === '…' || el.hasAttribute('data-ph-label') ) {
+            el.textContent = sharedDefault;
+          }
+        });
+        
+        // Assign a group color
         const colorClass = `ph-group-${groupIndex % 8}`; // Cycle through 8 colors
         group.forEach(el => {
           // Remove any existing group classes
@@ -1027,7 +1051,12 @@ class SnippetManager
 
     const onFocus = (e) => {
       const el = e.currentTarget;
-      el.dataset.edited = '0';
+      // Only reset edited flag if the element has the default value or is empty
+      const currentValue = (el.textContent || '').trim();
+      const defaultValue = el.dataset.default || '';
+      if( currentValue === defaultValue || currentValue === '' ) {
+        el.dataset.edited = '0';
+      }
       if( el.classList.contains('ph-choice') ) {
         this.openChoiceMenu(el);
       }
@@ -1081,18 +1110,25 @@ class SnippetManager
     };
 
     nodes.forEach(el => {
-      el.addEventListener('focus', onFocus);
-      el.addEventListener('blur', onBlur);
-      el.addEventListener('keydown', onKeyDown);
-      if( el.classList.contains('ph-text') ) el.addEventListener('input', onInput);
-      if( el.classList.contains('ph-choice') ) el.addEventListener('click', onClick);
+      // Only bind events to elements with valid placeholder names
+      const name = el.dataset.ph;
+      if( name && name.trim() !== '' ) {
+        el.addEventListener('focus', onFocus);
+        el.addEventListener('blur', onBlur);
+        el.addEventListener('keydown', onKeyDown);
+        if( el.classList.contains('ph-text') ) el.addEventListener('input', onInput);
+        if( el.classList.contains('ph-choice') ) el.addEventListener('click', onClick);
+      }
+      else {
+        // Remove from tab order if it doesn't have a valid placeholder name
+        el.removeAttribute('tabindex');
+      }
     });
 
-    // Bind events for literal editable spans
+    // Bind events for literal editable spans (but not focus/blur to avoid undefined logs)
     const literalNodes = document.querySelectorAll('#inlineSnippet .ph-literal');
     literalNodes.forEach(el => {
-      el.addEventListener('focus', onFocus);
-      el.addEventListener('blur', onBlur);
+      // Don't bind focus/blur to literals to avoid "undefined" placeholder logs
       el.addEventListener('input', onInput);
       el.addEventListener('keydown', onKeyDown);
     });

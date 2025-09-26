@@ -181,7 +181,7 @@ if( isset($_GET['data']) ) {
               <div id="renderContent">
                 <div id="inlineSnippet" class="inline-snippet"></div>
                 <!-- Choice menu for placeholders (shown on demand) -->
-                <div id="phChoiceMenu" class="dropdown-menu"></div>
+                <div id="phChoiceMenu" class="dropdown-menu" tabindex="-1"></div>
               </div>
             </div>
 
