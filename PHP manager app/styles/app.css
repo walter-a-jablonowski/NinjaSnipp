@@ -192,7 +192,7 @@ body {
 
 /* Included regions highlighting (works with nested includes) */
 .inline-snippet .inc-block {
-  display: inline-block; /* do not force a new line before/after the include */
+  display: inline-block; /* don't force a new line before/after the include */
   background-color: #f2f3f5; /* light grey */
   padding: 0; /* no extra space */
   margin: 0;  /* no extra space */
@@ -356,7 +356,7 @@ body {
   height: 1rem;
 }
 
-/* Offcanvas sidebar styling is mostly Bootstrap defaults */
+/* Offcanvas sidebar styling is mostly BS defaults */
 
 /* Responsive adjustments */
 @media (max-width: 991.98px) {

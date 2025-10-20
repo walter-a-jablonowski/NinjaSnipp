@@ -101,9 +101,9 @@ try {
         break;
       }
 
-      // Ensure old exists and new does not
+      // Ensure old exists and new doesn't
       if( ! file_exists($oldFull) ) {
-        $response = ['success' => false, 'message' => 'Source does not exist'];
+        $response = ['success' => false, 'message' => 'Source missing'];
         break;
       }
       if( file_exists($newFull) ) {

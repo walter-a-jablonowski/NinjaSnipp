@@ -43,8 +43,8 @@ class SnippetManager
       const parent = parts.join('/');
       let base = filename;
       if( type === 'file' && ext ) {
-        const dotExt = '.' + ext;
-        if( base.toLowerCase().endsWith(dotExt) ) base = base.slice(0, -dotExt.length);
+        const dExt = '.' + ext;
+        if( base.toLowerCase().endsWith(dExt) ) base = base.slice(0, -dExt.length);
       }
       this._renameContext = { oldPath, parent, type, ext };
       const input = document.getElementById('renameNameInput');
@@ -59,7 +59,7 @@ class SnippetManager
     // Apply immediately
     this.resizeMdTextarea();
     this.resizeInlineSnippet();
-    // Extra delayed recalculation to account for late layout/Font/Bootstrap paints
+    // Extra delayed recalculation to account for late layout/Font/BS paints
     setTimeout(() => {
       if( this._mdAutoHeight ) {
         this.resizeMdTextarea();
@@ -304,7 +304,7 @@ class SnippetManager
     
     // Global document events
     document.addEventListener('click', (e) => {
-      // If the click is inside any dropdown control or its menu, do not trigger navigation
+      // If the click is inside any dropdown control or its menu, don't trigger navigation
       if( e.target.closest('.dropdown') || e.target.closest('.dropdown-menu') ) return;
       if( e.target.closest('.file-item') ) this.handleFileClick(e);
       else this.hideContextMenu();
@@ -331,7 +331,7 @@ class SnippetManager
       });
     }
 
-    // After full page load (fonts, bootstrap), recalc heights once
+    // After full page load (fonts, BS), recalc heights once
     window.addEventListener('load', () => {
       this.resizeMdTextarea();
       this.resizeInlineSnippet();
@@ -558,7 +558,7 @@ class SnippetManager
     if( editEmptyState ) editEmptyState.style.display = 'none';
     editForm.style.display = 'block';
 
-    // Make editors taller to fill available vertical space for both YAML and Markdown
+    // Make editors taller to fill available vertical space for YAML and Markdown
     // Do it after the form becomes visible to get correct element geometry
     requestAnimationFrame(() => {
       // Handle content height for YAML files after layout settles
@@ -640,7 +640,7 @@ class SnippetManager
     const result = await apiCall(this.currentDataPath, 'saveSnippet', { path, data });
     
     if( result.success ) {
-      // If called with silent flag, do not pop success toast
+      // If called with silent flag, don't pop success toast
       const silent = arguments[0] === true || (typeof arguments[0] === 'object' && arguments[0]?.silent === true);
       if( ! silent ) showSuccess('Snippet saved successfully');
       this.currentSnippet = data;
@@ -935,7 +935,7 @@ class SnippetManager
 
       // Include directives: leave verbatim (should be pre-resolved server-side)
       if( /^include:\s*["'][^"']+["']$/i.test(token) ) {
-        // Render include directive verbatim (should not occur since server resolves)
+        // Render include directive verbatim (shouldn't occur since server resolves)
         out += escapeHtml(match[0]);
         lastIndex = regex.lastIndex;
         continue;
@@ -1096,7 +1096,7 @@ class SnippetManager
         const group = this.placeholderGroups.get(name) || [];
         group.forEach(node => { if( node !== el ) node.textContent = value; });
       }
-      // For both ph and ph-literal, recompute rendered output
+      // For ph and ph-literal, recompute rendered output
       this.updateRenderedOutput();
     };
     const onKeyDown = (e) => {
@@ -1125,9 +1125,9 @@ class SnippetManager
       }
     });
 
-    // Bind events for literal editable spans (but not focus/blur to avoid undefined logs)
+    // Bind events for literal editable spans (but no focus/blur to avoid undefined logs)
     const literalNodes = document.querySelectorAll('#inlineSnippet .ph-literal');
-    literalNodes.forEach(el => {
+    literalNodes.forEach( el => {
       // Don't bind focus/blur to literals to avoid "undefined" placeholder logs
       el.addEventListener('input', onInput);
       el.addEventListener('keydown', onKeyDown);
@@ -1183,7 +1183,7 @@ class SnippetManager
     
     // Store to remove later
     this._choiceOutsideHandler = clickOutside;
-    // Add the outside click handler immediately but with the flag protection
+    // Add the outside click handler immediately but with the flag proection
     document.addEventListener('click', clickOutside);
     
     // Clear the flag after a short delay
@@ -1230,7 +1230,7 @@ class SnippetManager
       }
       else if( node.nodeType === Node.ELEMENT_NODE ) {
         const el = node;
-        if( el.classList.contains('ph') || el.classList.contains('ph-literal') ) {
+        if( el.classList.contains('ph') || el.classList.contains('ph-literal')) {
           parts.push(el.textContent || '');
         }
         else {
@@ -1454,7 +1454,7 @@ class SnippetManager
     recentList.innerHTML = this.recentSnippets.map(item => {
       const extension = item.path.split('.').pop();
       const icon = extension === 'yml' ? 'bi-file-code' : 'bi-file-text';
-      const timeAgoText = timeAgo(item.timestamp);
+      const timeAgo = timeAgo(item.timestamp);
       
       return `
         <div class="list-group-item file-item" data-path="${item.path}" 
@@ -1463,7 +1463,7 @@ class SnippetManager
             <i class="bi ${icon} file-icon me-2"></i>
             <div class="flex-grow-1">
               <div class="fw-medium">${item.name}</div>
-              <div class="file-meta">${timeAgoText}</div>
+              <div class="file-meta">${timeAgo}</div>
             </div>
           </div>
         </div>

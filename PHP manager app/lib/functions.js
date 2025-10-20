@@ -37,7 +37,7 @@ function showModal(modalId)
     modal.show();
   }
   catch(e) {
-    // Bootstrap unavailable
+    // BS unavailable
   }
 }
 
@@ -50,7 +50,7 @@ function activateTab(tabButtonId)
     tab.show();
   }
   catch(e) {
-    // No-op if Bootstrap is unavailable
+    // Nix if BS is unavailable
   }
 }
 
