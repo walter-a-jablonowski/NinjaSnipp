@@ -1454,7 +1454,7 @@ class SnippetManager
     recentList.innerHTML = this.recentSnippets.map(item => {
       const extension = item.path.split('.').pop();
       const icon = extension === 'yml' ? 'bi-file-code' : 'bi-file-text';
-      const timeAgo = timeAgo(item.timestamp);
+      const timeStr = timeAgo(item.timestamp);
       
       return `
         <div class="list-group-item file-item" data-path="${item.path}" 
@@ -1463,7 +1463,7 @@ class SnippetManager
             <i class="bi ${icon} file-icon me-2"></i>
             <div class="flex-grow-1">
               <div class="fw-medium">${item.name}</div>
-              <div class="file-meta">${timeAgo}</div>
+              <div class="file-meta">${timeStr}</div>
             </div>
           </div>
         </div>
