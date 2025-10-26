@@ -247,7 +247,7 @@ body {
   padding: 0;
 }
 
-.maybe-footer {
+.maybe-end {
   border-top: 1px solid #adb5bd;
   margin: 0;
   padding: 0;
@@ -257,7 +257,7 @@ body {
   display: none;
 }
 
-.maybe-block[data-enabled="false"] .maybe-footer {
+.maybe-block[data-enabled="false"] .maybe-end {
   display: none;
 }
 

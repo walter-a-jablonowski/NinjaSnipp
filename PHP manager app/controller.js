@@ -947,7 +947,7 @@ class SnippetManager
           if( incStack.length > 0 && incStack[incStack.length - 1].type === 'maybe' ) {
             incStack.pop();
             out += `</div>`; // close maybe-content
-            out += `<div class="maybe-footer"></div>`; // add footer line
+            out += `<div class="maybe-end"></div>`; // add footer line
             out += `</div>`; // close maybe-block
           }
         }
@@ -1294,8 +1294,8 @@ class SnippetManager
           return '';
         }
         
-        // Skip maybe-header and maybe-footer (checkbox, label, and footer line)
-        if( el.classList.contains('maybe-header') || el.classList.contains('maybe-footer') ) {
+        // Skip maybe-header and maybe-end (checkbox, label, and footer line)
+        if( el.classList.contains('maybe-header') || el.classList.contains('maybe-end') ) {
           return '';
         }
         
