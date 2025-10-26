@@ -551,6 +551,9 @@ class SnippetManager
 
   private function processIncludes( string $content, bool $forInline ) : string
   {
+    // First, handle MAYBE blocks (optional text portions)
+    $content = $this->processMaybeBlocks($content, $forInline);
+    
     // Double-brace include: {{ include: "Snippet name" }} (allow inner spaces)
     return preg_replace_callback('/^(\s*)\{\{\s*include:\s*["\']([^"\']+)["\']\s*\}\}/m', function($matches) use ($forInline) {
       $indent = $matches[1];
@@ -584,6 +587,31 @@ class SnippetManager
       }
         
       return $matches[0]; // Return original if missing
+    }, $content);
+  }
+
+  private function processMaybeBlocks( string $content, bool $forInline ) : string
+  {
+    // Match {{ MAYBE: Name }} ... {{ END-MAYBE }} blocks
+    $pattern = '/\{\{\s*MAYBE:\s*([^}]+)\s*\}\}(.*?)\{\{\s*END-MAYBE\s*\}\}/s';
+    
+    return preg_replace_callback($pattern, function($matches) use ($forInline) {
+      $name = trim($matches[1]);
+      $blockContent = $matches[2];
+      
+      // Recursively process includes and nested MAYBE blocks within this block
+      $blockContent = $this->processMaybeBlocks($blockContent, $forInline);
+      
+      if( $forInline ) {
+        // Wrap with markers for inline editing
+        $start = "<<<MAYBE:START:{$name}>>>";
+        $end = "<<<MAYBE:END>>>";
+        return $start . $blockContent . $end;
+      }
+      else {
+        // For final render, include the content (checkbox state handled by JS)
+        return $blockContent;
+      }
     }, $content);
   }
 

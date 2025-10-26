@@ -11,7 +11,9 @@ content: |
    */
   function {{ functionName=myFunction }}( ${{ paramName }} )
   {
+    {{ MAYBE: SomeName }}
     {{ include: "error-handling" }}
+    {{ END-MAYBE }}
     
     // Function body
     {{ body=// TASK: Implement function logic }}

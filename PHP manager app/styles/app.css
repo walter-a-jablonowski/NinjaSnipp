@@ -198,6 +198,69 @@ body {
   margin: 0;  /* no extra space */
 }
 
+/* MAYBE blocks (optional text portions) */
+.maybe-block {
+  display: block;
+  margin: 0;
+}
+
+.maybe-header {
+  display: flex;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  position: relative;
+}
+
+.maybe-header::before {
+  content: '';
+  width: 1.5rem;
+  border-top: 1px solid #adb5bd;
+  margin-right: 0.5rem;
+  flex-shrink: 0;
+}
+
+.maybe-header::after {
+  content: '';
+  flex: 1;
+  border-top: 1px solid #adb5bd;
+  margin-left: 0.5rem;
+}
+
+.maybe-checkbox {
+  cursor: pointer;
+  margin: 0 0.25rem 0 0;
+  flex-shrink: 0;
+}
+
+.maybe-label {
+  font-size: 0.875rem;
+  color: #495057;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.maybe-content {
+  display: block;
+  margin: 0;
+  padding: 0;
+}
+
+.maybe-footer {
+  border-top: 1px solid #adb5bd;
+  margin: 0;
+  padding: 0;
+}
+
+.maybe-block[data-enabled="false"] .maybe-content {
+  display: none;
+}
+
+.maybe-block[data-enabled="false"] .maybe-footer {
+  display: none;
+}
+
 .ph {
   display: inline-block;
   min-width: 0.5rem;

@@ -19,6 +19,12 @@ A snippet manager app that has some special features
 - `{{placholder=one|two|three}}`
   - first currently is default
 - `{{include: "Snippet name"}}`
+- Optional text:
+  ```
+  {{ MAYBE: SomeName }}
+  Some optional text
+  {{ END-MAYBE }}
+  ```
 - Trick for optional text: `{{optional=My optional text}}`
 
 ### Misc

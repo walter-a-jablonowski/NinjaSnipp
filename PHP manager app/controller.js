@@ -889,6 +889,20 @@ class SnippetManager
 
   buildInlineHtmlFromComposed(text)
   {
+    // First pass: convert MAYBE to HTML structure
+    const maybeStack = [];
+    const maybeR2 = /<<<MAYBE:START:([^>]+)>>>|<<<MAYBE:END>>>/g;
+    let processedText = text.replace(maybeR2, (match, name) => {
+      if( match.startsWith('<<<MAYBE:START:') ) {
+        maybeStack.push(name);
+        return `<<<MAYBE-DIV-START:${name}>>>`;
+      }
+      else {
+        maybeStack.pop();
+        return '<<<MAYBE-DIV-END>>>';
+      }
+    });
+    
     const regex = /\{\{\s*([^}]*)\s*\}\}/g;
     let lastIndex = 0;
     let match;
@@ -896,13 +910,13 @@ class SnippetManager
     // Track open include wrappers across placeholder boundaries
     const incStack = [];
 
-    // Helper to emit literal text that may contain include markers
+    // Helper to emit literal text that may contain include and MAYBE-DIV
     const emitLiteralWithInc = (literal, idxTag) => {
       if( ! literal ) return;
-      const markerRe = /(<<<INC:START:([^>]+)>>>|<<<INC:END>>>)/g;
+      const maybeR = /(<<<INC:START:([^>]+)>>>|<<<INC:END>>>|<<<MAYBE-DIV-START:([^>]+)>>>|<<<MAYBE-DIV-END>>>)/g;
       let pos = 0;
       let m;
-      while( (m = markerRe.exec(literal)) ) {
+      while( (m = maybeR.exec(literal)) ) {
         const before = literal.slice(pos, m.index);
         if( before ) {
           out += `<span class="ph-literal" contenteditable="true" tabindex="-1" data-chunk="${idxTag}">${escapeHtml(before)}</span>`;
@@ -911,23 +925,41 @@ class SnippetManager
         if( token.startsWith('<<<INC:START:') ) {
           const name = m[2] || '';
           out += `<span class="inc-block" data-inc="${escapeHtml(name)}">`;
-          incStack.push(name);
+          incStack.push({type: 'inc', name});
         }
-        else { // <<<INC:END>>>
-          if( incStack.length > 0 ) {
+        else if( token === '<<<INC:END>>>' ) {
+          if( incStack.length > 0 && incStack[incStack.length - 1].type === 'inc' ) {
             incStack.pop();
             out += `</span>`;
           }
         }
-        pos = markerRe.lastIndex;
+        else if( token.startsWith('<<<MAYBE-DIV-START:') ) {
+          const name = m[3] || '';
+          out += `<div class="maybe-block" data-maybe="${escapeHtml(name)}" data-enabled="true">`;
+          out += `<div class="maybe-header">`;
+          out += `<input type="checkbox" class="maybe-checkbox" checked> `;
+          out += `<span class="maybe-label">${escapeHtml(name)}</span>`;
+          out += `</div>`;
+          out += `<div class="maybe-content">`;
+          incStack.push({type: 'maybe', name});
+        }
+        else if( token === '<<<MAYBE-DIV-END>>>' ) {
+          if( incStack.length > 0 && incStack[incStack.length - 1].type === 'maybe' ) {
+            incStack.pop();
+            out += `</div>`; // close maybe-content
+            out += `<div class="maybe-footer"></div>`; // add footer line
+            out += `</div>`; // close maybe-block
+          }
+        }
+        pos = maybeR.lastIndex;
       }
       const tail = literal.slice(pos);
       if( tail ) {
         out += `<span class="ph-literal" contenteditable="true" tabindex="-1" data-chunk="${idxTag}-tail">${escapeHtml(tail)}</span>`;
       }
     };
-    while( (match = regex.exec(text)) ) {
-      const before = text.slice(lastIndex, match.index);
+    while( (match = regex.exec(processedText)) ) {
+      const before = processedText.slice(lastIndex, match.index);
       if( before ) emitLiteralWithInc(before, String(lastIndex));
 
       const raw   = match[1];
@@ -970,7 +1002,7 @@ class SnippetManager
       lastIndex = regex.lastIndex;
     }
 
-    const tail = text.slice(lastIndex);
+    const tail = processedText.slice(lastIndex);
     if( tail ) emitLiteralWithInc(tail, 'tail');
 
     // Close any unclosed include wrappers (robustness)
@@ -1132,6 +1164,19 @@ class SnippetManager
       el.addEventListener('input', onInput);
       el.addEventListener('keydown', onKeyDown);
     });
+
+    // Bind events for MAYBE block checkboxes
+    const maybeCheckboxes = document.querySelectorAll('#inlineSnippet .maybe-checkbox');
+    maybeCheckboxes.forEach(checkbox => {
+      checkbox.addEventListener('change', (e) => {
+        const maybeBlock = e.target.closest('.maybe-block');
+        if( maybeBlock ) {
+          const enabled = e.target.checked;
+          maybeBlock.dataset.enabled = enabled ? 'true' : 'false';
+          this.updateRenderedOutput();
+        }
+      });
+    });
   }
 
   openChoiceMenu(el)
@@ -1223,21 +1268,66 @@ class SnippetManager
     // Build final text from inline DOM: placeholders -> current values, literals -> their text
     const container = document.getElementById('inlineSnippet');
     if( ! container ) return;
-    const parts = [];
-    container.childNodes.forEach(node => {
+    
+    // Recursive function to extract text from nodes, respecting MAYBE block state
+    const extractText = (node) => {
       if( node.nodeType === Node.TEXT_NODE ) {
-        parts.push(node.nodeValue);
+        return node.nodeValue || '';
       }
       else if( node.nodeType === Node.ELEMENT_NODE ) {
         const el = node;
-        if( el.classList.contains('ph') || el.classList.contains('ph-literal')) {
-          parts.push(el.textContent || '');
+        
+        // Handle MAYBE blocks
+        if( el.classList.contains('maybe-block') ) {
+          const enabled = el.dataset.enabled === 'true';
+          if( ! enabled ) return ''; // Skip disabled blocks
+          
+          // Extract text from maybe-content only (skip header)
+          const content = el.querySelector('.maybe-content');
+          if( content ) {
+            let text = '';
+            content.childNodes.forEach(child => {
+              text += extractText(child);
+            });
+            return text;
+          }
+          return '';
         }
-        else {
-          parts.push(el.textContent || '');
+        
+        // Skip maybe-header and maybe-footer (checkbox, label, and footer line)
+        if( el.classList.contains('maybe-header') || el.classList.contains('maybe-footer') ) {
+          return '';
         }
+        
+        // Handle placeholders and literals
+        if( el.classList.contains('ph') || el.classList.contains('ph-literal') ) {
+          return el.textContent || '';
+        }
+        
+        // Handle include blocks and other containers
+        if( el.classList.contains('inc-block') || el.classList.contains('maybe-content') ) {
+          let text = '';
+          el.childNodes.forEach(child => {
+            text += extractText(child);
+          });
+          return text;
+        }
+        
+        // Default: recursively process children
+        let text = '';
+        el.childNodes.forEach(child => {
+          text += extractText(child);
+        });
+        return text;
       }
+      return '';
+    };
+    
+    let parts = [];
+    container.childNodes.forEach(node => {
+      parts.push(extractText(node));
     });
+    
     this.renderedText = parts.join('');
     const copyRenderedBtn = document.getElementById('copyRenderedBtn');
     if( copyRenderedBtn ) copyRenderedBtn.disabled = this.renderedText.length === 0;
