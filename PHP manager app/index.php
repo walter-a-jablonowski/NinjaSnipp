@@ -158,6 +158,9 @@ if( isset($_GET['data']) ) {
                 <div id="autosaveSwitchWrapper" class="form-check form-switch" title="autosave" style="display: none;">
                   <input class="form-check-input" type="checkbox" id="autosaveSwitch">
                 </div>
+                <button type="button" class="btn btn-sm btn-outline-secondary d-md-none" id="renderViewToggleBtn" title="Switch view" style="display: none;">
+                  <i class="bi bi-card-text"></i>
+                </button>
                 <button type="button" class="btn btn-sm btn-outline-primary" id="copyRenderedBtn" title="Copy rendered" aria-label="Copy rendered" style="display: none;" disabled>
                   <i class="bi bi-clipboard"></i>
                 </button>
@@ -179,7 +182,16 @@ if( isset($_GET['data']) ) {
             <!-- Rendered Tab -->
             <div id="render-pane" class="tab-pane fade show active" role="tabpanel">
               <div id="renderContent">
-                <div id="inlineSnippet" class="inline-snippet"></div>
+                <div class="row g-2 render-snippet-active" id="renderRow">
+                  <!-- Usage preview (left) -->
+                  <div class="col-md-6" id="renderUsageCol">
+                    <div id="renderUsage" class="usage-preview overflow-auto"></div>
+                  </div>
+                  <!-- Snippet (right) -->
+                  <div class="col-md-6" id="renderSnippetCol">
+                    <div id="inlineSnippet" class="inline-snippet"></div>
+                  </div>
+                </div>
                 <!-- Choice menu for placeholders (shown on demand) -->
                 <div id="phChoiceMenu" class="dropdown-menu" tabindex="-1"></div>
               </div>
@@ -220,7 +232,7 @@ if( isset($_GET['data']) ) {
                         <button class="nav-link small py-1 px-2 active" id="contentFieldPill" type="button">Content</button>
                       </li>
                     </ul>
-                    <button type="button" class="btn btn-sm btn-link ms-auto p-0 text-muted" id="usagePreviewBtnMobile" title="Preview usage" style="display: none;">
+                    <button type="button" class="btn btn-sm btn-link ms-auto p-0 text-muted" id="usagePreviewBtnMobile" title="Preview usage">
                       <i class="bi bi-eye"></i>
                     </button>
                   </div>

@@ -1,9 +1,8 @@
 sh: form--
-usage: |
+usage: |-
   Creates an HTML form with common input fields.
   Use {{ formName }} for form name, {{ action }} for form action.
   Choose {{ method }} for HTTP method.
-
 content: |
   <form name="{{ formName }}" action="{{ action=/submit }}" method="{{ method=post|get }}">
     <div class="form-group">

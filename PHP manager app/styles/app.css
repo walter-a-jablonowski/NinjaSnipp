@@ -467,6 +467,10 @@ body {
 @media (max-width: 767.98px) {
   #editFieldsRow.mobile-content-active #fieldUsage { display: none !important; }
   #editFieldsRow.mobile-usage-active #fieldContent { display: none !important; }
+
+  /* Mobile render view toggle */
+  #renderRow.render-snippet-active #renderUsageCol { display: none !important; }
+  #renderRow.render-usage-active #renderSnippetCol { display: none !important; }
 }
 
 /* Responsive adjustments */

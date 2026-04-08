@@ -113,6 +113,9 @@ class SnippetManager
     const available = Math.max(200, Math.floor(window.innerHeight - rect.top - bottomPadding));
     el.style.height = available + 'px';
     el.style.overflowY = 'auto';
+    // Keep usage preview the same height so both columns align
+    const renderUsage = document.getElementById('renderUsage');
+    if( renderUsage ) renderUsage.style.height = available + 'px';
   }
 
   async init()
@@ -354,16 +357,12 @@ class SnippetManager
         editFieldsRow.classList.remove('mobile-content-active');
         usageFieldPill.classList.add('active');
         contentFieldPill.classList.remove('active');
-        // Show the preview button when Usage tab is active
-        const btnMobile = document.getElementById('usagePreviewBtnMobile');
-        if( btnMobile ) btnMobile.style.display = '';
       });
       contentFieldPill.addEventListener('click', () => {
         editFieldsRow.classList.add('mobile-content-active');
         editFieldsRow.classList.remove('mobile-usage-active');
         contentFieldPill.classList.add('active');
         usageFieldPill.classList.remove('active');
-        // Exit preview mode and hide button when switching away from Usage
         this.resetUsagePreview();
       });
     }
@@ -373,6 +372,10 @@ class SnippetManager
     const usagePreviewBtnMobile = document.getElementById('usagePreviewBtnMobile');
     if( usagePreviewBtn )       usagePreviewBtn.addEventListener('click', () => this.toggleUsagePreview());
     if( usagePreviewBtnMobile ) usagePreviewBtnMobile.addEventListener('click', () => this.toggleUsagePreview());
+
+    // Render tab: mobile view toggle
+    const renderViewToggleBtn = document.getElementById('renderViewToggleBtn');
+    if( renderViewToggleBtn ) renderViewToggleBtn.addEventListener('click', () => this.toggleRenderView());
 
     // Bind autosave handlers to edit form inputs (once)
     this.bindAutosaveHandlers();
@@ -860,13 +863,13 @@ class SnippetManager
       if( btn ) btn.style.display = show ? '' : 'none';
     });
 
-    // Copy button is only visible on Render tab when a YAML snippet is loaded
-    const copyBtn = document.getElementById('copyRenderedBtn');
-    if( copyBtn ) {
-      const renderActive = activeTab && activeTab.id === 'render-tab';
-      const canRender = !!(this.currentSnippet && this.currentSnippet._type === 'yml');
-      copyBtn.style.display = (renderActive && canRender) ? '' : 'none';
-    }
+    // Copy + render view toggle: only visible on Render tab when a YAML snippet is loaded
+    const copyBtn         = document.getElementById('copyRenderedBtn');
+    const renderToggleBtn = document.getElementById('renderViewToggleBtn');
+    const renderActive    = !!(activeTab && activeTab.id === 'render-tab');
+    const canRender       = !!(this.currentSnippet && this.currentSnippet._type === 'yml');
+    if( copyBtn )         copyBtn.style.display         = (renderActive && canRender) ? '' : 'none';
+    if( renderToggleBtn ) renderToggleBtn.style.display = (renderActive && canRender) ? '' : 'none';
 
     // Autosave switch is visible only on Edit tab
     const autosaveWrap = document.getElementById('autosaveSwitchWrapper');
@@ -929,6 +932,18 @@ class SnippetManager
     const result = await apiCall(this.currentDataPath, 'composeContent', { snippet });
     if( result.success ) {
       this.renderInlineSnippet(result.composed || '');
+      this.renderUsageInPreview();
+      // Reset render view to snippet on each re-render
+      const renderRow = document.getElementById('renderRow');
+      if( renderRow ) {
+        renderRow.classList.add('render-snippet-active');
+        renderRow.classList.remove('render-usage-active');
+      }
+      const renderToggleBtn = document.getElementById('renderViewToggleBtn');
+      if( renderToggleBtn ) {
+        const icon = renderToggleBtn.querySelector('i');
+        if( icon ) icon.className = 'bi bi-card-text';
+      }
       // Also update live preview initially with defaults
       this.updateRenderedOutput();
       // Adjust preview height after (re)render
@@ -1318,6 +1333,15 @@ class SnippetManager
     const preview  = document.getElementById('usagePreview');
     if( ! textarea || ! preview ) return;
 
+    // On mobile, auto-switch to Usage pill if Content is currently active
+    const editFieldsRow = document.getElementById('editFieldsRow');
+    if( editFieldsRow?.classList.contains('mobile-content-active') ) {
+      editFieldsRow.classList.add('mobile-usage-active');
+      editFieldsRow.classList.remove('mobile-content-active');
+      document.getElementById('usageFieldPill')?.classList.add('active');
+      document.getElementById('contentFieldPill')?.classList.remove('active');
+    }
+
     const isActive = preview.style.display !== 'none';
     if( isActive ) {
       preview.style.display = 'none';
@@ -1339,8 +1363,6 @@ class SnippetManager
     if( textarea ) textarea.style.display = '';
     if( preview ) preview.style.display = 'none';
     this._setUsagePreviewIcon('bi-eye');
-    const btnMobile = document.getElementById('usagePreviewBtnMobile');
-    if( btnMobile ) btnMobile.style.display = 'none';
   }
 
   _setUsagePreviewIcon(iconClass)
@@ -1349,6 +1371,33 @@ class SnippetManager
       const btn = document.getElementById(id);
       if( btn ) btn.querySelector('i').className = `bi ${iconClass}`;
     });
+  }
+
+  renderUsageInPreview()
+  {
+    const el = document.getElementById('renderUsage');
+    if( ! el ) return;
+    const usageText = document.getElementById('snippetUsage')?.value || '';
+    el.innerHTML = usageText ? marked.parse(usageText) : '';
+  }
+
+  toggleRenderView()
+  {
+    const row = document.getElementById('renderRow');
+    const btn = document.getElementById('renderViewToggleBtn');
+    if( ! row || ! btn ) return;
+
+    const showingUsage = row.classList.contains('render-usage-active');
+    if( showingUsage ) {
+      row.classList.remove('render-usage-active');
+      row.classList.add('render-snippet-active');
+      btn.querySelector('i').className = 'bi bi-card-text';
+    }
+    else {
+      row.classList.remove('render-snippet-active');
+      row.classList.add('render-usage-active');
+      btn.querySelector('i').className = 'bi bi-braces';
+    }
   }
 
   getCurrentPlaceholderValues()
