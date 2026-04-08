@@ -21,7 +21,7 @@ class SnippetManager
     this._autosaveTimer = null; // debounce timer id
     this._autosaveDelayMs = 800; // debounce delay for autosave
     this._autosaveBound = false; // ensure we bind handlers once
-    
+
     this.init();
   }
 
@@ -151,7 +151,7 @@ class SnippetManager
         }
       });
     }
-    
+
     // Button event bindings
     const buttonEvents = [
       ['searchBtn', 'click', () => this.performSearch()],
@@ -301,7 +301,7 @@ class SnippetManager
         this.resizeInlineSnippet();
       })
     );
-    
+
     // Global document events
     document.addEventListener('click', (e) => {
       // If the click is inside any dropdown control or its menu, don't trigger navigation
@@ -309,7 +309,7 @@ class SnippetManager
       if( e.target.closest('.file-item') ) this.handleFileClick(e);
       else this.hideContextMenu();
     });
-    
+
     document.addEventListener('contextmenu', (e) => {
       if( e.target.closest('.file-item') ) {
         e.preventDefault();
@@ -373,7 +373,7 @@ class SnippetManager
   renderFileList(files) {
     const fileList = document.getElementById('fileList');
     if( ! fileList ) return;
-    
+
     if( files.length === 0 ) {
       fileList.innerHTML = `
         <div class="empty-state">
@@ -385,12 +385,12 @@ class SnippetManager
     }
 
     fileList.innerHTML = files.map(file => {
-      const icon = file.type === 'folder' ? 'bi-folder' : 
+      const icon = file.type === 'folder' ? 'bi-folder' :
                    file.extension === 'yml' ? 'bi-file-code' : 'bi-file-text';
       const modified = file.modified ? new Date(file.modified * 1000).toLocaleDateString() : '';
       const includedClass = file.isIncluded ? ' file-item-included' : '';
       const includedIcon = file.isIncluded ? '<i class="bi bi-link-45deg text-primary ms-1" title="Included file"></i>' : '';
-      
+
       return `
         <div class="list-group-item file-item${includedClass}" data-path="${file.path}" data-type="${file.type}" data-extension="${file.extension || ''}">
           <div class="d-flex align-items-center">
@@ -424,16 +424,16 @@ class SnippetManager
       this.loadFiles(this.currentPath);
       return;
     }
-    
+
     if( ! this.currentPath ) return; // already at base
-    
+
     // Check if we have navigation history (for included folders)
     if( this.navigationHistory.length > 0 ) {
       const previousPath = this.navigationHistory.pop();
       this.loadFiles(previousPath);
       return;
     }
-    
+
     // Default behavior: go up one level
     const parts = this.currentPath.split('/');
     parts.pop();
@@ -460,7 +460,7 @@ class SnippetManager
     }
     else {
       this.loadSnippet(path);
-      
+
       // Auto-close sidebar on mobile when a file is selected
       // check if we're on mobile (screen width < 992px, BS's lg breakpoint)
       if( window.innerWidth < 992 ) {
@@ -474,9 +474,9 @@ class SnippetManager
   async loadSnippet(path)
   {
     showLoading('editContent');
-    
+
     const result = await apiCall(this.currentDataPath, 'loadSnippet', { path });
-    
+
     if( result.success ) {
       this.currentSnippet = result.snippet;
       this.renderEditForm(result.snippet);
@@ -486,7 +486,7 @@ class SnippetManager
       this.recentSnippets.unshift(item);
       this.recentSnippets = this.recentSnippets.slice(0, 10);
       await apiCall(this.currentDataPath, 'saveRecentSnippets', { data: this.recentSnippets });
-      
+
       // Enable render tab for yml files
       const renderTab = document.getElementById('render-tab');
       if( result.snippet._type === 'yml' ) {
@@ -507,7 +507,7 @@ class SnippetManager
     else {
       showError('Failed to load snippet: ' + result.message);
     }
-    
+
     hideLoading('editContent');
   }
 
@@ -527,11 +527,11 @@ class SnippetManager
     if( ! editForm || ! snippetNameEdit || ! snippetContent ) return;
 
     const isYaml = snippet._type === 'yml';
-    
+
     // Populate form fields
     snippetNameEdit.value = snippet._name || '';
     snippetContent.value = snippet.content || '';
-    
+
     if( isYaml ) {
       if( snippetSh ) snippetSh.value = snippet.sh || '';
       if( snippetUsage ) snippetUsage.value = snippet.usage || '';
@@ -614,7 +614,7 @@ class SnippetManager
 
     const nameInput = document.getElementById('snippetNameEdit');
     const contentInput = document.getElementById('snippetContent');
-    
+
     if( ! nameInput.value.trim() || ! contentInput.value.trim() ) {
       showError('Name and content are required');
       return;
@@ -629,7 +629,7 @@ class SnippetManager
     if( this.currentSnippet._type === 'yml' ) {
       const shInput = document.getElementById('snippetSh');
       const usageInput = document.getElementById('snippetUsage');
-      
+
       data.sh = shInput.value.trim();
       data.usage = usageInput.value.trim();
     }
@@ -638,7 +638,7 @@ class SnippetManager
     const path = (this.currentPath ? this.currentPath + '/' : '') + data._name + '.' + extension;
 
     const result = await apiCall(this.currentDataPath, 'saveSnippet', { path, data });
-    
+
     if( result.success ) {
       // If called with silent flag, don't pop success toast
       const silent = arguments[0] === true || (typeof arguments[0] === 'object' && arguments[0]?.silent === true);
@@ -774,11 +774,11 @@ class SnippetManager
   {
     const editEmptyState = document.getElementById('editEmptyState');
     const editForm = document.getElementById('editForm');
-    
+
     if( editEmptyState && editForm ) {
       editForm.style.display = 'none';
       editEmptyState.style.display = 'block';
-      
+
       // Clear form values
       const inputs = ['snippetNameEdit', 'snippetSh', 'snippetUsage', 'snippetContent'];
       inputs.forEach(id => {
@@ -786,7 +786,7 @@ class SnippetManager
         if( input ) input.value = '';
       });
     }
-    
+
     this.configureRenderTab(false);
     this.setActionButtonsEnabled(false);
   }
@@ -795,7 +795,7 @@ class SnippetManager
   {
     const activeTab = document.querySelector('#contentTabs .nav-link.active');
     const show = activeTab && activeTab.id === 'edit-tab';
-    
+
     ['saveSnippetBtn', 'duplicateSnippetBtn', 'deleteSnippetBtn'].forEach(id => {
       const btn = document.getElementById(id);
       if( btn ) btn.style.display = show ? '' : 'none';
@@ -902,7 +902,7 @@ class SnippetManager
         return '<<<MAYBE-DIV-END>>>';
       }
     });
-    
+
     const regex = /\{\{\s*([^}]*)\s*\}\}/g;
     let lastIndex = 0;
     let match;
@@ -1041,7 +1041,7 @@ class SnippetManager
             break;
           }
         }
-        
+
         // Apply the shared default to all elements in the group
         group.forEach(el => {
           el.dataset.default = sharedDefault;
@@ -1051,12 +1051,12 @@ class SnippetManager
             el.textContent = sharedDefault;
           }
         });
-        
+
         // Assign a group color
         const colorClass = `ph-group-${groupIndex % 8}`; // Cycle through 8 colors
         group.forEach(el => {
           // Remove any existing group classes
-          el.classList.remove('ph-group-0', 'ph-group-1', 'ph-group-2', 'ph-group-3', 
+          el.classList.remove('ph-group-0', 'ph-group-1', 'ph-group-2', 'ph-group-3',
                              'ph-group-4', 'ph-group-5', 'ph-group-6', 'ph-group-7');
           el.classList.add(colorClass);
         });
@@ -1065,7 +1065,7 @@ class SnippetManager
       else {
         // Single instance: remove any group classes (keep default yellow)
         group.forEach(el => {
-          el.classList.remove('ph-group-0', 'ph-group-1', 'ph-group-2', 'ph-group-3', 
+          el.classList.remove('ph-group-0', 'ph-group-1', 'ph-group-2', 'ph-group-3',
                              'ph-group-4', 'ph-group-5', 'ph-group-6', 'ph-group-7');
         });
       }
@@ -1093,7 +1093,7 @@ class SnippetManager
         this.openChoiceMenu(el);
       }
     };
-    
+
     const onClick = (e) => {
       const el = e.currentTarget;
       if( el.classList.contains('ph-choice') ) {
@@ -1181,6 +1181,8 @@ class SnippetManager
 
   openChoiceMenu(el)
   {
+    // Clean up any previously orphaned outside-click handler before opening
+    this.closeChoiceMenu();
     const menu = document.getElementById('phChoiceMenu');
     if( ! menu ) return;
     const choices = JSON.parse(el.dataset.choices || '[]');
@@ -1219,18 +1221,18 @@ class SnippetManager
         this._menuJustOpened = false;
         return;
       }
-      
+
       // Don't close if clicking on the menu or its items
       if( ! menu.contains(evt.target) && ! evt.target.closest('#phChoiceMenu') ) {
         this.closeChoiceMenu();
       }
     };
-    
+
     // Store to remove later
     this._choiceOutsideHandler = clickOutside;
     // Add the outside click handler immediately but with the flag proection
     document.addEventListener('click', clickOutside);
-    
+
     // Clear the flag after a short delay
     setTimeout(() => {
       this._menuJustOpened = false;
@@ -1243,7 +1245,7 @@ class SnippetManager
     if( ! menu ) return;
     menu.classList.remove('show');
     menu.style.display = 'none';
-    
+
     // Clean up event listeners
     if( this._choiceOutsideHandler ) {
       document.removeEventListener('click', this._choiceOutsideHandler);
@@ -1268,7 +1270,7 @@ class SnippetManager
     // Build final text from inline DOM: placeholders -> current values, literals -> their text
     const container = document.getElementById('inlineSnippet');
     if( ! container ) return;
-    
+
     // Recursive function to extract text from nodes, respecting MAYBE block state
     const extractText = (node) => {
       if( node.nodeType === Node.TEXT_NODE ) {
@@ -1276,12 +1278,12 @@ class SnippetManager
       }
       else if( node.nodeType === Node.ELEMENT_NODE ) {
         const el = node;
-        
+
         // Handle MAYBE blocks
         if( el.classList.contains('maybe-block') ) {
           const enabled = el.dataset.enabled === 'true';
           if( ! enabled ) return ''; // Skip disabled blocks
-          
+
           // Extract text from maybe-content only (skip header)
           const content = el.querySelector('.maybe-content');
           if( content ) {
@@ -1293,17 +1295,17 @@ class SnippetManager
           }
           return '';
         }
-        
+
         // Skip maybe-header and maybe-end (checkbox, label, and footer line)
         if( el.classList.contains('maybe-header') || el.classList.contains('maybe-end') ) {
           return '';
         }
-        
+
         // Handle placeholders and literals
         if( el.classList.contains('ph') || el.classList.contains('ph-literal') ) {
           return el.textContent || '';
         }
-        
+
         // Handle include blocks and other containers
         if( el.classList.contains('inc-block') || el.classList.contains('maybe-content') ) {
           let text = '';
@@ -1312,7 +1314,7 @@ class SnippetManager
           });
           return text;
         }
-        
+
         // Default: recursively process children
         let text = '';
         el.childNodes.forEach(child => {
@@ -1322,12 +1324,12 @@ class SnippetManager
       }
       return '';
     };
-    
+
     let parts = [];
     container.childNodes.forEach(node => {
       parts.push(extractText(node));
     });
-    
+
     this.renderedText = parts.join('');
     const copyRenderedBtn = document.getElementById('copyRenderedBtn');
     if( copyRenderedBtn ) copyRenderedBtn.disabled = this.renderedText.length === 0;
@@ -1392,9 +1394,9 @@ class SnippetManager
     this.searchHistory.unshift(query);
     this.searchHistory = this.searchHistory.slice(0, 20);
     await apiCall(this.currentDataPath, 'saveSearchHistory', { data: this.searchHistory });
-    
+
     const result = await apiCall(this.currentDataPath, 'searchSnippets', { query });
-    
+
     if( result.success ) {
       this.isSearchMode = true;
       this.renderSearchResults(result.results);
@@ -1408,7 +1410,7 @@ class SnippetManager
   {
     const fileList = document.getElementById('fileList');
     if( ! fileList ) return;
-    
+
     if( results.length === 0 ) {
       fileList.innerHTML = `
         <div class="empty-state">
@@ -1421,7 +1423,7 @@ class SnippetManager
 
     fileList.innerHTML = results.map(result => {
       let icon, dataType, dataExtension, metaInfo;
-      
+
       if( result.type === 'folder' ) {
         icon = 'bi-folder';
         dataType = 'folder';
@@ -1434,9 +1436,9 @@ class SnippetManager
         dataExtension = result.type;
         metaInfo = result.type.toUpperCase() + ' • ' + result.path;
       }
-      
+
       return `
-        <div class="list-group-item file-item" data-path="${result.path}" 
+        <div class="list-group-item file-item" data-path="${result.path}"
              data-type="${dataType}" data-extension="${dataExtension}">
           <div class="d-flex align-items-center">
             <i class="bi ${icon} file-icon me-2"></i>
@@ -1470,29 +1472,19 @@ class SnippetManager
     const searchHistory = document.getElementById('searchHistory');
     const searchInput = document.getElementById('searchInput');
     if( ! searchHistory || ! searchInput ) return;
-    
+
     const rect = searchInput.getBoundingClientRect();
-    
+
     searchHistory.style.display = 'block';
     searchHistory.style.top = (rect.bottom + window.scrollY) + 'px';
     searchHistory.style.left = rect.left + 'px';
     searchHistory.style.width = rect.width + 'px';
-    
+
     searchHistory.innerHTML = this.searchHistory.slice(0, 10).map(item => `
       <div class="search-history-item" data-query="${item}">
         <i class="bi bi-clock-history me-2"></i>${item}
       </div>
     `).join('');
-    
-    // Bind click events
-    searchHistory.addEventListener('click', (e) => {
-      if( e.target.closest('.search-history-item') ) {
-        const query = e.target.closest('.search-history-item').dataset.query;
-        searchInput.value = query;
-        this.performSearch();
-        this.hideSearchHistory();
-      }
-    });
   }
 
   hideSearchHistory()
@@ -1500,8 +1492,24 @@ class SnippetManager
     document.getElementById('searchHistory').style.display = 'none';
   }
 
+
   setupSearchHistory()
   {
+    const searchHistory = document.getElementById('searchHistory');
+    const searchInput = document.getElementById('searchInput');
+
+    // Handle clicks on history items (bound once here instead of on every showSearchHistory call)
+    if( searchHistory && searchInput ) {
+      searchHistory.addEventListener('click', (e) => {
+        const item = e.target.closest('.search-history-item');
+        if( item ) {
+          searchInput.value = item.dataset.query;
+          this.performSearch();
+          this.hideSearchHistory();
+        }
+      });
+    }
+
     // Hide search history when clicking outside
     document.addEventListener('click', (e) => {
       if( ! e.target.closest('#searchInput') && ! e.target.closest('#searchHistory') ) {
@@ -1530,7 +1538,7 @@ class SnippetManager
   {
     const recentList = document.getElementById('recentList');
     if( ! recentList ) return;
-    
+
     if( this.recentSnippets.length === 0 ) {
       recentList.innerHTML = `
         <div class="empty-state">
@@ -1545,9 +1553,9 @@ class SnippetManager
       const extension = item.path.split('.').pop();
       const icon = extension === 'yml' ? 'bi-file-code' : 'bi-file-text';
       const timeStr = timeAgo(item.timestamp);
-      
+
       return `
-        <div class="list-group-item file-item" data-path="${item.path}" 
+        <div class="list-group-item file-item" data-path="${item.path}"
              data-type="file" data-extension="${extension}">
           <div class="d-flex align-items-center">
             <i class="bi ${icon} file-icon me-2"></i>
@@ -1567,7 +1575,7 @@ class SnippetManager
   {
     const name = document.getElementById('snippetName').value.trim();
     const type = document.getElementById('snippetType').value;
-    
+
     if( ! name ) {
       showError('Snippet name is required');
       return;
@@ -1588,7 +1596,7 @@ class SnippetManager
     const path = (this.currentPath ? this.currentPath + '/' : '') + name + '.' + extension;
 
     const result = await apiCall(this.currentDataPath, 'saveSnippet', { path, data });
-    
+
     if( result.success ) {
       // Reload files so the new snippet appears
       await this.loadFiles(this.currentPath);
@@ -1606,7 +1614,7 @@ class SnippetManager
       // Close modal
       const modal = bootstrap.Modal.getInstance(document.getElementById('newSnippetModal'));
       modal.hide();
-      
+
       // Clear form
       document.getElementById('newSnippetForm').reset();
     }
@@ -1618,7 +1626,7 @@ class SnippetManager
   async createFolder()
   {
     const name = document.getElementById('folderName').value.trim();
-    
+
     if( ! name ) {
       showError('Folder name is required');
       return;
@@ -1626,14 +1634,14 @@ class SnippetManager
 
     const folderPath = (this.currentPath ? this.currentPath + '/' : '') + name;
     const result     = await apiCall(this.currentDataPath, 'createFolder', { folderPath });
-    
+
     if( result.success ) {
       this.loadFiles(this.currentPath);
-      
+
       // Close modal
       const modal = bootstrap.Modal.getInstance(document.getElementById('newFolderModal'));
       modal.hide();
-      
+
       // Clear form
       document.getElementById('newFolderForm').reset();
     }
@@ -1647,7 +1655,7 @@ class SnippetManager
     // Update local state and inform server for consistency
     this.currentDataPath = dataPath;
     const result = await apiCall(this.currentDataPath, 'setDataPath', { dataPath });
-    
+
     if( result.success ) {
       this.currentPath = '';
       // Load recent snippets for the new data folder
@@ -1666,9 +1674,9 @@ class SnippetManager
 
   async loadFiles(subPath = '') {
     showLoading('fileList');
-    
+
     const result = await apiCall(this.currentDataPath, 'listFiles', { subPath });
-    
+
     if( result.success ) {
       this.isSearchMode = false; // Exit search mode when loading normal files
       this.renderFileList(result.files);
@@ -1691,7 +1699,7 @@ class SnippetManager
     else {
       showError('Failed to load files: ' + result.message);
     }
-    
+
     hideLoading('fileList');
   }
 
