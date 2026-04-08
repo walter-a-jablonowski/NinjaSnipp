@@ -97,6 +97,9 @@ class SnippetManager
     const bottomPadding = 24; // space for bottom padding/margins
     const available = Math.max(200, Math.floor(window.innerHeight - rect.top - bottomPadding));
     ta.style.height = available + 'px';
+    // Keep usage textarea the same height so both columns are visually aligned
+    const usageTa = document.getElementById('snippetUsage');
+    if( usageTa ) usageTa.style.height = available + 'px';
   }
 
   resizeInlineSnippet()
@@ -341,6 +344,25 @@ class SnippetManager
     const fileList = document.getElementById('fileList');
     if( fileList ) fileList.addEventListener('click', (e) => this.handleFileListDropdownClick(e));
 
+    // Mobile Usage/Content pill switcher
+    const usageFieldPill   = document.getElementById('usageFieldPill');
+    const contentFieldPill = document.getElementById('contentFieldPill');
+    const editFieldsRow    = document.getElementById('editFieldsRow');
+    if( usageFieldPill && contentFieldPill && editFieldsRow ) {
+      usageFieldPill.addEventListener('click', () => {
+        editFieldsRow.classList.add('mobile-usage-active');
+        editFieldsRow.classList.remove('mobile-content-active');
+        usageFieldPill.classList.add('active');
+        contentFieldPill.classList.remove('active');
+      });
+      contentFieldPill.addEventListener('click', () => {
+        editFieldsRow.classList.add('mobile-content-active');
+        editFieldsRow.classList.remove('mobile-usage-active');
+        contentFieldPill.classList.add('active');
+        usageFieldPill.classList.remove('active');
+      });
+    }
+
     // Bind autosave handlers to edit form inputs (once)
     this.bindAutosaveHandlers();
   }
@@ -541,6 +563,21 @@ class SnippetManager
     [fieldSh, fieldUsage].forEach(field => {
       if( field ) field.style.display = isYaml ? '' : 'none';
     });
+
+    // Mobile pill nav: only relevant for YAML (d-md-none keeps it hidden on desktop)
+    const editFieldPills = document.getElementById('editFieldPills');
+    if( editFieldPills ) editFieldPills.style.display = isYaml ? '' : 'none';
+
+    // Reset pill state to default (Content active) on each snippet load
+    const editFieldsRow    = document.getElementById('editFieldsRow');
+    const usageFieldPill   = document.getElementById('usageFieldPill');
+    const contentFieldPill = document.getElementById('contentFieldPill');
+    if( editFieldsRow ) {
+      editFieldsRow.classList.remove('mobile-usage-active');
+      editFieldsRow.classList.add('mobile-content-active');
+    }
+    if( usageFieldPill ) usageFieldPill.classList.remove('active');
+    if( contentFieldPill ) contentFieldPill.classList.add('active');
 
     // Hide Name and Content labels for Markdown to save space
     if( labelSnippetName ) labelSnippetName.style.display = isYaml ? '' : 'none';
@@ -785,6 +822,15 @@ class SnippetManager
         const input = document.getElementById(id);
         if( input ) input.value = '';
       });
+    }
+
+    // Reset mobile pill nav
+    const editFieldPills = document.getElementById('editFieldPills');
+    if( editFieldPills ) editFieldPills.style.display = 'none';
+    const editFieldsRow = document.getElementById('editFieldsRow');
+    if( editFieldsRow ) {
+      editFieldsRow.classList.remove('mobile-usage-active');
+      editFieldsRow.classList.add('mobile-content-active');
     }
 
     this.configureRenderTab(false);

@@ -210,19 +210,36 @@ if( isset($_GET['data']) ) {
                     </div>
                   </div>
 
-                  <div class="mb-3" id="fieldUsage">
-                    <label for="snippetUsage" class="form-label">Usage</label>
-                    <textarea class="form-control" id="snippetUsage" rows="3" placeholder="Comments, usage and sample..."></textarea>
+                  <!-- Mobile pill switcher (YAML-only; d-md-none hides on desktop; JS toggles for YAML/MD) -->
+                  <div class="d-md-none mb-2" id="editFieldPills" style="display: none;">
+                    <ul class="nav nav-pills gap-1" role="tablist">
+                      <li class="nav-item">
+                        <button class="nav-link small py-1 px-2" id="usageFieldPill" type="button">Usage</button>
+                      </li>
+                      <li class="nav-item">
+                        <button class="nav-link small py-1 px-2 active" id="contentFieldPill" type="button">Content</button>
+                      </li>
+                    </ul>
                   </div>
 
-                  <div class="mb-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                      <label for="snippetContent" class="form-label" id="labelSnippetContent">Content</label>
-                      <button type="button" class="btn btn-sm btn-link" id="expandContentBtn" title="Expand content area" style="display: none;">
-                        <i class="bi bi-caret-down fs-5 text-muted"></i>
-                      </button>
+                  <!-- Usage + Content: side by side on desktop, switchable via pills on mobile -->
+                  <div class="row g-2 mb-3 mobile-content-active" id="editFieldsRow">
+                    <!-- Usage (YAML-only) -->
+                    <div class="col-md-6 d-flex flex-column" id="fieldUsage">
+                      <label for="snippetUsage" class="form-label">Usage</label>
+                      <textarea class="form-control flex-grow-1" id="snippetUsage" rows="3" placeholder="Comments, usage and sample..."></textarea>
                     </div>
-                    <textarea class="form-control" id="snippetContent" rows="12" placeholder="Some {{ var }} snippet..." required></textarea>
+
+                    <!-- Content -->
+                    <div class="col-md-6 d-flex flex-column" id="fieldContent">
+                      <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label for="snippetContent" class="form-label mb-0" id="labelSnippetContent">Content</label>
+                        <button type="button" class="btn btn-sm btn-link p-0" id="expandContentBtn" title="Expand content area" style="display: none;">
+                          <i class="bi bi-caret-down fs-5 text-muted"></i>
+                        </button>
+                      </div>
+                      <textarea class="form-control flex-grow-1" id="snippetContent" rows="12" placeholder="Some {{ var }} snippet..." required></textarea>
+                    </div>
                   </div>
                 </form>
               </div>
