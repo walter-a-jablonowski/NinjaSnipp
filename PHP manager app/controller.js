@@ -354,14 +354,25 @@ class SnippetManager
         editFieldsRow.classList.remove('mobile-content-active');
         usageFieldPill.classList.add('active');
         contentFieldPill.classList.remove('active');
+        // Show the preview button when Usage tab is active
+        const btnMobile = document.getElementById('usagePreviewBtnMobile');
+        if( btnMobile ) btnMobile.style.display = '';
       });
       contentFieldPill.addEventListener('click', () => {
         editFieldsRow.classList.add('mobile-content-active');
         editFieldsRow.classList.remove('mobile-usage-active');
         contentFieldPill.classList.add('active');
         usageFieldPill.classList.remove('active');
+        // Exit preview mode and hide button when switching away from Usage
+        this.resetUsagePreview();
       });
     }
+
+    // Usage preview buttons
+    const usagePreviewBtn       = document.getElementById('usagePreviewBtn');
+    const usagePreviewBtnMobile = document.getElementById('usagePreviewBtnMobile');
+    if( usagePreviewBtn )       usagePreviewBtn.addEventListener('click', () => this.toggleUsagePreview());
+    if( usagePreviewBtnMobile ) usagePreviewBtnMobile.addEventListener('click', () => this.toggleUsagePreview());
 
     // Bind autosave handlers to edit form inputs (once)
     this.bindAutosaveHandlers();
@@ -578,6 +589,7 @@ class SnippetManager
     }
     if( usageFieldPill ) usageFieldPill.classList.remove('active');
     if( contentFieldPill ) contentFieldPill.classList.add('active');
+    this.resetUsagePreview();
 
     // Hide Name and Content labels for Markdown to save space
     if( labelSnippetName ) labelSnippetName.style.display = isYaml ? '' : 'none';
@@ -832,6 +844,7 @@ class SnippetManager
       editFieldsRow.classList.remove('mobile-usage-active');
       editFieldsRow.classList.add('mobile-content-active');
     }
+    this.resetUsagePreview();
 
     this.configureRenderTab(false);
     this.setActionButtonsEnabled(false);
@@ -1297,6 +1310,45 @@ class SnippetManager
       document.removeEventListener('click', this._choiceOutsideHandler);
       this._choiceOutsideHandler = null;
     }
+  }
+
+  toggleUsagePreview()
+  {
+    const textarea = document.getElementById('snippetUsage');
+    const preview  = document.getElementById('usagePreview');
+    if( ! textarea || ! preview ) return;
+
+    const isActive = preview.style.display !== 'none';
+    if( isActive ) {
+      preview.style.display = 'none';
+      textarea.style.display = '';
+      this._setUsagePreviewIcon('bi-eye');
+    }
+    else {
+      preview.innerHTML = marked.parse(textarea.value || '');
+      preview.style.display = '';
+      textarea.style.display = 'none';
+      this._setUsagePreviewIcon('bi-eye-slash');
+    }
+  }
+
+  resetUsagePreview()
+  {
+    const textarea = document.getElementById('snippetUsage');
+    const preview  = document.getElementById('usagePreview');
+    if( textarea ) textarea.style.display = '';
+    if( preview ) preview.style.display = 'none';
+    this._setUsagePreviewIcon('bi-eye');
+    const btnMobile = document.getElementById('usagePreviewBtnMobile');
+    if( btnMobile ) btnMobile.style.display = 'none';
+  }
+
+  _setUsagePreviewIcon(iconClass)
+  {
+    ['usagePreviewBtn', 'usagePreviewBtnMobile'].forEach(id => {
+      const btn = document.getElementById(id);
+      if( btn ) btn.querySelector('i').className = `bi ${iconClass}`;
+    });
   }
 
   getCurrentPlaceholderValues()

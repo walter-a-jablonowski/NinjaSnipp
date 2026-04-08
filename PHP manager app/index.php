@@ -211,7 +211,7 @@ if( isset($_GET['data']) ) {
                   </div>
 
                   <!-- Mobile pill switcher (YAML-only; d-md-none hides on desktop; JS toggles for YAML/MD) -->
-                  <div class="d-md-none mb-2" id="editFieldPills" style="display: none;">
+                  <div class="d-flex align-items-center d-md-none mb-2" id="editFieldPills" style="display: none;">
                     <ul class="nav nav-pills gap-1" role="tablist">
                       <li class="nav-item">
                         <button class="nav-link small py-1 px-2" id="usageFieldPill" type="button">Usage</button>
@@ -220,14 +220,23 @@ if( isset($_GET['data']) ) {
                         <button class="nav-link small py-1 px-2 active" id="contentFieldPill" type="button">Content</button>
                       </li>
                     </ul>
+                    <button type="button" class="btn btn-sm btn-link ms-auto p-0 text-muted" id="usagePreviewBtnMobile" title="Preview usage" style="display: none;">
+                      <i class="bi bi-eye"></i>
+                    </button>
                   </div>
 
                   <!-- Usage + Content: side by side on desktop, switchable via pills on mobile -->
                   <div class="row g-2 mb-3 mobile-content-active" id="editFieldsRow">
                     <!-- Usage (YAML-only) -->
                     <div class="col-md-6 d-flex flex-column" id="fieldUsage">
-                      <label for="snippetUsage" class="form-label">Usage</label>
+                      <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label for="snippetUsage" class="form-label mb-0">Usage</label>
+                        <button type="button" class="btn btn-sm btn-link p-0 text-muted d-none d-md-block" id="usagePreviewBtn" title="Preview usage">
+                          <i class="bi bi-eye"></i>
+                        </button>
+                      </div>
                       <textarea class="form-control flex-grow-1" id="snippetUsage" rows="3" placeholder="Comments, usage and sample..."></textarea>
+                      <div id="usagePreview" class="usage-preview flex-grow-1 overflow-auto" style="display: none;"></div>
                     </div>
 
                     <!-- Content -->
@@ -373,6 +382,7 @@ if( isset($_GET['data']) ) {
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="lib/functions.js?v=<?= time() ?>"></script>
   <script src="controller.js?v=<?= time() ?>"></script>
 </body>
