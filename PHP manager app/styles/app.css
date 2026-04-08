@@ -420,6 +420,73 @@ body {
 
 /* Offcanvas sidebar styling is mostly BS defaults */
 
+/* Markdown file preview panel */
+.markdown-preview {
+  font-size: 0.9rem;
+  line-height: 1.7;
+  padding: 1rem 1.25rem;
+  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+  background: #fff;
+}
+
+.markdown-preview h1, .markdown-preview h2, .markdown-preview h3,
+.markdown-preview h4, .markdown-preview h5, .markdown-preview h6 {
+  font-weight: 600;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.markdown-preview h1 { font-size: 1.5rem; }
+.markdown-preview h2 { font-size: 1.25rem; }
+.markdown-preview h3 { font-size: 1.1rem; }
+.markdown-preview h4, .markdown-preview h5, .markdown-preview h6 { font-size: 1rem; }
+.markdown-preview h1:first-child, .markdown-preview h2:first-child { margin-top: 0; }
+
+.markdown-preview p { margin-bottom: 0.75rem; }
+.markdown-preview p:last-child { margin-bottom: 0; }
+
+.markdown-preview ul, .markdown-preview ol {
+  padding-left: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.markdown-preview code {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.8125rem;
+  background: #f8f9fa;
+  padding: 0.15em 0.4em;
+  border-radius: 0.2rem;
+  border: 1px solid #e9ecef;
+}
+
+.markdown-preview pre {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  margin-bottom: 0.75rem;
+}
+
+.markdown-preview pre code {
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.markdown-preview blockquote {
+  border-left: 3px solid #dee2e6;
+  padding-left: 1rem;
+  margin-left: 0;
+  color: #6c757d;
+}
+
+.markdown-preview hr {
+  border-color: #dee2e6;
+  margin: 1rem 0;
+}
+
 /* Usage markdown preview panel */
 .usage-preview {
   font-size: 0.875rem;

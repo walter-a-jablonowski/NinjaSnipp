@@ -192,6 +192,8 @@ if( isset($_GET['data']) ) {
                     <div id="inlineSnippet" class="inline-snippet"></div>
                   </div>
                 </div>
+                <!-- Markdown file: simple rendered preview -->
+                <div id="markdownPreview" class="markdown-preview overflow-auto" style="display: none;"></div>
                 <!-- Choice menu for placeholders (shown on demand) -->
                 <div id="phChoiceMenu" class="dropdown-menu" tabindex="-1"></div>
               </div>

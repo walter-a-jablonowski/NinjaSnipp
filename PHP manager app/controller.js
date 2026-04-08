@@ -104,13 +104,24 @@ class SnippetManager
 
   resizeInlineSnippet()
   {
+    if( ! this.currentSnippet ) return;
+
+    // Markdown: resize the markdown preview panel
+    if( this.currentSnippet._type !== 'yml' ) {
+      const mp = document.getElementById('markdownPreview');
+      if( ! mp || mp.style.display === 'none' ) return;
+      const rect = mp.getBoundingClientRect();
+      const available = Math.max(200, Math.floor(window.innerHeight - rect.top - 24));
+      mp.style.height = available + 'px';
+      mp.style.overflowY = 'auto';
+      return;
+    }
+
+    // YAML: resize inline snippet and usage preview
     const el = document.getElementById('inlineSnippet');
     if( ! el ) return;
-    // Only relevant if a snippet is loaded (typically YAML for preview)
-    if( ! this.currentSnippet ) return;
     const rect = el.getBoundingClientRect();
-    const bottomPadding = 24;
-    const available = Math.max(200, Math.floor(window.innerHeight - rect.top - bottomPadding));
+    const available = Math.max(200, Math.floor(window.innerHeight - rect.top - 24));
     el.style.height = available + 'px';
     el.style.overflowY = 'auto';
     // Keep usage preview the same height so both columns align
@@ -523,21 +534,17 @@ class SnippetManager
       this.recentSnippets = this.recentSnippets.slice(0, 10);
       await apiCall(this.currentDataPath, 'saveRecentSnippets', { data: this.recentSnippets });
 
-      // Enable render tab for yml files
-      const renderTab = document.getElementById('render-tab');
+      // Activate the appropriate tab and render
       if( result.snippet._type === 'yml' ) {
-        renderTab.disabled = false;
-        renderTab.classList.remove('disabled');
-        // Auto-render inline immediately when a YAML snippet is selected
+        // YAML: render inline snippet, stay on Preview tab
         this.composeAndRenderInline();
-        // Keep Rendered tab active (it's first now); just update actions visibility
         this.updateActionButtonsVisibility();
       }
       else {
-        renderTab.disabled = true;
-        renderTab.classList.add('disabled');
-        // Switch to Edit tab for non-YAML files
-        activateTab('edit-tab');
+        // Markdown: render preview, show Preview tab by default
+        this.renderMarkdownPreview();
+        activateTab('render-tab');
+        this.updateActionButtonsVisibility();
       }
     }
     else {
@@ -577,6 +584,11 @@ class SnippetManager
     [fieldSh, fieldUsage].forEach(field => {
       if( field ) field.style.display = isYaml ? '' : 'none';
     });
+
+    // Content column: full width for Markdown, half for YAML (usage takes the other half)
+    const fieldContent = document.getElementById('fieldContent');
+    if( fieldContent )
+      fieldContent.className = isYaml ? 'col-md-6 d-flex flex-column' : 'col-12 d-flex flex-column';
 
     // Mobile pill nav: only relevant for YAML (d-md-none keeps it hidden on desktop)
     const editFieldPills = document.getElementById('editFieldPills');
@@ -643,8 +655,8 @@ class SnippetManager
       }, 150);
     });
 
-    // Configure render tab
-    this.configureRenderTab(isYaml);
+    // Render tab is always enabled (YAML gets inline snippet, MD gets markdown preview)
+    this.configureRenderTab(true);
     this.setActionButtonsEnabled(true);
   }
 
@@ -849,6 +861,16 @@ class SnippetManager
     }
     this.resetUsagePreview();
 
+    // Reset render pane to YAML layout defaults
+    const renderRow = document.getElementById('renderRow');
+    const mdPreview = document.getElementById('markdownPreview');
+    if( renderRow ) renderRow.style.display = '';
+    if( mdPreview ) mdPreview.style.display = 'none';
+
+    // Reset content column to half-width default
+    const fieldContent = document.getElementById('fieldContent');
+    if( fieldContent ) fieldContent.className = 'col-md-6 d-flex flex-column';
+
     this.configureRenderTab(false);
     this.setActionButtonsEnabled(false);
   }
@@ -923,10 +945,23 @@ class SnippetManager
 
   async composeAndRenderInline()
   {
-    if( ! this.currentSnippet || this.currentSnippet._type !== 'yml' ) return;
+    if( ! this.currentSnippet ) return;
+
+    // Markdown: delegate to simple markdown renderer
+    if( this.currentSnippet._type !== 'yml' ) {
+      this.renderMarkdownPreview();
+      return;
+    }
+
     const snippetContent = document.getElementById('snippetContent');
     const inlineContainer = document.getElementById('inlineSnippet');
     if( ! snippetContent || ! inlineContainer ) return;
+
+    // Ensure correct panels are shown for YAML
+    const renderRow    = document.getElementById('renderRow');
+    const mdPreview    = document.getElementById('markdownPreview');
+    if( renderRow )  renderRow.style.display  = '';
+    if( mdPreview )  mdPreview.style.display  = 'none';
 
     const snippet = { ...this.currentSnippet, content: snippetContent.value };
     const result = await apiCall(this.currentDataPath, 'composeContent', { snippet });
@@ -934,7 +969,6 @@ class SnippetManager
       this.renderInlineSnippet(result.composed || '');
       this.renderUsageInPreview();
       // Reset render view to snippet on each re-render
-      const renderRow = document.getElementById('renderRow');
       if( renderRow ) {
         renderRow.classList.add('render-snippet-active');
         renderRow.classList.remove('render-usage-active');
@@ -949,6 +983,21 @@ class SnippetManager
       // Adjust preview height after (re)render
       this.resizeInlineSnippet();
     }
+  }
+
+  renderMarkdownPreview()
+  {
+    const renderRow = document.getElementById('renderRow');
+    const mdPreview = document.getElementById('markdownPreview');
+    if( ! mdPreview ) return;
+
+    // Show markdown preview, hide YAML inline snippet row
+    if( renderRow ) renderRow.style.display = 'none';
+    mdPreview.style.display = '';
+
+    const content = document.getElementById('snippetContent')?.value || '';
+    mdPreview.innerHTML = marked.parse(content);
+    this.resizeInlineSnippet(); // routes to MD resize path
   }
 
   renderInlineSnippet(composedText)
