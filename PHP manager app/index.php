@@ -139,10 +139,10 @@ if( isset($_GET['data']) ) {
       </div>
 
       <!-- Main Content -->
-      <main class="app-content px-3 pb-4 overflow-auto">
-        <div class="pt-3">
+      <main class="app-content px-3 pb-1">
+        <div class="pt-3 d-flex flex-column h-100">
           <!-- Content Tab Control -->
-          <ul class="nav nav-tabs mb-3" id="contentTabs" role="tablist">
+          <ul class="nav nav-tabs mb-2" id="contentTabs" role="tablist">
             <li class="nav-item" role="presentation">
               <button id="render-tab" class="nav-link small py-1 px-2 active" data-bs-toggle="tab" data-bs-target="#render-pane" type="button" role="tab" disabled>
                 <i class="bi bi-eye me-2"></i>Preview
@@ -211,19 +211,6 @@ if( isset($_GET['data']) ) {
                 <!-- Static Edit Form (hidden by default; JS will populate) -->
                 <form id="editForm" class="snippet-form" style="display: none;">
 
-                  <!-- Group Name and Short Code on one line (Short Code is YAML-only) -->
-                  <div class="row g-2 mb-3 align-items-end" id="fieldNameRow">
-                    <div class="col-12 col-md-8">
-                      <label for="snippetNameEdit" class="form-label" id="labelSnippetName">Name</label>
-                      <input type="text" class="form-control" id="snippetNameEdit" required>
-                    </div>
-                    <!-- YAML-only fields -->
-                    <div class="col-12 col-md-4" id="fieldSh">
-                      <label for="snippetSh" class="form-label">Short Code</label>
-                      <input type="text" class="form-control" id="snippetSh" placeholder="e.g., arr--">
-                    </div>
-                  </div>
-
                   <!-- Mobile pill switcher (YAML-only; d-md-none hides on desktop; JS toggles for YAML/MD) -->
                   <div class="d-flex align-items-center d-md-none mb-2" id="editFieldPills" style="display: none;">
                     <ul class="nav nav-pills gap-1" role="tablist">
@@ -240,7 +227,7 @@ if( isset($_GET['data']) ) {
                   </div>
 
                   <!-- Usage + Content: side by side on desktop, switchable via pills on mobile -->
-                  <div class="row g-2 mb-3 mobile-content-active" id="editFieldsRow">
+                  <div class="row g-2 mobile-content-active" id="editFieldsRow">
                     <!-- Usage (YAML-only) -->
                     <div class="col-md-6 d-flex flex-column" id="fieldUsage">
                       <div class="d-flex justify-content-between align-items-center mb-1">
@@ -251,16 +238,15 @@ if( isset($_GET['data']) ) {
                       </div>
                       <textarea class="form-control flex-grow-1" id="snippetUsage" rows="3" placeholder="Comments, usage and sample..."></textarea>
                       <div id="usagePreview" class="usage-preview flex-grow-1 overflow-auto" style="display: none;"></div>
+                      <!-- YAML-only: Short Code (no label) -->
+                      <div id="fieldSh" class="mt-2">
+                        <input type="text" title="Short code" class="form-control form-control-sm" id="snippetSh" placeholder="Short code, e.g. arr--">
+                      </div>
                     </div>
 
                     <!-- Content -->
                     <div class="col-md-6 d-flex flex-column" id="fieldContent">
-                      <div class="d-flex justify-content-between align-items-center mb-1">
-                        <label for="snippetContent" class="form-label mb-0" id="labelSnippetContent">Content</label>
-                        <button type="button" class="btn btn-sm btn-link p-0" id="expandContentBtn" title="Expand content area" style="display: none;">
-                          <i class="bi bi-caret-down fs-5 text-muted"></i>
-                        </button>
-                      </div>
+                      <label for="snippetContent" class="form-label mb-1" id="labelSnippetContent">Content</label>
                       <textarea class="form-control flex-grow-1" id="snippetContent" rows="12" placeholder="Some {{ var }} snippet..." required></textarea>
                     </div>
                   </div>

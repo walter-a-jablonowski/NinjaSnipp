@@ -94,12 +94,9 @@ class SnippetManager
     if( ! this.currentSnippet ) return;
     // Compute available height from textarea top to viewport bottom with a small padding
     const rect = ta.getBoundingClientRect();
-    const bottomPadding = 24; // space for bottom padding/margins
+    const bottomPadding = 8; // space for bottom padding/margins
     const available = Math.max(200, Math.floor(window.innerHeight - rect.top - bottomPadding));
     ta.style.height = available + 'px';
-    // Keep usage textarea the same height so both columns are visually aligned
-    const usageTa = document.getElementById('snippetUsage');
-    if( usageTa ) usageTa.style.height = available + 'px';
   }
 
   resizeInlineSnippet()
@@ -111,7 +108,7 @@ class SnippetManager
       const mp = document.getElementById('markdownPreview');
       if( ! mp || mp.style.display === 'none' ) return;
       const rect = mp.getBoundingClientRect();
-      const available = Math.max(200, Math.floor(window.innerHeight - rect.top - 24));
+      const available = Math.max(200, Math.floor(window.innerHeight - rect.top - 8));
       mp.style.height = available + 'px';
       mp.style.overflowY = 'auto';
       return;
@@ -121,7 +118,7 @@ class SnippetManager
     const el = document.getElementById('inlineSnippet');
     if( ! el ) return;
     const rect = el.getBoundingClientRect();
-    const available = Math.max(200, Math.floor(window.innerHeight - rect.top - 24));
+    const available = Math.max(200, Math.floor(window.innerHeight - rect.top - 8));
     el.style.height = available + 'px';
     el.style.overflowY = 'auto';
     // Keep usage preview the same height so both columns align
@@ -186,8 +183,7 @@ class SnippetManager
       ['confirmDuplicateBtn', 'click', () => this.performDuplicate()],
       ['confirmDeleteBtn', 'click', () => this.performDelete()],
       ['recent-tab', 'click', () => this.loadRecentSnippets()],
-      ['confirmRenameBtn', 'click', () => this.performRename()],
-      ['expandContentBtn', 'click', () => this.toggleContentExpansion()]
+      ['confirmRenameBtn', 'click', () => this.performRename()]
     ];
 
     buttonEvents.forEach(([elementId, event, handler]) => {
@@ -558,8 +554,6 @@ class SnippetManager
   {
     const editEmptyState = document.getElementById('editEmptyState');
     const editForm = document.getElementById('editForm');
-    const snippetNameEdit = document.getElementById('snippetNameEdit');
-    const labelSnippetName = document.getElementById('labelSnippetName');
     const fieldSh = document.getElementById('fieldSh');
     const fieldUsage = document.getElementById('fieldUsage');
     const snippetSh = document.getElementById('snippetSh');
@@ -567,12 +561,11 @@ class SnippetManager
     const snippetContent = document.getElementById('snippetContent');
     const labelSnippetContent = document.getElementById('labelSnippetContent');
 
-    if( ! editForm || ! snippetNameEdit || ! snippetContent ) return;
+    if( ! editForm || ! snippetContent ) return;
 
     const isYaml = snippet._type === 'yml';
 
     // Populate form fields
-    snippetNameEdit.value = snippet._name || '';
     snippetContent.value = snippet.content || '';
 
     if( isYaml ) {
@@ -606,17 +599,8 @@ class SnippetManager
     if( contentFieldPill ) contentFieldPill.classList.add('active');
     this.resetUsagePreview();
 
-    // Hide Name and Content labels for Markdown to save space
-    if( labelSnippetName ) labelSnippetName.style.display = isYaml ? '' : 'none';
+    // Hide Content label for Markdown to save space
     if( labelSnippetContent ) labelSnippetContent.style.display = isYaml ? '' : 'none';
-
-    // Hide name row for Markdown files
-    const fieldNameRow = document.getElementById('fieldNameRow');
-    if( fieldNameRow ) fieldNameRow.style.display = isYaml ? '' : 'none';
-
-    // Toggle expand button visibility
-    const expandBtn = document.getElementById('expandContentBtn');
-    if( expandBtn ) expandBtn.style.display = isYaml ? '' : 'none';
 
     // Show form, hide empty state
     if( editEmptyState ) editEmptyState.style.display = 'none';
@@ -629,16 +613,6 @@ class SnippetManager
       if( isYaml ) {
         if( this._initialContentHeight === null ) {
           this._initialContentHeight = 300;
-        }
-        // Reset to initial height if expanded
-        if( this._contentExpanded ) {
-          snippetContent.style.height = this._initialContentHeight + 'px';
-          this._contentExpanded = false;
-          const expandBtn = document.getElementById('expandContentBtn');
-          if( expandBtn ) {
-            const icon = expandBtn.querySelector('i');
-            if( icon ) icon.className = 'bi bi-caret-down fs-5 text-muted';
-          }
         }
       }
 
@@ -676,17 +650,16 @@ class SnippetManager
   {
     if( ! this.currentSnippet ) return;
 
-    const nameInput = document.getElementById('snippetNameEdit');
     const contentInput = document.getElementById('snippetContent');
 
-    if( ! nameInput.value.trim() || ! contentInput.value.trim() ) {
-      showError('Name and content are required');
+    if( ! contentInput.value.trim() ) {
+      showError('Content is required');
       return;
     }
 
     const data = {
       _type: this.currentSnippet._type,
-      _name: nameInput.value.trim(),
+      _name: this.currentSnippet._name,
       content: contentInput.value
     };
 
@@ -723,12 +696,11 @@ class SnippetManager
   bindAutosaveHandlers()
   {
     if( this._autosaveBound ) return;
-    const nameEl = document.getElementById('snippetNameEdit');
     const shEl = document.getElementById('snippetSh');
     const usageEl = document.getElementById('snippetUsage');
     const contentEl = document.getElementById('snippetContent');
     const handler = () => this.onEditFieldChanged();
-    [nameEl, shEl, usageEl, contentEl].forEach(el => {
+    [shEl, usageEl, contentEl].forEach(el => {
       if( el ) {
         el.addEventListener('input', handler);
         el.addEventListener('blur', handler);
@@ -844,7 +816,7 @@ class SnippetManager
       editEmptyState.style.display = 'block';
 
       // Clear form values
-      const inputs = ['snippetNameEdit', 'snippetSh', 'snippetUsage', 'snippetContent'];
+      const inputs = ['snippetSh', 'snippetUsage', 'snippetContent'];
       inputs.forEach(id => {
         const input = document.getElementById(id);
         if( input ) input.value = '';
@@ -1900,30 +1872,6 @@ class SnippetManager
   }
 
   // showLoading/hideLoading moved to global helpers in lib/functions.js
-
-  async toggleContentExpansion() {
-    const snippetContent = document.getElementById('snippetContent');
-    const expandBtn = document.getElementById('expandContentBtn');
-    if( ! snippetContent || ! expandBtn ) return;
-
-    const icon = expandBtn.querySelector('i');
-    if( ! icon ) return;
-
-    if( this._contentExpanded ) {
-      // Restore to initial height
-      snippetContent.style.height = this._initialContentHeight + 'px';
-      icon.className = 'bi bi-caret-down fs-5 text-muted';
-      this._contentExpanded = false;
-    } else {
-      // Expand to available height
-      const rect = snippetContent.getBoundingClientRect();
-      const bottomPadding = 24;
-      const available = Math.max(400, Math.floor(window.innerHeight - rect.top - bottomPadding));
-      snippetContent.style.height = available + 'px';
-      icon.className = 'bi bi-caret-up fs-5 text-muted';
-      this._contentExpanded = true;
-    }
-  }
 
 }
 

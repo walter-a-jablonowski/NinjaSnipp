@@ -15,6 +15,9 @@ body {
 .app-content {
   flex: 1 1 auto;
   min-width: 0; /* allow flex child to shrink properly */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .app-sidebar {
@@ -148,9 +151,6 @@ body {
 }
 
 /* Form styling */
-.snippet-form {
-}
-
 .snippet-form .form-label {
   font-weight: 600;
   color: #495057;
@@ -560,9 +560,45 @@ body {
   }
 }
 
-/* Tab content styling */
+/* Tab content styling: fill remaining space in flex column, no forced min-height */
 .tab-content {
-  min-height: 400px;
+  flex: 1 1 0;
+  overflow: hidden;
+}
+
+.tab-pane {
+  height: 100%;
+  overflow: hidden;
+}
+
+#renderContent,
+#editContent {
+  height: 100%;
+}
+
+#editContent,
+#editForm {
+  display: flex;
+  flex-direction: column;
+}
+
+#editFieldsRow {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+#fieldUsage {
+  min-height: 0;
+}
+
+#snippetUsage,
+#usagePreview {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+#fieldSh {
+  flex-shrink: 0;
 }
 
 /* Default (>= sm): show full brand, hide short brand */
