@@ -609,9 +609,9 @@ class SnippetManager
       if( snippetUsage ) snippetUsage.value = snippet.usage || '';
     }
 
-    // Toggle YAML-only fields visibility
+    // Toggle YAML-only fields visibility (use class to beat Bootstrap's d-flex !important)
     [fieldSh, fieldUsage].forEach(field => {
-      if( field ) field.style.display = isYaml ? '' : 'none';
+      if( field ) field.classList.toggle('force-hide', ! isYaml);
     });
 
     // Content column: full width for Markdown, half for YAML (usage takes the other half)
@@ -621,7 +621,7 @@ class SnippetManager
 
     // Mobile pill nav: only relevant for YAML (d-md-none keeps it hidden on desktop)
     const editFieldPills = document.getElementById('editFieldPills');
-    if( editFieldPills ) editFieldPills.style.display = isYaml ? '' : 'none';
+    if( editFieldPills ) editFieldPills.style.display = isYaml ? 'flex' : 'none';
 
     // Reset pill state to default (Content active) on each snippet load
     const editFieldsRow    = document.getElementById('editFieldsRow');
@@ -635,8 +635,11 @@ class SnippetManager
     if( contentFieldPill ) contentFieldPill.classList.add('active');
     this.resetUsagePreview();
 
-    // Hide Content label for Markdown to save space
-    if( labelSnippetContent ) labelSnippetContent.style.display = isYaml ? '' : 'none';
+    // Content label: always hidden on mobile, always visible on desktop
+    if( labelSnippetContent ) {
+      labelSnippetContent.style.display = '';
+      labelSnippetContent.classList.add('d-none', 'd-md-block');
+    }
 
     // Show form, hide empty state
     if( editEmptyState ) editEmptyState.style.display = 'none';

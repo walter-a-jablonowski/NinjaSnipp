@@ -212,7 +212,7 @@ if( isset($_GET['data']) ) {
                 <form id="editForm" class="snippet-form" style="display: none;">
 
                   <!-- Mobile pill switcher (YAML-only; d-md-none hides on desktop; JS toggles for YAML/MD) -->
-                  <div class="d-flex align-items-center d-md-none mb-2" id="editFieldPills" style="display: none;">
+                  <div class="align-items-center d-md-none mb-2" id="editFieldPills" style="display: none;">
                     <ul class="nav nav-pills gap-1" role="tablist">
                       <li class="nav-item">
                         <button class="nav-link small py-1 px-2" id="usageFieldPill" type="button">Usage</button>
@@ -246,7 +246,7 @@ if( isset($_GET['data']) ) {
 
                     <!-- Content -->
                     <div class="col-md-6 d-flex flex-column" id="fieldContent">
-                      <label for="snippetContent" class="form-label mb-1 d-none d-md-block" id="labelSnippetContent">Content</label>
+                      <label for="snippetContent" class="form-label mb-1" id="labelSnippetContent">Content</label>
                       <textarea class="form-control" id="snippetContent" rows="12" placeholder="Some {{ var }} snippet..." required></textarea>
                     </div>
                   </div>

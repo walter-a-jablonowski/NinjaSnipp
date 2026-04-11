@@ -554,6 +554,8 @@ body {
   padding: 0;
 }
 
+.force-hide { display: none !important; }
+
 /* Mobile pill toggle for Usage/Content fields */
 @media (max-width: 767.98px) {
   #editFieldsRow.mobile-content-active #fieldUsage { display: none !important; }
