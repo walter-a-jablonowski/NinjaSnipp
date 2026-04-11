@@ -26,7 +26,7 @@ if( isset($_GET['data']) ) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ninja Snipp</title>
+  <title>Ninja</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
   <link href="styles/theme.css?v=<?= time() ?>" rel="stylesheet">
@@ -42,7 +42,7 @@ if( isset($_GET['data']) ) {
 
       <a class="navbar-brand d-flex align-items-center" href="#">
         <i class="bi bi-code-square me-2 fs-4"></i>
-        <span class="fw-bold brand-full">Ninja Snipp</span>
+        <span class="fw-bold brand-full">Ninja</span>
         <span class="fw-bold brand-short">Ninja</span>
       </a>
       
