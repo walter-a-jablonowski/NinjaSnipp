@@ -42,8 +42,8 @@
 
 /* Nav pills and tabs themed with primary orange */
 .nav-pills {
-  --bs-nav-pills-link-active-bg: var(--bs-primary);
-  --bs-nav-pills-link-active-color: #fff;
+  --bs-nav-pills-link-active-bg: rgba(var(--bs-primary-rgb), 0.08);
+  --bs-nav-pills-link-active-color: var(--bs-primary);
 }
 
 .nav-pills .nav-link {
