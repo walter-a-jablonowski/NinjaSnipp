@@ -230,7 +230,7 @@ if( isset($_GET['data']) ) {
                   <div class="row g-2 mobile-content-active" id="editFieldsRow">
                     <!-- Usage (YAML-only) -->
                     <div class="col-md-6 d-flex flex-column" id="fieldUsage">
-                      <div class="d-flex justify-content-between align-items-center mb-1">
+                      <div class="d-none d-md-flex justify-content-between align-items-center mb-1">
                         <label for="snippetUsage" class="form-label mb-0">Usage</label>
                         <button type="button" class="btn btn-sm btn-link p-0 text-muted d-none d-md-block" id="usagePreviewBtn" title="Preview usage">
                           <i class="bi bi-eye"></i>
@@ -246,7 +246,7 @@ if( isset($_GET['data']) ) {
 
                     <!-- Content -->
                     <div class="col-md-6 d-flex flex-column" id="fieldContent">
-                      <label for="snippetContent" class="form-label mb-1" id="labelSnippetContent">Content</label>
+                      <label for="snippetContent" class="form-label mb-1 d-none d-md-block" id="labelSnippetContent">Content</label>
                       <textarea class="form-control flex-grow-1" id="snippetContent" rows="12" placeholder="Some {{ var }} snippet..." required></textarea>
                     </div>
                   </div>

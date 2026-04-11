@@ -604,7 +604,7 @@ class SnippetManager
 
     // Show form, hide empty state
     if( editEmptyState ) editEmptyState.style.display = 'none';
-    editForm.style.display = 'block';
+    editForm.style.display = 'flex';
 
     // Make editors taller to fill available vertical space for YAML and Markdown
     // Do it after the form becomes visible to get correct element geometry
