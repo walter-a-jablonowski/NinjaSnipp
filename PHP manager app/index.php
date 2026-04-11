@@ -247,7 +247,7 @@ if( isset($_GET['data']) ) {
                     <!-- Content -->
                     <div class="col-md-6 d-flex flex-column" id="fieldContent">
                       <label for="snippetContent" class="form-label mb-1 d-none d-md-block" id="labelSnippetContent">Content</label>
-                      <textarea class="form-control flex-grow-1" id="snippetContent" rows="12" placeholder="Some {{ var }} snippet..." required></textarea>
+                      <textarea class="form-control" id="snippetContent" rows="12" placeholder="Some {{ var }} snippet..." required></textarea>
                     </div>
                   </div>
                 </form>

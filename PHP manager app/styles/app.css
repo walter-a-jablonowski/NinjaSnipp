@@ -618,11 +618,15 @@ body {
   flex: 1 1 0;
   min-height: 0;
   overflow: hidden;
+  --bs-gutter-x: 0.5rem; /* keep horizontal gap between columns */
+  --bs-gutter-y: 0; /* remove vertical gutter that causes row to overflow */
+  align-items: stretch; /* columns must stretch to full row height */
 }
 
 #fieldUsage {
   min-height: 0;
   flex: 1 1 0 !important; /* override Bootstrap col: 0 0 auto */
+  max-height: 100%;
 }
 
 #snippetUsage,

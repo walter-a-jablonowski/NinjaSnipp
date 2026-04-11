@@ -94,9 +94,45 @@ class SnippetManager
     if( ! this.currentSnippet ) return;
     // Compute available height from textarea top to viewport bottom with a small padding
     const rect = ta.getBoundingClientRect();
-    const bottomPadding = 8; // space for bottom padding/margins
+    const bottomPadding = 8; // gap below textarea
     const available = Math.max(200, Math.floor(window.innerHeight - rect.top - bottomPadding));
     ta.style.height = available + 'px';
+
+    // Also constrain fieldUsage height so fieldSh stays visible
+    const fieldUsage = document.getElementById('fieldUsage');
+    if( fieldUsage && window.innerWidth >= 768 ) {
+      const fuRect = fieldUsage.getBoundingClientRect();
+      const fuAvailable = Math.floor(window.innerHeight - fuRect.top - 8);
+      fieldUsage.style.height = Math.max(100, fuAvailable) + 'px';
+    }
+    else if( fieldUsage ) {
+      fieldUsage.style.height = ''; // let CSS flex handle it on mobile
+    }
+
+    this.debugShPosition(); // DEBUG
+  }
+
+  debugShPosition()
+  {
+    const fieldUsage  = document.getElementById('fieldUsage');
+    const snippetUsage = document.getElementById('snippetUsage');
+    const fieldSh     = document.getElementById('fieldSh');
+    if( ! fieldSh || ! fieldUsage ) return;
+
+    const s = (e, p) => window.getComputedStyle(e).getPropertyValue(p);
+    const fuRect  = fieldUsage.getBoundingClientRect();
+    const shRect  = fieldSh.getBoundingClientRect();
+    const usRect  = snippetUsage ? snippetUsage.getBoundingClientRect() : null;
+
+    console.group('fieldSh position debug');
+    console.log('viewport                   :', window.innerHeight);
+    console.log('#fieldUsage  top/bottom    :', Math.round(fuRect.top), '/', Math.round(fuRect.bottom), '| oh:', fieldUsage.offsetHeight);
+    console.log('#fieldUsage  display/flex  :', s(fieldUsage, 'display'), '/', s(fieldUsage, 'flex-direction'));
+    console.log('#snippetUsage top/bottom   :', usRect ? `${Math.round(usRect.top)} / ${Math.round(usRect.bottom)} | oh:${snippetUsage.offsetHeight}` : 'null');
+    console.log('#fieldSh     top/bottom    :', Math.round(shRect.top), '/', Math.round(shRect.bottom), '| oh:', fieldSh.offsetHeight);
+    console.log('#fieldSh     below viewport:', shRect.bottom > window.innerHeight);
+    console.log('#fieldSh     flex-shrink   :', s(fieldSh, 'flex-shrink'));
+    console.groupEnd();
   }
 
   resizeInlineSnippet()
