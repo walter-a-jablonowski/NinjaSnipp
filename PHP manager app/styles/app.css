@@ -7,6 +7,16 @@ body {
   height: calc(100vh - 56px); /* default navbar height */
 }
 
+@media (min-width: 992px) {
+  .navbar {
+    padding-top: 0.2rem;
+    padding-bottom: 0.2rem;
+  }
+  .layout {
+    height: calc(100vh - 42px);
+  }
+}
+
 /* App shell: flex-based layout instead of grid */
 .app-shell {
   display: flex;
