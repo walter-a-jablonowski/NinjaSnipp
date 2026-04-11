@@ -640,7 +640,8 @@ class SnippetManager
     }
     if( usageFieldPill ) usageFieldPill.classList.remove('active');
     if( contentFieldPill ) contentFieldPill.classList.add('active');
-    this.resetUsagePreview();
+    if( isYaml ) this.showUsagePreview();
+    else this.resetUsagePreview();
 
     // Content label: hidden for markdown (single field needs no label); for YAML show on desktop only
     if( labelSnippetContent ) {
@@ -1440,6 +1441,17 @@ class SnippetManager
     if( textarea ) textarea.style.display = '';
     if( preview ) preview.style.display = 'none';
     this._setUsagePreviewIcon('bi-eye');
+  }
+
+  showUsagePreview()
+  {
+    const textarea = document.getElementById('snippetUsage');
+    const preview  = document.getElementById('usagePreview');
+    if( ! textarea || ! preview ) return;
+    preview.innerHTML = marked.parse(textarea.value || '');
+    preview.style.display = '';
+    textarea.style.display = 'none';
+    this._setUsagePreviewIcon('bi-eye-slash');
   }
 
   _setUsagePreviewIcon(iconClass)
