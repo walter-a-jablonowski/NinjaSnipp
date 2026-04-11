@@ -92,6 +92,20 @@ body {
   color: white;
 }
 
+#searchBtn {
+  border-color: rgba(255, 255, 255, 0.3);
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+#searchBtn:hover,
+#searchBtn:focus {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+  color: white;
+  box-shadow: none;
+}
+
 /* Search history dropdown */
 #searchHistory {
   max-height: 300px;
