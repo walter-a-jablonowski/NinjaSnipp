@@ -395,17 +395,24 @@ class SnippetManager
     const contentFieldPill = document.getElementById('contentFieldPill');
     const editFieldsRow    = document.getElementById('editFieldsRow');
     if( usageFieldPill && contentFieldPill && editFieldsRow ) {
+      const usagePreviewBtnMobile = document.getElementById('usagePreviewBtnMobile');
+      const setMobileEyeVisible = (visible) => {
+        if( usagePreviewBtnMobile ) usagePreviewBtnMobile.style.display = visible ? '' : 'none';
+      };
+
       usageFieldPill.addEventListener('click', () => {
         editFieldsRow.classList.add('mobile-usage-active');
         editFieldsRow.classList.remove('mobile-content-active');
         usageFieldPill.classList.add('active');
         contentFieldPill.classList.remove('active');
+        setMobileEyeVisible(true);
       });
       contentFieldPill.addEventListener('click', () => {
         editFieldsRow.classList.add('mobile-content-active');
         editFieldsRow.classList.remove('mobile-usage-active');
         contentFieldPill.classList.add('active');
         usageFieldPill.classList.remove('active');
+        setMobileEyeVisible(false);
         this.resetUsagePreview();
       });
     }
@@ -635,11 +642,21 @@ class SnippetManager
     if( contentFieldPill ) contentFieldPill.classList.add('active');
     this.resetUsagePreview();
 
-    // Content label: always hidden on mobile, always visible on desktop
+    // Content label: hidden for markdown (single field needs no label); for YAML show on desktop only
     if( labelSnippetContent ) {
-      labelSnippetContent.style.display = '';
-      labelSnippetContent.classList.add('d-none', 'd-md-block');
+      if( isYaml ) {
+        labelSnippetContent.style.display = '';
+        labelSnippetContent.classList.add('d-none', 'd-md-block');
+      }
+      else {
+        labelSnippetContent.style.display = 'none';
+        labelSnippetContent.classList.remove('d-none', 'd-md-block');
+      }
     }
+
+    // Mobile eye icon: only visible when Usage pill is active (Content is default)
+    const usagePreviewBtnMobile = document.getElementById('usagePreviewBtnMobile');
+    if( usagePreviewBtnMobile ) usagePreviewBtnMobile.style.display = 'none';
 
     // Show form, hide empty state
     if( editEmptyState ) editEmptyState.style.display = 'none';
