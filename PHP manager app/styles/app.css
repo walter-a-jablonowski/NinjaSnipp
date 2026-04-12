@@ -101,10 +101,13 @@ body {
 }
 
 .app-sidebar .tab-pane {
-  display: flex;
   flex-direction: column;
   height: 100%;
   overflow: hidden;
+}
+
+.app-sidebar .tab-pane.active.show {
+  display: flex;
 }
 
 /* Only the file/recent lists scroll */
