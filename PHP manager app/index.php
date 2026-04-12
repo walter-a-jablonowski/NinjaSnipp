@@ -6,6 +6,9 @@ use Symfony\Component\Yaml\Yaml;
 require_once 'vendor/autoload.php';
 
 
+$appConfig = Yaml::parseFile('config.yml');
+$debug     = (bool)($appConfig['debug'] ?? false);
+
 $config  = Yaml::parseFile('users/default/settings.yml');
 $manager = new SnippetManager( $config['dataPaths'] ?? ['data'], $config);
 if( isset($config['nav']['foldersFirst']) )
@@ -26,6 +29,7 @@ if( isset($_GET['data']) )
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
   <link href="styles/theme.css?v=<?= time() ?>" rel="stylesheet">
   <link href="styles/app.css?v=<?= time() ?>" rel="stylesheet">
+  <script>const APP_DEBUG = <?= json_encode($debug) ?>;</script>
 </head>
 <body>
   <!-- Header -->
@@ -96,8 +100,8 @@ if( isset($_GET['data']) )
               <div class="tab-content">
                 <!-- Files & Folders Tab -->
                 <div class="tab-pane fade show active" id="files-pane" role="tabpanel">
-                  <!-- Action Buttons -->
-                  <div class="d-flex gap-2 mb-3">
+                  <!-- Action Buttons (debug only) -->
+                  <div class="d-flex gap-2 mb-3<?= $debug ? '' : ' d-none' ?>">
                     <button class="btn btn-sm btn-outline-secondary" id="backBtn" title="Back">
                       <i class="bi bi-arrow-left"></i>
                     </button>

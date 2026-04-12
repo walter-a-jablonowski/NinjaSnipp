@@ -1,2 +1,4 @@
 # Common config currently empty
 # see also user settings
+
+debug: true

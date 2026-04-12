@@ -127,13 +127,82 @@ body {
   border-bottom: none;
 }
 
-/* File list styling */
+/* Tree navigation */
+.tree-item {
+  cursor: pointer;
+  border-radius: 0.25rem;
+  margin-bottom: 1px;
+  padding: 0.2rem 0.5rem;
+  user-select: none;
+  transition: background-color 0.12s ease;
+}
+
+.tree-item:hover {
+  background-color: #e9ecef;
+}
+
+.tree-item.active {
+  background-color: var(--bs-primary) !important;
+  color: white;
+}
+
+.tree-item.active .tree-toggle,
+.tree-item.active .file-icon {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.tree-item.active .tree-menu-btn {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.tree-toggle {
+  font-size: 0.65rem;
+  width: 12px;
+  text-align: center;
+  flex-shrink: 0;
+  margin-right: 3px;
+  color: #868e96;
+}
+
+.tree-toggle-spacer {
+  display: inline-block;
+  width: 12px;
+  margin-right: 3px;
+  flex-shrink: 0;
+}
+
+.tree-name {
+  font-size: 0.875rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.tree-menu-btn {
+  color: #868e96 !important;
+}
+
+.tree-item:hover .tree-menu-btn {
+  color: #495057 !important;
+}
+
+.file-icon {
+  width: 14px;
+  text-align: center;
+  flex-shrink: 0;
+  margin-right: 4px !important;
+  font-size: 0.85rem;
+}
+
+/* Legacy file-item used for search results */
 .file-item {
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.12s ease;
   border: none;
-  border-radius: 0.375rem;
-  margin-bottom: 0.25rem;
+  border-radius: 0.25rem;
+  margin-bottom: 1px;
+  padding: 0.2rem 0.5rem;
 }
 
 .file-item:hover {
@@ -142,26 +211,11 @@ body {
 
 .file-item.active {
   background-color: var(--bs-primary) !important;
-  color: white;
-}
-
-/* Included files styling */
-.file-item-included {
-  background-color: #e9ecef;
-  position: relative;
-}
-
-.file-item-included:hover {
-  background-color: #dee2e6 !important;
-}
-
-.file-item-included.active {
-  background-color: var(--bs-primary) !important;
-  color: white;
+  color: white !important;
 }
 
 .file-item .file-icon {
-  width: 20px;
+  width: 14px;
   text-align: center;
 }
 

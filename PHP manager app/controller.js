@@ -10,7 +10,9 @@ class SnippetManager
     this.selectedFiles = new Set();
     this.placeholderGroups = new Map(); // name => [elements]
     this.renderedText = '';
-    this.navigationHistory = []; // Track navigation history for included folders
+    this.fileTree = []; // Tree state for file navigator
+    this.expandedFolders = new Set(); // Paths of currently expanded folders
+    this._deleteContext = null; // Context for deleting via tree-item "..." menu
     this.isSearchMode = false; // Track if we're showing search results
     this._mdAutoHeight = false; // reuse flag for content auto-height
     this._onResizeHandler = null;
@@ -30,26 +32,46 @@ class SnippetManager
     const actionEl = e.target.closest('.dropdown-item');
     if( ! actionEl ) return;
     const action = actionEl.getAttribute('data-action');
-    const item = actionEl.closest('.file-item');
+    const item   = actionEl.closest('.tree-item');
     if( ! item ) return;
-    const oldPath = item.getAttribute('data-path');
+    const path = item.getAttribute('data-path');
     const type = item.getAttribute('data-type');
-    const ext = item.getAttribute('data-extension') || '';
+    const ext  = item.getAttribute('data-extension') || '';
 
     if( action === 'rename' ) {
-      // Prepare context and show modal
-      const parts = oldPath.split('/');
+      const parts    = path.split('/');
       const filename = parts.pop();
-      const parent = parts.join('/');
+      const parent   = parts.join('/');
       let base = filename;
       if( type === 'file' && ext ) {
         const dExt = '.' + ext;
         if( base.toLowerCase().endsWith(dExt) ) base = base.slice(0, -dExt.length);
       }
-      this._renameContext = { oldPath, parent, type, ext };
+      this._renameContext = { oldPath: path, parent, type, ext };
       const input = document.getElementById('renameNameInput');
       if( input ) input.value = base;
       showModal('renameItemModal');
+    }
+    else if( action === 'new-snippet' ) {
+      // Create new snippet inside this folder
+      this.currentPath = path;
+      if( path ) this.expandedFolders.add(path);
+      showModal('newSnippetModal');
+    }
+    else if( action === 'new-folder' ) {
+      // Create new subfolder inside this folder
+      this.currentPath = path;
+      if( path ) this.expandedFolders.add(path);
+      showModal('newFolderModal');
+    }
+    else if( action === 'delete' ) {
+      const nameParts = path.split('/');
+      const fullName  = nameParts.pop();
+      const baseName  = ext ? fullName.replace(new RegExp('\\.' + ext + '$', 'i'), '') : fullName;
+      this._deleteContext = { path, name: baseName };
+      const nameEl = document.getElementById('deleteSnippetName');
+      if( nameEl ) nameEl.textContent = baseName;
+      showModal('deleteSnippetModal');
     }
   }
 
@@ -355,12 +377,12 @@ class SnippetManager
     document.addEventListener('click', (e) => {
       // If the click is inside any dropdown control or its menu, don't trigger navigation
       if( e.target.closest('.dropdown') || e.target.closest('.dropdown-menu') ) return;
-      if( e.target.closest('.file-item') ) this.handleFileClick(e);
+      if( e.target.closest('.tree-item') || e.target.closest('.file-item') ) this.handleFileClick(e);
       else this.hideContextMenu();
     });
 
     document.addEventListener('contextmenu', (e) => {
-      if( e.target.closest('.file-item') ) {
+      if( e.target.closest('.tree-item') || e.target.closest('.file-item') ) {
         e.preventDefault();
         this.showContextMenu(e);
       }
@@ -443,10 +465,12 @@ class SnippetManager
     if( result && result.success ) {
       const modal = bootstrap.Modal.getInstance(document.getElementById('renameItemModal')) || new bootstrap.Modal(document.getElementById('renameItemModal'));
       if( modal ) modal.hide();
-      await this.loadFiles(this.currentPath);
-      const newItem = document.querySelector(`.file-item[data-path="${newPath}"]`);
+      // Ensure the parent folder stays expanded after refresh
+      if( ctx.parent ) this.expandedFolders.add(ctx.parent);
+      await this.loadFiles();
+      const newItem = document.querySelector(`.tree-item[data-path="${newPath}"]`);
       if( newItem ) {
-        document.querySelectorAll('.file-item.active').forEach(n => n.classList.remove('active'));
+        document.querySelectorAll('.tree-item.active, .file-item.active').forEach(n => n.classList.remove('active'));
         newItem.classList.add('active');
       }
       showSuccess('Renamed successfully');
@@ -456,105 +480,210 @@ class SnippetManager
     }
   }
 
-  renderFileList(files) {
+  // --- Tree state helpers ---
+
+  buildTreeNodes(files)
+  {
+    return files.map(file => ({
+      name: file.name,
+      path: file.path,
+      type: file.type,
+      extension: file.extension || '',
+      modified: file.modified || null,
+      isIncluded: file.isIncluded || false,
+      color: file.color || null,
+      children: file.type === 'folder' ? null : undefined,
+      isOpen: false
+    }));
+  }
+
+  findNodeInTree(nodes, path)
+  {
+    for( const node of nodes ) {
+      if( node.path === path ) return node;
+      if( node.type === 'folder' && node.children ) {
+        const found = this.findNodeInTree(node.children, path);
+        if( found ) return found;
+      }
+    }
+    return null;
+  }
+
+  flattenTree(nodes, depth = 0)
+  {
+    const result = [];
+    for( const node of nodes ) {
+      result.push({ ...node, _depth: depth });
+      if( node.type === 'folder' && node.isOpen && node.children )
+        result.push(...this.flattenTree(node.children, depth + 1));
+    }
+    return result;
+  }
+
+  async restoreExpandedFolders(nodes)
+  {
+    for( const node of nodes ) {
+      if( node.type === 'folder' && this.expandedFolders.has(node.path) ) {
+        node.isOpen = true;
+        if( node.children === null ) {
+          const result = await apiCall(this.currentDataPath, 'listFiles', { subPath: node.path });
+          if( result.success )
+            node.children = this.buildTreeNodes(result.files);
+        }
+        if( node.children )
+          await this.restoreExpandedFolders(node.children);
+      }
+    }
+  }
+
+  async toggleFolder(path)
+  {
+    const node = this.findNodeInTree(this.fileTree, path);
+    if( ! node || node.type !== 'folder' ) return;
+
+    if( node.isOpen ) {
+      node.isOpen = false;
+      this.expandedFolders.delete(path);
+    }
+    else {
+      if( node.children === null ) {
+        const result = await apiCall(this.currentDataPath, 'listFiles', { subPath: path });
+        if( result.success )
+          node.children = this.buildTreeNodes(result.files);
+        else {
+          showError('Failed to load folder');
+          return;
+        }
+      }
+      node.isOpen = true;
+      this.expandedFolders.add(path);
+    }
+
+    this.renderTree();
+  }
+
+  // --- Tree rendering ---
+
+  renderTree()
+  {
     const fileList = document.getElementById('fileList');
     if( ! fileList ) return;
 
-    if( files.length === 0 ) {
+    const flat = this.flattenTree(this.fileTree);
+
+    if( flat.length === 0 ) {
       fileList.innerHTML = `
         <div class="empty-state">
           <i class="bi bi-folder-x"></i>
-          <p>No files found in this folder</p>
+          <p>No files found</p>
         </div>
       `;
       return;
     }
 
-    fileList.innerHTML = files.map(file => {
-      const icon = file.type === 'folder' ? 'bi-folder' :
-                   file.extension === 'yml' ? 'bi-file-code' : 'bi-file-text';
-      const modified = file.modified ? new Date(file.modified * 1000).toLocaleDateString() : '';
-      const includedClass = file.isIncluded ? ' file-item-included' : '';
-      const includedIcon = file.isIncluded ? '<i class="bi bi-link-45deg text-primary ms-1" title="Included file"></i>' : '';
-      const bgStyle = file.color ? ` style="background-color: ${file.color};"` : '';
+    fileList.innerHTML = flat.map(node => this.renderTreeNode(node)).join('');
+    this.restoreActiveHighlight();
+  }
 
-      return `
-        <div class="list-group-item file-item${includedClass}" data-path="${file.path}" data-type="${file.type}" data-extension="${file.extension || ''}"${bgStyle}>
-          <div class="d-flex align-items-center">
-            <i class="bi ${icon} file-icon me-2"></i>
-            <div class="flex-grow-1">
-              <div class="fw-medium">${file.name}${includedIcon}</div>
-              ${file.type === 'file' ? `<div class="file-meta">${file.extension.toUpperCase()} • ${modified}</div>` : ''}
-            </div>
-            <div class="dropdown ms-2">
-              <button class="btn btn-sm btn-link text-muted p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="More actions">
-                <i class="bi bi-three-dots-vertical"></i>
-              </button>
-              <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" href="#" data-action="rename">Rename</a></li>
-                <li><a class="dropdown-item" href="#" data-action="delete">Delete</a></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      `;
-    }).join('');
+  restoreActiveHighlight()
+  {
+    if( ! this.currentSnippet ) return;
+    const ext = this.currentSnippet._type === 'yml' ? 'yml' : 'md';
+    const activePath = (this.currentPath ? this.currentPath + '/' : '') + this.currentSnippet._name + '.' + ext;
+    const item = document.querySelector(`.tree-item[data-path="${activePath}"]`);
+    if( item ) item.classList.add('active');
+  }
+
+  renderTreeNode(node)
+  {
+    const { type, _depth, path, name, isOpen, extension, isIncluded, color } = node;
+    const isFolder  = type === 'folder';
+    const indentPx  = 6 + _depth * 14;
+
+    const icon = isFolder
+      ? (isOpen ? 'bi-folder2-open' : 'bi-folder')
+      : (extension === 'yml' ? 'bi-file-code' : 'bi-file-text');
+
+    const toggleEl = isFolder
+      ? `<i class="bi ${isOpen ? 'bi-chevron-down' : 'bi-chevron-right'} tree-toggle"></i>`
+      : `<span class="tree-toggle-spacer"></span>`;
+
+    const includedIcon = isIncluded
+      ? '<i class="bi bi-link-45deg text-primary ms-1" title="Included file"></i>'
+      : '';
+
+    const styleVal = color
+      ? `padding-left: ${indentPx}px; background-color: ${color};`
+      : `padding-left: ${indentPx}px;`;
+
+    const menuItems = isFolder
+      ? `<li><a class="dropdown-item small" href="#" data-action="new-snippet">New Snippet here</a></li>
+         <li><a class="dropdown-item small" href="#" data-action="new-folder">New Folder here</a></li>
+         <li><hr class="dropdown-divider"></li>
+         <li><a class="dropdown-item small" href="#" data-action="rename">Rename</a></li>`
+      : `<li><a class="dropdown-item small" href="#" data-action="rename">Rename</a></li>
+         <li><a class="dropdown-item small text-danger" href="#" data-action="delete">Delete</a></li>`;
+
+    return `<div class="tree-item${isFolder ? ' tree-folder' : ' tree-file'}" ` +
+      `data-path="${path}" data-type="${type}" data-extension="${extension || ''}" ` +
+      `style="${styleVal}">` +
+      `<div class="d-flex align-items-center">` +
+        toggleEl +
+        `<i class="bi ${icon} file-icon"></i>` +
+        `<span class="tree-name flex-grow-1">${name}${includedIcon}</span>` +
+        `<div class="dropdown">` +
+          `<button class="btn btn-sm btn-link text-muted p-0 tree-menu-btn" type="button" ` +
+            `data-bs-toggle="dropdown" aria-expanded="false" aria-label="More actions">` +
+            `<i class="bi bi-three-dots-vertical"></i>` +
+          `</button>` +
+          `<ul class="dropdown-menu dropdown-menu-end">${menuItems}</ul>` +
+        `</div>` +
+      `</div>` +
+    `</div>`;
   }
 
   goBack()
   {
-    // If we're in search mode, exit search and return to normal file listing
+    // In tree mode goBack only handles exiting search mode
     if( this.isSearchMode ) {
       this.isSearchMode = false;
       const searchInput = document.getElementById('searchInput');
       if( searchInput ) searchInput.value = '';
-      this.loadFiles(this.currentPath);
-      return;
+      this.loadFiles();
     }
-
-    if( ! this.currentPath ) return; // already at base
-
-    // Check if we have navigation history (for included folders)
-    if( this.navigationHistory.length > 0 ) {
-      const previousPath = this.navigationHistory.pop();
-      this.loadFiles(previousPath);
-      return;
-    }
-
-    // Default behavior: go up one level
-    const parts = this.currentPath.split('/');
-    parts.pop();
-    const parent = parts.join('/');
-    this.loadFiles(parent);
   }
 
   handleFileClick(e)
   {
-    const fileItem = e.target.closest('.file-item');
-    const { path, type } = fileItem.dataset;
+    const treeItem = e.target.closest('.tree-item');
+    const fileItem = e.target.closest('.file-item'); // search results use file-item
+    const item = treeItem || fileItem;
+    if( ! item ) return;
 
-    // Clear previous selection and set new active item
-    document.querySelectorAll('.file-item.active').forEach(item => item.classList.remove('active'));
-    fileItem.classList.add('active');
+    const { path, type } = item.dataset;
 
     if( type === 'folder' ) {
-      // Check if this is an included folder
-      if( fileItem.classList.contains('file-item-included') ) {
-        // Save current path to navigation history before navigating to included folder
-        this.navigationHistory.push(this.currentPath);
-      }
-      this.loadFiles(path);
+      // Toggle folder expand/collapse (only for tree-items, not search results)
+      if( treeItem ) this.toggleFolder(path);
+      return;
     }
-    else {
-      this.loadSnippet(path);
 
-      // Auto-close sidebar on mobile when a file is selected
-      // check if we're on mobile (screen width < 992px, BS's lg breakpoint)
-      if( window.innerWidth < 992 ) {
-        const sidebar = document.getElementById('sidebarNav');
-        const offcanvas = bootstrap.Offcanvas.getInstance(sidebar);
-        if( offcanvas )  offcanvas.hide();
-      }
+    // File: update active state and load snippet
+    document.querySelectorAll('.tree-item.active, .file-item.active').forEach(i => i.classList.remove('active'));
+    item.classList.add('active');
+
+    // Set currentPath to the file's parent folder
+    const parts = path.split('/');
+    parts.pop();
+    this.currentPath = parts.join('/');
+
+    this.loadSnippet(path);
+
+    // Auto-close sidebar on mobile
+    if( window.innerWidth < 992 ) {
+      const sidebar = document.getElementById('sidebarNav');
+      const offcanvas = bootstrap.Offcanvas.getInstance(sidebar);
+      if( offcanvas ) offcanvas.hide();
     }
   }
 
@@ -739,7 +868,7 @@ class SnippetManager
       const silent = arguments[0] === true || (typeof arguments[0] === 'object' && arguments[0]?.silent === true);
       if( ! silent ) showSuccess('Snippet saved successfully');
       this.currentSnippet = data;
-      this.loadFiles(this.currentPath); // Refresh file list
+      this.loadFiles(); // Refresh file list
 
       // Re-render after save when YAML
       if( this.currentSnippet._type === 'yml' ) {
@@ -829,8 +958,7 @@ class SnippetManager
       // Close modal
       const modal = bootstrap.Modal.getInstance(document.getElementById('duplicateSnippetModal'));
       if( modal ) modal.hide();
-      // Refresh list
-      this.loadFiles(this.currentPath);
+      this.loadFiles();
     }
     else {
       showError('Failed to duplicate snippet: ' + result.message);
@@ -840,27 +968,49 @@ class SnippetManager
   async deleteCurrentSnippet()
   {
     if( ! this.currentSnippet ) return;
-    // Open confirmation modal; confirm handled by performDelete()
+    this._deleteContext = null; // ensure we use currentSnippet, not a tree-item context
     showModal('deleteSnippetModal');
   }
 
   async performDelete()
   {
-    if( ! this.currentSnippet ) return;
-    const extension = this.currentSnippet._type === 'yml' ? 'yml' : 'md';
-    const path = (this.currentPath ? this.currentPath + '/' : '') + this.currentSnippet._name + '.' + extension;
-    const result = await apiCall(this.currentDataPath, 'deleteSnippet', { path });
-    if( result.success ) {
-      showSuccess('Snippet deleted successfully');
-      // Close modal
-      const modal = bootstrap.Modal.getInstance(document.getElementById('deleteSnippetModal'));
-      if( modal ) modal.hide();
-      this.currentSnippet = null;
-      this.clearEditForm();
-      this.loadFiles(this.currentPath);
+    let path;
+    let clearCurrent = false;
+
+    if( this._deleteContext ) {
+      // Delete triggered from tree "..." menu
+      path = this._deleteContext.path;
+      // If we're deleting the currently loaded snippet, clear the editor
+      if( this.currentSnippet ) {
+        const ext = this.currentSnippet._type === 'yml' ? 'yml' : 'md';
+        const curPath = (this.currentPath ? this.currentPath + '/' : '') + this.currentSnippet._name + '.' + ext;
+        if( curPath === path ) clearCurrent = true;
+      }
+    }
+    else if( this.currentSnippet ) {
+      // Delete triggered from toolbar
+      const extension = this.currentSnippet._type === 'yml' ? 'yml' : 'md';
+      path = (this.currentPath ? this.currentPath + '/' : '') + this.currentSnippet._name + '.' + extension;
+      clearCurrent = true;
     }
     else {
-      showError('Failed to delete snippet: ' + result.message);
+      return;
+    }
+
+    const result = await apiCall(this.currentDataPath, 'deleteSnippet', { path });
+    if( result.success ) {
+      showSuccess('Deleted successfully');
+      const modal = bootstrap.Modal.getInstance(document.getElementById('deleteSnippetModal'));
+      if( modal ) modal.hide();
+      this._deleteContext = null;
+      if( clearCurrent ) {
+        this.currentSnippet = null;
+        this.clearEditForm();
+      }
+      this.loadFiles();
+    }
+    else {
+      showError('Failed to delete: ' + (result?.message || 'Unknown error'));
     }
   }
 
@@ -1696,10 +1846,10 @@ class SnippetManager
     }
     else {
       this.hideSearchHistory();
-      // If search input is cleared and we're in search mode, return to normal listing
+      // If search input is cleared and we're in search mode, return to tree listing
       if( this.isSearchMode ) {
         this.isSearchMode = false;
-        this.loadFiles(this.currentPath);
+        this.loadFiles();
       }
     }
   }
@@ -1835,16 +1985,14 @@ class SnippetManager
     const result = await apiCall(this.currentDataPath, 'saveSnippet', { path, data });
 
     if( result.success ) {
-      // Reload files so the new snippet appears
-      await this.loadFiles(this.currentPath);
+      // Ensure parent folder is expanded so the new file is visible
+      if( this.currentPath ) this.expandedFolders.add(this.currentPath);
+      await this.loadFiles();
 
       // Select and open the newly created snippet, then switch to Edit tab
-      const list = document.getElementById('fileList');
-      if( list ) {
-        document.querySelectorAll('.file-item.active').forEach(item => item.classList.remove('active'));
-        const newItem = list.querySelector(`.file-item[data-path="${path}"]`);
-        if( newItem ) newItem.classList.add('active');
-      }
+      document.querySelectorAll('.tree-item.active, .file-item.active').forEach(item => item.classList.remove('active'));
+      const newItem = document.querySelector(`.tree-item[data-path="${path}"]`);
+      if( newItem ) newItem.classList.add('active');
       await this.loadSnippet(path);
       activateTab('edit-tab');
 
@@ -1873,7 +2021,8 @@ class SnippetManager
     const result     = await apiCall(this.currentDataPath, 'createFolder', { folderPath });
 
     if( result.success ) {
-      this.loadFiles(this.currentPath);
+      if( this.currentPath ) this.expandedFolders.add(this.currentPath);
+      this.loadFiles();
 
       // Close modal
       const modal = bootstrap.Modal.getInstance(document.getElementById('newFolderModal'));
@@ -1889,12 +2038,15 @@ class SnippetManager
 
   async changeDataFolder(dataPath)
   {
-    // Update local state and inform server for consistency
     this.currentDataPath = dataPath;
     const result = await apiCall(this.currentDataPath, 'setDataPath', { dataPath });
 
     if( result.success ) {
       this.currentPath = '';
+      this.fileTree = [];
+      this.expandedFolders.clear();
+      this.currentSnippet = null;
+      this.clearEditForm();
       // Load recent snippets for the new data folder
       const recentResult = await apiCall(this.currentDataPath, 'getRecentSnippets');
       if( recentResult.success ) {
@@ -1909,25 +2061,25 @@ class SnippetManager
 
   // apiCall moved to global helper in lib/functions.js
 
-  async loadFiles(subPath = '') {
+  async loadFiles()
+  {
     showLoading('fileList');
 
-    const result = await apiCall(this.currentDataPath, 'listFiles', { subPath });
+    const result = await apiCall(this.currentDataPath, 'listFiles', { subPath: '' });
 
     if( result.success ) {
-      this.isSearchMode = false; // Exit search mode when loading normal files
-      this.renderFileList(result.files);
-      this.currentPath = subPath;
+      this.isSearchMode = false;
+      this.fileTree = this.buildTreeNodes(result.files);
+      await this.restoreExpandedFolders(this.fileTree);
+      this.renderTree();
 
       // Auto-load first yml/md file on initial page load
-      if( this._initialLoad && result.files.length > 0 ) {
+      if( this._initialLoad ) {
         const firstFile = result.files.find(f => f.type === 'file' && (f.extension === 'yml' || f.extension === 'md'));
         if( firstFile ) {
-          const fileItem = document.querySelector(`.file-item[data-path="${firstFile.path}"]`);
-          if( fileItem ) {
-            document.querySelectorAll('.file-item.active').forEach(item => item.classList.remove('active'));
-            fileItem.classList.add('active');
-          }
+          const fileItem = document.querySelector(`.tree-item[data-path="${firstFile.path}"]`);
+          if( fileItem ) fileItem.classList.add('active');
+          this.currentPath = '';
           this.loadSnippet(firstFile.path);
         }
         this._initialLoad = false;
