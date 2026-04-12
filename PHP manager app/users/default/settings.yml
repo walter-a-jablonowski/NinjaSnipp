@@ -1,6 +1,10 @@
 dataPaths:
-  'Demo 1': data/demo_data_1
-  'Demo 2': data/demo_data_2
+  'Demo 1':
+    'data/common': '#e8e8e8'
+    'data/demo_data_1': null
+  'Demo 2':
+    'data/common': '#e8e8e8'
+    'data/demo_data_2': null
 nav:
   foldersFirst: false
 render:

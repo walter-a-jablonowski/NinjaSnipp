@@ -12,13 +12,8 @@ if( isset($config['nav']['foldersFirst']) )
   $manager->setFoldersFirst( (bool)$config['nav']['foldersFirst'] );
 
 // Optional URL param: select initial data folder by label key from config (e.g., ?data=Demo%201)
-if( isset($_GET['data']) ) {
-  $label = (string)$_GET['data'];
-  $paths = $manager->getDataPaths(); // label => path
-  if( isset($paths[$label]) ) {
-    $manager->setCurrentDataPath($paths[$label]);
-  }
-}
+if( isset($_GET['data']) )
+  $manager->setCurrentDataPath((string)$_GET['data']);
 
 ?>
 <!DOCTYPE html>
@@ -75,8 +70,8 @@ if( isset($_GET['data']) ) {
               <!-- Data Folder Selection -->
               <div class="mb-3">
                 <select id="dataFolderSelect" class="form-select" title="Data folder">
-                  <?php foreach( $manager->getDataPaths() as $label => $path ): ?>
-                    <option value="<?= htmlspecialchars($path) ?>" <?= $path === $manager->getCurrentDataPath() ? 'selected' : '' ?>>
+                  <?php foreach( array_keys($manager->getDataPaths()) as $label ): ?>
+                    <option value="<?= htmlspecialchars($label) ?>" <?= $label === $manager->getCurrentDataLabel() ? 'selected' : '' ?>>
                       <?= htmlspecialchars($label) ?>
                     </option>
                   <?php endforeach; ?>

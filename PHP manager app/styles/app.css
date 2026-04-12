@@ -137,11 +137,11 @@ body {
 }
 
 .file-item:hover {
-  background-color: #e9ecef;
+  background-color: #e9ecef !important;
 }
 
 .file-item.active {
-  background-color: var(--bs-primary);
+  background-color: var(--bs-primary) !important;
   color: white;
 }
 
@@ -152,11 +152,11 @@ body {
 }
 
 .file-item-included:hover {
-  background-color: #dee2e6;
+  background-color: #dee2e6 !important;
 }
 
 .file-item-included.active {
-  background-color: var(--bs-primary);
+  background-color: var(--bs-primary) !important;
   color: white;
 }
 

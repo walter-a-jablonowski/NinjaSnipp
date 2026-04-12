@@ -1,0 +1,12 @@
+sh: lic--
+usage: |-
+  Standard license/copyright header for source files.
+  Fill in year, author and project name.
+content: |
+  /**
+   * {{ project=MyProject }}
+   *
+   * @author  {{ author=Your Name }}
+   * @license {{ license=MIT|GPL-3.0|Apache-2.0 }}
+   * @year    {{ year=2026 }}
+   */

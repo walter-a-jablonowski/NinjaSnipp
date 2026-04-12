@@ -476,9 +476,10 @@ class SnippetManager
       const modified = file.modified ? new Date(file.modified * 1000).toLocaleDateString() : '';
       const includedClass = file.isIncluded ? ' file-item-included' : '';
       const includedIcon = file.isIncluded ? '<i class="bi bi-link-45deg text-primary ms-1" title="Included file"></i>' : '';
+      const bgStyle = file.color ? ` style="background-color: ${file.color};"` : '';
 
       return `
-        <div class="list-group-item file-item${includedClass}" data-path="${file.path}" data-type="${file.type}" data-extension="${file.extension || ''}">
+        <div class="list-group-item file-item${includedClass}" data-path="${file.path}" data-type="${file.type}" data-extension="${file.extension || ''}"${bgStyle}>
           <div class="d-flex align-items-center">
             <i class="bi ${icon} file-icon me-2"></i>
             <div class="flex-grow-1">

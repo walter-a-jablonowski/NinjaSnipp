@@ -1,0 +1,14 @@
+sh: env--
+usage: |-
+  Environment configuration block.
+  Use for .env files or config templates shared across environments.
+content: |
+  APP_ENV={{ env=production|development|testing }}
+  APP_DEBUG={{ debug=false|true }}
+  APP_URL={{ url=https://example.com }}
+
+  DB_HOST={{ dbHost=127.0.0.1 }}
+  DB_PORT={{ dbPort=3306 }}
+  DB_DATABASE={{ dbName=myapp }}
+  DB_USERNAME={{ dbUser=root }}
+  DB_PASSWORD={{ dbPass=secret }}

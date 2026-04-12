@@ -17,15 +17,14 @@ $manager = new SnippetManager( $config['dataPaths'] ?? ['data'], $config);
 if( isset($config['nav']['foldersFirst']) )
   $manager->setFoldersFirst( (bool)$config['nav']['foldersFirst'] );
 
-// Set current data path if provided, or ensure we're using the first path
+// Set current data set by label, or fall back to first
 if( isset($input['dataPath']) && !empty($input['dataPath']) )
   $manager->setCurrentDataPath($input['dataPath']);
-else  // ensure we're using the first data path when no dataPath is provided
+else
 {
-  $paths = $manager->getDataPaths(); // associative label => path
-  $firstLabel = array_key_first($paths);
+  $firstLabel = array_key_first($manager->getDataPaths());
   if( $firstLabel !== null )
-    $manager->setCurrentDataPath($paths[$firstLabel]);
+    $manager->setCurrentDataPath($firstLabel);
 }
 
 $response = ['success' => false, 'message' => 'Unknown action'];
