@@ -46,9 +46,6 @@ body {
     transform: none;
     visibility: visible !important;
   }
-  .offcanvas-lg .offcanvas-body {
-    overflow-y: auto; /* scroll menu if needed */
-  }
 
   /* Static sidebar panel (lg+) */
   .app-sidebar {
@@ -64,11 +61,57 @@ body {
   }
 }
 
-/* Sidebar tab content no special flex needed; offcanvas-body scrolls */
+/* Sidebar flex chain: only #fileList / #recentList scroll, not the sidebar body */
+.app-sidebar .offcanvas {
+  display: flex;
+  flex-direction: column;
+}
 
-/* Lists scroll */
+.app-sidebar .offcanvas-body {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;   /* body must NOT scroll */
+  display: flex;
+  flex-direction: column;
+}
+
+#sidebarInner {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Fixed-height items inside the inner wrapper — must not grow or shrink */
+#sidebarInner > .mb-3,
+#sidebarInner > #sidebarTabs {
+  flex-shrink: 0;
+}
+
+/* Action buttons row (debug) must also not grow */
+#files-pane > .d-flex {
+  flex-shrink: 0;
+}
+
+.app-sidebar .tab-content {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.app-sidebar .tab-pane {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Only the file/recent lists scroll */
 #fileList,
 #recentList {
+  flex: 1 1 0;
+  min-height: 0;
   overflow-y: auto;
   scrollbar-gutter: stable;
 }

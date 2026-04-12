@@ -70,7 +70,7 @@ if( isset($_GET['data']) )
             <button type="button" class="btn-close d-lg-none" data-bs-dismiss="offcanvas" aria-label="Close"></button>
           </div>
           <div class="offcanvas-body p-0">
-            <div class="p-3">
+            <div class="p-3" id="sidebarInner">
               <!-- Data Folder Selection -->
               <div class="mb-3">
                 <select id="dataFolderSelect" class="form-select" title="Data folder">
