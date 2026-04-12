@@ -199,74 +199,63 @@ class SnippetManager
     if( $includePos === false )
       return [];
 
-    $targetPath = trim(substr($includeFileName, $includePos + 7)); // 7 = length of "INCLUDE"
-    if( empty($targetPath) )
+    $targetName = trim(substr($includeFileName, $includePos + 7)); // 7 = length of "INCLUDE"
+    if( empty($targetName) )
       return [];
 
-    $targetFullPath = $basePath . "/$targetPath";
+    // Virtual tree path: the position this item appears at in the tree (unique per location)
+    $virtualPrefix = $currentSubPath ? "$currentSubPath/" : '';
 
-    $possiblePaths = [
-      "$targetPath.yml",
-      "$targetPath.md",
-      "common/$targetPath.yml",
-      "common/$targetPath.md"
-    ];
-
-    $items = [];
-
-    if( is_dir($targetFullPath) )
+    // Search order: current base folder first, then all other base folders
+    $orderedFolders = [];
+    foreach( $this->currentFolders as $f )
     {
-      $items[] = [
-        'type'       => 'folder',
-        'name'       => pathinfo($targetPath, PATHINFO_FILENAME),
-        'path'       => $targetPath,
-        'isIncluded' => true,
-        'color'      => $color
-      ];
+      if( $f['path'] === $basePath )
+        array_unshift($orderedFolders, $f);
+      else
+        $orderedFolders[] = $f;
     }
-    elseif( file_exists($targetFullPath) )
+
+    foreach( $orderedFolders as $folder )
     {
-      $extension = pathinfo($targetPath, PATHINFO_EXTENSION);
-      if( $extension === 'yml' || $extension === 'md' )
+      $base     = $folder['path'];
+      $fullPath = "$base/$targetName";
+      $itemColor = $folder['color'] ?? $color;
+
+      // Included folder
+      if( is_dir($fullPath) )
       {
-        $items[] = [
-          'type'       => 'file',
-          'name'       => pathinfo($targetPath, PATHINFO_FILENAME),
-          'extension'  => $extension,
-          'path'       => $targetPath,
-          'modified'   => filemtime($targetFullPath),
+        return [[
+          'type'       => 'folder',
+          'name'       => $targetName,
+          'path'       => $virtualPrefix . $targetName,
+          'fsPath'     => $targetName,
           'isIncluded' => true,
-          'color'      => $color
-        ];
+          'color'      => $itemColor
+        ]];
       }
-    }
-    else
-    {
-      foreach( $possiblePaths as $possiblePath )
-      {
-        $possibleFullPath = $basePath . "/$possiblePath";
 
-        if( file_exists($possibleFullPath) )
+      // Included file (with extension)
+      foreach( ['yml', 'md'] as $ext )
+      {
+        $filePath = "$base/$targetName.$ext";
+        if( file_exists($filePath) )
         {
-          $extension = pathinfo($possiblePath, PATHINFO_EXTENSION);
-          if( $extension === 'yml' || $extension === 'md' )
-          {
-            $items[] = [
-              'type'       => 'file',
-              'name'       => pathinfo($possiblePath, PATHINFO_FILENAME),
-              'extension'  => $extension,
-              'path'       => $possiblePath,
-              'modified'   => filemtime($possibleFullPath),
-              'isIncluded' => true,
-              'color'      => $color
-            ];
-            break;
-          }
+          return [[
+            'type'       => 'file',
+            'name'       => $targetName,
+            'extension'  => $ext,
+            'path'       => $virtualPrefix . $targetName . '.' . $ext,
+            'fsPath'     => "$targetName.$ext",
+            'modified'   => filemtime($filePath),
+            'isIncluded' => true,
+            'color'      => $itemColor
+          ]];
         }
       }
     }
 
-    return $items;
+    return [];
   }
 
   private function getDirectoryContentsRecursively( string $dirPath, string $basePath ) : array

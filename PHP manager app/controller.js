@@ -34,9 +34,10 @@ class SnippetManager
     const action = actionEl.getAttribute('data-action');
     const item   = actionEl.closest('.tree-item');
     if( ! item ) return;
-    const path = item.getAttribute('data-path');
-    const type = item.getAttribute('data-type');
-    const ext  = item.getAttribute('data-extension') || '';
+    const path   = item.getAttribute('data-path');
+    const fsPath = item.getAttribute('data-fspath') || path; // real fs path (for included items)
+    const type   = item.getAttribute('data-type');
+    const ext    = item.getAttribute('data-extension') || '';
 
     if( action === 'rename' ) {
       const parts    = path.split('/');
@@ -53,15 +54,15 @@ class SnippetManager
       showModal('renameItemModal');
     }
     else if( action === 'new-snippet' ) {
-      // Create new snippet inside this folder
-      this.currentPath = path;
-      if( path ) this.expandedFolders.add(path);
+      // Create new snippet inside this folder (use real fs path so included folders work)
+      this.currentPath = fsPath;
+      if( fsPath ) this.expandedFolders.add(path);
       showModal('newSnippetModal');
     }
     else if( action === 'new-folder' ) {
-      // Create new subfolder inside this folder
-      this.currentPath = path;
-      if( path ) this.expandedFolders.add(path);
+      // Create new subfolder inside this folder (use real fs path so included folders work)
+      this.currentPath = fsPath;
+      if( fsPath ) this.expandedFolders.add(path);
       showModal('newFolderModal');
     }
     else if( action === 'delete' ) {
@@ -486,7 +487,8 @@ class SnippetManager
   {
     return files.map(file => ({
       name: file.name,
-      path: file.path,
+      path: file.path,                          // virtual tree path (unique position in tree)
+      fsPath: file.fsPath || file.path,          // real filesystem path (for listFiles/loadSnippet)
       type: file.type,
       extension: file.extension || '',
       modified: file.modified || null,
@@ -526,7 +528,7 @@ class SnippetManager
       if( node.type === 'folder' && this.expandedFolders.has(node.path) ) {
         node.isOpen = true;
         if( node.children === null ) {
-          const result = await apiCall(this.currentDataPath, 'listFiles', { subPath: node.path });
+          const result = await apiCall(this.currentDataPath, 'listFiles', { subPath: node.fsPath || node.path });
           if( result.success )
             node.children = this.buildTreeNodes(result.files);
         }
@@ -547,7 +549,7 @@ class SnippetManager
     }
     else {
       if( node.children === null ) {
-        const result = await apiCall(this.currentDataPath, 'listFiles', { subPath: path });
+        const result = await apiCall(this.currentDataPath, 'listFiles', { subPath: node.fsPath || path });
         if( result.success )
           node.children = this.buildTreeNodes(result.files);
         else {
@@ -590,15 +592,18 @@ class SnippetManager
     if( ! this.currentSnippet ) return;
     const ext = this.currentSnippet._type === 'yml' ? 'yml' : 'md';
     const activePath = (this.currentPath ? this.currentPath + '/' : '') + this.currentSnippet._name + '.' + ext;
-    const item = document.querySelector(`.tree-item[data-path="${activePath}"]`);
+    // Match by data-path (normal items) or data-fspath (included items that share a real fs path)
+    const item = document.querySelector(`.tree-item[data-path="${activePath}"]`)
+               || document.querySelector(`.tree-item[data-fspath="${activePath}"]`);
     if( item ) item.classList.add('active');
   }
 
   renderTreeNode(node)
   {
-    const { type, _depth, path, name, isOpen, extension, isIncluded, color } = node;
+    const { type, _depth, path, fsPath, name, isOpen, extension, isIncluded, color } = node;
     const isFolder  = type === 'folder';
     const indentPx  = 6 + _depth * 14;
+    const realFsPath = fsPath || path;
 
     const icon = isFolder
       ? (isOpen ? 'bi-folder2-open' : 'bi-folder')
@@ -609,23 +614,33 @@ class SnippetManager
       : `<span class="tree-toggle-spacer"></span>`;
 
     const includedIcon = isIncluded
-      ? '<i class="bi bi-link-45deg text-primary ms-1" title="Included file"></i>'
+      ? '<i class="bi bi-link-45deg text-primary ms-1" title="Included"></i>'
       : '';
 
     const styleVal = color
       ? `padding-left: ${indentPx}px; background-color: ${color};`
       : `padding-left: ${indentPx}px;`;
 
-    const menuItems = isFolder
-      ? `<li><a class="dropdown-item small" href="#" data-action="new-snippet">New Snippet here</a></li>
-         <li><a class="dropdown-item small" href="#" data-action="new-folder">New Folder here</a></li>
-         <li><hr class="dropdown-divider"></li>
-         <li><a class="dropdown-item small" href="#" data-action="rename">Rename</a></li>`
-      : `<li><a class="dropdown-item small" href="#" data-action="rename">Rename</a></li>
-         <li><a class="dropdown-item small text-danger" href="#" data-action="delete">Delete</a></li>`;
+    let menuItems;
+    if( isIncluded ) {
+      // Included items: no structural actions (they live at their original location)
+      menuItems = isFolder
+        ? `<li><a class="dropdown-item small" href="#" data-action="new-snippet">New Snippet here</a></li>
+           <li><a class="dropdown-item small" href="#" data-action="new-folder">New Folder here</a></li>`
+        : `<li><span class="dropdown-item small text-muted disabled">Included file</span></li>`;
+    }
+    else {
+      menuItems = isFolder
+        ? `<li><a class="dropdown-item small" href="#" data-action="new-snippet">New Snippet here</a></li>
+           <li><a class="dropdown-item small" href="#" data-action="new-folder">New Folder here</a></li>
+           <li><hr class="dropdown-divider"></li>
+           <li><a class="dropdown-item small" href="#" data-action="rename">Rename</a></li>`
+        : `<li><a class="dropdown-item small" href="#" data-action="rename">Rename</a></li>
+           <li><a class="dropdown-item small text-danger" href="#" data-action="delete">Delete</a></li>`;
+    }
 
-    return `<div class="tree-item${isFolder ? ' tree-folder' : ' tree-file'}" ` +
-      `data-path="${path}" data-type="${type}" data-extension="${extension || ''}" ` +
+    return `<div class="tree-item${isFolder ? ' tree-folder' : ' tree-file'}${isIncluded ? ' tree-included' : ''}" ` +
+      `data-path="${path}" data-fspath="${realFsPath}" data-type="${type}" data-extension="${extension || ''}" ` +
       `style="${styleVal}">` +
       `<div class="d-flex align-items-center">` +
         toggleEl +
@@ -661,6 +676,7 @@ class SnippetManager
     if( ! item ) return;
 
     const { path, type } = item.dataset;
+    const fsPath = item.dataset.fspath || path; // real filesystem path (for included items)
 
     if( type === 'folder' ) {
       // Toggle folder expand/collapse (only for tree-items, not search results)
@@ -672,12 +688,12 @@ class SnippetManager
     document.querySelectorAll('.tree-item.active, .file-item.active').forEach(i => i.classList.remove('active'));
     item.classList.add('active');
 
-    // Set currentPath to the file's parent folder
-    const parts = path.split('/');
+    // Set currentPath to the file's parent folder (using real fs path)
+    const parts = fsPath.split('/');
     parts.pop();
     this.currentPath = parts.join('/');
 
-    this.loadSnippet(path);
+    this.loadSnippet(fsPath);
 
     // Auto-close sidebar on mobile
     if( window.innerWidth < 992 ) {
