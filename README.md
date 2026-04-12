@@ -8,6 +8,8 @@ A snippet manager app that has some special features
 
 ### File system include feature
 
+Combined base folders: cmn plus detail (see settings)
+
 - File: `11 INCLUDE error-handling`
 - Folder: `11 INCLUDE common`
 - current data folder only
