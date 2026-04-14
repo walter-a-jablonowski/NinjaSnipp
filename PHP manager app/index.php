@@ -7,7 +7,8 @@ require_once 'vendor/autoload.php';
 
 
 $appConfig = Yaml::parseFile('config.yml');
-$debug     = (bool)($appConfig['debug'] ?? false);
+$debug     = (bool) $appConfig['debug']['on'];
+$allBtns   = (bool) $appConfig['debug']['showAllFileBtns'];
 
 $config  = Yaml::parseFile('users/default/settings.yml');
 $manager = new SnippetManager( $config['dataPaths'] ?? ['data'], $config);
@@ -29,7 +30,6 @@ if( isset($_GET['data']) )
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
   <link href="styles/theme.css?v=<?= time() ?>" rel="stylesheet">
   <link href="styles/app.css?v=<?= time() ?>" rel="stylesheet">
-  <script>const APP_DEBUG = <?= json_encode($debug) ?>;</script>
 </head>
 <body>
   <!-- Header -->
@@ -101,22 +101,26 @@ if( isset($_GET['data']) )
                 <!-- Files & Folders Tab -->
                 <div class="tab-pane fade show active" id="files-pane" role="tabpanel">
                   <!-- Action Buttons (debug only) -->
-                  <div class="d-flex gap-2 mb-3<?= $debug ? '' : ' d-none' ?>">
-                    <button class="btn btn-sm btn-outline-secondary" id="backBtn" title="Back">
-                      <i class="bi bi-arrow-left"></i>
-                    </button>
+                  <div class="d-flex gap-2 mb-3">
+                    <?php if( $debug && $allBtns ): ?>
+                      <button class="btn btn-sm btn-outline-secondary" id="backBtn" title="Back">
+                        <i class="bi bi-arrow-left"></i>
+                      </button>
+                    <?php endif; ?>
                     <button class="btn btn-sm btn-success" id="newSnippetBtn" title="New Snippet">
                       <i class="bi bi-plus"></i>
                     </button>
                     <button class="btn btn-sm btn-primary" id="newFolderBtn" title="New Folder">
                       <i class="bi bi-folder-plus"></i>
                     </button>
-                    <button class="btn btn-sm btn-warning" id="selectBtn" title="Select" disabled>
-                      <i class="bi bi-list-check"></i>
-                    </button>
-                    <button class="btn btn-sm" id="bulkActionsBtn" title="Bulk actions" disabled>
-                      Actions
-                    </button>
+                    <?php if( $debug && $allBtns ): ?>
+                      <button class="btn btn-sm btn-warning" id="selectBtn" title="Select" disabled>
+                        <i class="bi bi-list-check"></i>
+                      </button>
+                      <button class="btn btn-sm" id="bulkActionsBtn" title="Bulk actions" disabled>
+                        Actions
+                      </button>
+                    <?php endif; ?>
                   </div>
 
                   <!-- File List -->
@@ -398,6 +402,7 @@ if( isset($_GET['data']) )
     </div>
   </div>
 
+  <script>const APP_DEBUG = <?= json_encode($debug) ?>;</script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="lib/functions.js?v=<?= time() ?>"></script>
