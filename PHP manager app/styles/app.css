@@ -846,3 +846,8 @@ body {
   margin-bottom: 1rem;
   opacity: 0.5;
 }
+
+/* Marked-rendered lists: reduce default browser indent */
+ul.no-indent {
+  padding-left: 20px;
+}

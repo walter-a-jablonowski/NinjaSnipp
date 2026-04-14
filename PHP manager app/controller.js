@@ -1,3 +1,9 @@
+// Wrapper: parse markdown and add .no-indent to all <ul> elements
+function parseMd( src )
+{
+  return marked.parse(src).replace(/<ul>/g, '<ul class="no-indent">');
+}
+
 class SnippetManager
 {
   constructor()
@@ -1192,7 +1198,7 @@ class SnippetManager
     mdPreview.style.display = '';
 
     const content = document.getElementById('snippetContent')?.value || '';
-    mdPreview.innerHTML = marked.parse(content);
+    mdPreview.innerHTML = parseMd(content);
     this.resizeInlineSnippet(); // routes to MD resize path
   }
 
@@ -1594,7 +1600,7 @@ class SnippetManager
       this._setUsagePreviewIcon('bi-eye');
     }
     else {
-      preview.innerHTML = marked.parse(textarea.value || '');
+      preview.innerHTML = parseMd(textarea.value || '');
       preview.style.display = '';
       textarea.style.display = 'none';
       this._setUsagePreviewIcon('bi-eye-slash');
@@ -1615,7 +1621,7 @@ class SnippetManager
     const textarea = document.getElementById('snippetUsage');
     const preview  = document.getElementById('usagePreview');
     if( ! textarea || ! preview ) return;
-    preview.innerHTML = marked.parse(textarea.value || '');
+    preview.innerHTML = parseMd(textarea.value || '');
     preview.style.display = '';
     textarea.style.display = 'none';
     this._setUsagePreviewIcon('bi-eye-slash');
@@ -1634,7 +1640,7 @@ class SnippetManager
     const el = document.getElementById('renderUsage');
     if( ! el ) return;
     const usageText = document.getElementById('snippetUsage')?.value || '';
-    el.innerHTML = usageText ? marked.parse(usageText) : '';
+    el.innerHTML = usageText ? parseMd(usageText) : '';
   }
 
   toggleRenderView()
