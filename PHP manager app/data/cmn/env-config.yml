@@ -1,7 +1,6 @@
 sh: env--
-usage: |-
-  Environment configuration block.
-  Use for .env files or config templates shared across environments.
+usage: |
+  Environment configuration block. Use for .env files or config templates shared across environments.
 content: |
   APP_ENV={{ env=production|development|testing }}
   APP_DEBUG={{ debug=false|true }}

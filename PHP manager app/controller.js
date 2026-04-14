@@ -29,6 +29,7 @@ class SnippetManager
     this._autosaveTimer = null; // debounce timer id
     this._autosaveDelayMs = 800; // debounce delay for autosave
     this._autosaveBound = false; // ensure we bind handlers once
+    this._lineWrapOff = false; // global line-wrap toggle state
 
     this.init();
   }
@@ -245,6 +246,7 @@ class SnippetManager
       ['saveSnippetBtn', 'click', () => this.saveCurrentSnippet()],
       ['duplicateSnippetBtn', 'click', () => this.duplicateCurrentSnippet()],
       ['deleteSnippetBtn', 'click', () => this.deleteCurrentSnippet()],
+      ['toggleLineWrapBtn', 'click', () => this.toggleLineWrap()],
       ['confirmDuplicateBtn', 'click', () => this.performDuplicate()],
       ['confirmDeleteBtn', 'click', () => this.performDelete()],
       ['recent-tab', 'click', () => this.loadRecentSnippets()],
@@ -374,6 +376,7 @@ class SnippetManager
     document.querySelectorAll('#contentTabs [data-bs-toggle="tab"]').forEach(btn =>
       btn.addEventListener('shown.bs.tab', (e) => {
         this.updateActionButtonsVisibility();
+        this.applyLineWrap();
         // Recompute heights when switching tabs
         this.resizeMdTextarea();
         this.resizeInlineSnippet();
@@ -1082,7 +1085,18 @@ class SnippetManager
     const activeTab = document.querySelector('#contentTabs .nav-link.active');
     const show = activeTab && activeTab.id === 'edit-tab';
 
-    ['saveSnippetBtn', 'snippetActionsDropdown'].forEach(id => {
+    // Save button: edit tab only
+    const saveBtn = document.getElementById('saveSnippetBtn');
+    if( saveBtn ) saveBtn.style.display = show ? '' : 'none';
+
+    // Dropdown: visible on both tabs when a snippet is loaded
+    const hasSnippet = !!this.currentSnippet;
+    const dropdown = document.getElementById('snippetActionsDropdown');
+    if( dropdown ) dropdown.style.display = hasSnippet ? '' : 'none';
+
+    // Edit-only items (duplicate, delete and their dividers): hide on render tab
+    ['snippetActionsEditGroup', 'snippetActionsEditDivider',
+     'snippetActionsDeleteGroup', 'snippetActionsDeleteDivider'].forEach(id => {
       const el = document.getElementById(id);
       if( el ) el.style.display = show ? '' : 'none';
     });
@@ -1140,6 +1154,42 @@ class SnippetManager
     ['saveSnippetBtn', 'snippetActionsBtn', 'duplicateSnippetBtn', 'deleteSnippetBtn'].forEach(id => {
       const btn = document.getElementById(id);
       if( btn ) btn.disabled = !enabled;
+    });
+  }
+
+  toggleLineWrap()
+  {
+    if( ! this.currentSnippet ) return;
+    this._lineWrapOff = ! this._lineWrapOff;
+    this.applyLineWrap();
+  }
+
+  applyLineWrap()
+  {
+    if( ! this.currentSnippet ) return;
+
+    const activeTab = document.querySelector('#contentTabs .nav-link.active');
+    const isEdit    = activeTab && activeTab.id === 'edit-tab';
+    const isYaml    = this.currentSnippet._type === 'yml';
+    const off       = this._lineWrapOff;
+
+    let ids;
+    if( isYaml && isEdit )        ids = ['snippetContent', 'snippetUsage', 'usagePreview'];
+    else if( isYaml && ! isEdit ) ids = ['renderUsage', 'inlineSnippet'];
+    else if( isEdit )             ids = ['snippetContent'];
+    else                          ids = ['markdownPreview'];
+
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if( ! el ) return;
+      if( el.tagName === 'TEXTAREA' ) {
+        el.style.whiteSpace = off ? 'nowrap' : '';
+        el.style.overflowX  = off ? 'auto'   : '';
+      }
+      else {
+        el.style.whiteSpace = off ? 'pre'  : '';
+        el.style.overflowX  = off ? 'auto' : '';
+      }
     });
   }
 
