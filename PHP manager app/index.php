@@ -166,12 +166,24 @@ if( isset($_GET['data']) )
                 <button type="button" class="btn btn-sm btn-primary" id="saveSnippetBtn" title="Save" aria-label="Save">
                   <i class="bi bi-save"></i>
                 </button>
-                <button type="button" class="btn btn-sm btn-outline-secondary" id="duplicateSnippetBtn" title="Duplicate" aria-label="Duplicate">
-                  <i class="bi bi-files"></i>
-                </button>
-                <button type="button" class="btn btn-sm btn-outline-danger" id="deleteSnippetBtn" title="Delete" aria-label="Delete">
-                  <i class="bi bi-trash"></i>
-                </button>
+                <div class="dropdown" id="snippetActionsDropdown">
+                  <button type="button" class="btn btn-sm btn-outline-warning dropdown-toggle-split" id="snippetActionsBtn" data-bs-toggle="dropdown" aria-expanded="false" title="More actions" style="--bs-btn-color: #fd7e14; --bs-btn-border-color: #fd7e14; --bs-btn-hover-bg: #fd7e14; --bs-btn-hover-color: #fff; --bs-btn-hover-border-color: #fd7e14; --bs-btn-active-bg: #fd7e14; --bs-btn-active-color: #fff;">
+                    <i class="bi bi-three-dots-vertical"></i>
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                      <button class="dropdown-item" id="duplicateSnippetBtn" type="button">
+                        <i class="bi bi-files me-2"></i>Duplicate
+                      </button>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                      <button class="dropdown-item text-danger" id="deleteSnippetBtn" type="button">
+                        <i class="bi bi-trash me-2"></i>Delete
+                      </button>
+                    </li>
+                  </ul>
+                </div>
               </div>
             </li>
           </ul>

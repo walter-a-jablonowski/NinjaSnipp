@@ -1076,9 +1076,9 @@ class SnippetManager
     const activeTab = document.querySelector('#contentTabs .nav-link.active');
     const show = activeTab && activeTab.id === 'edit-tab';
 
-    ['saveSnippetBtn', 'duplicateSnippetBtn', 'deleteSnippetBtn'].forEach(id => {
-      const btn = document.getElementById(id);
-      if( btn ) btn.style.display = show ? '' : 'none';
+    ['saveSnippetBtn', 'snippetActionsDropdown'].forEach(id => {
+      const el = document.getElementById(id);
+      if( el ) el.style.display = show ? '' : 'none';
     });
 
     // Copy + render view toggle: only visible on Render tab when a YAML snippet is loaded
@@ -1131,7 +1131,7 @@ class SnippetManager
 
   setActionButtonsEnabled(enabled)
   {
-    ['saveSnippetBtn', 'duplicateSnippetBtn', 'deleteSnippetBtn'].forEach(id => {
+    ['saveSnippetBtn', 'snippetActionsBtn', 'duplicateSnippetBtn', 'deleteSnippetBtn'].forEach(id => {
       const btn = document.getElementById(id);
       if( btn ) btn.disabled = !enabled;
     });
