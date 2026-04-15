@@ -139,30 +139,6 @@ class SnippetManager
       fieldUsage.style.height = ''; // let CSS flex handle it on mobile
     }
 
-    this.debugShPosition(); // DEBUG
-  }
-
-  debugShPosition()
-  {
-    const fieldUsage  = document.getElementById('fieldUsage');
-    const snippetUsage = document.getElementById('snippetUsage');
-    const fieldSc     = document.getElementById('fieldSc');
-    if( ! fieldSc || ! fieldUsage ) return;
-
-    const s = (e, p) => window.getComputedStyle(e).getPropertyValue(p);
-    const fuRect  = fieldUsage.getBoundingClientRect();
-    const scRect  = fieldSc.getBoundingClientRect();
-    const usRect  = snippetUsage ? snippetUsage.getBoundingClientRect() : null;
-
-    console.group('fieldSc position debug');
-    console.log('viewport                   :', window.innerHeight);
-    console.log('#fieldUsage  top/bottom    :', Math.round(fuRect.top), '/', Math.round(fuRect.bottom), '| oh:', fieldUsage.offsetHeight);
-    console.log('#fieldUsage  display/flex  :', s(fieldUsage, 'display'), '/', s(fieldUsage, 'flex-direction'));
-    console.log('#snippetUsage top/bottom   :', usRect ? `${Math.round(usRect.top)} / ${Math.round(usRect.bottom)} | oh:${snippetUsage.offsetHeight}` : 'null');
-    console.log('#fieldSc     top/bottom    :', Math.round(scRect.top), '/', Math.round(scRect.bottom), '| oh:', fieldSc.offsetHeight);
-    console.log('#fieldSc     below viewport:', scRect.bottom > window.innerHeight);
-    console.log('#fieldSc     flex-shrink   :', s(fieldSc, 'flex-shrink'));
-    console.groupEnd();
   }
 
   resizeInlineSnippet()

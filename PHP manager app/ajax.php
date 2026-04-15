@@ -41,19 +41,12 @@ try {
 
     case 'loadSnippet':
       $path = $input['path'] ?? '';
-      error_log("Loading snippet: " . $path); // Debug log
       $snippet = $manager->loadSnippet($path);
-      
+
       if( $snippet )
-      {
-        error_log("Snippet loaded successfully: " . $snippet['_name']); // Debug log
         $response = ['success' => true, 'snippet' => $snippet];
-      }
       else
-      {
-        error_log("Snippet missing: " . $path); // Debug log
         $response = ['success' => false, 'message' => 'Snippet missing'];
-      }
       break;
 
     case 'saveSnippet':
