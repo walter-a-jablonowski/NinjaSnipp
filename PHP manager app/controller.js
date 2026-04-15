@@ -1199,10 +1199,13 @@ class SnippetManager
     if( result.success ) {
       this.renderInlineSnippet(result.composed || '');
       this.renderUsageInPreview();
-      // Reset render view to snippet on each re-render
+      // On mobile: show usage first if there is any; on desktop always show snippet
       if( renderRow ) {
-        renderRow.classList.add('render-snippet-active');
-        renderRow.classList.remove('render-usage-active');
+        const usage = this.currentSnippet?.usage;
+        const hasUsage = usage && (typeof usage === 'string' ? usage.trim() : (usage.text || Object.keys(usage).length));
+        const mobileUsageFirst = window.innerWidth < 768 && hasUsage;
+        renderRow.classList.toggle('render-usage-active', !!mobileUsageFirst);
+        renderRow.classList.toggle('render-snippet-active', !mobileUsageFirst);
       }
       const renderToggleBtn = document.getElementById('renderViewToggleBtn');
       if( renderToggleBtn ) {
