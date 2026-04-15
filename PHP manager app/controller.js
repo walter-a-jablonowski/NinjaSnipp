@@ -1628,6 +1628,39 @@ class SnippetManager
     }
   }
 
+  _buildUsageMetaHtml()
+  {
+    const s = this.currentSnippet;
+    if( ! s ) return '';
+    const parts = [];
+    if( s.id )    parts.push(`<div class="usage-meta-id"><span class="usage-meta-label">ID</span> <code>${s.id}</code></div>`);
+    if( s.short ) parts.push(`<div class="usage-meta-short">${s.short}</div>`);
+    return parts.length ? `<div class="usage-meta">${parts.join('')}</div>` : '';
+  }
+
+  _buildUsageHtml()
+  {
+    const s = this.currentSnippet;
+    const usage = s?.usage ?? null;
+    let html = this._buildUsageMetaHtml();
+
+    if( usage && typeof usage === 'object' ) {
+      // Structured usage: optional vars map + optional text
+      if( usage.vars && typeof usage.vars === 'object' ) {
+        const rows = Object.entries(usage.vars)
+          .map(([k, v]) => `<tr><td><code>${k}</code></td><td>${v ?? ''}</td></tr>`)
+          .join('');
+        html += `<div class="usage-meta usage-meta-vars"><table class="usage-vars-table"><thead><tr><th>Var</th><th>Description</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+      }
+      if( usage.text ) html += parseMd(usage.text);
+    }
+    else if( typeof usage === 'string' && usage ) {
+      html += parseMd(usage);
+    }
+
+    return html;
+  }
+
   toggleUsagePreview()
   {
     const textarea = document.getElementById('snippetUsage');
@@ -1650,7 +1683,7 @@ class SnippetManager
       this._setUsagePreviewIcon('bi-eye');
     }
     else {
-      preview.innerHTML = parseMd(textarea.value || '');
+      preview.innerHTML = this._buildUsageHtml();
       preview.style.display = '';
       textarea.style.display = 'none';
       this._setUsagePreviewIcon('bi-eye-slash');
@@ -1671,7 +1704,7 @@ class SnippetManager
     const textarea = document.getElementById('snippetUsage');
     const preview  = document.getElementById('usagePreview');
     if( ! textarea || ! preview ) return;
-    preview.innerHTML = parseMd(textarea.value || '');
+    preview.innerHTML = this._buildUsageHtml();
     preview.style.display = '';
     textarea.style.display = 'none';
     this._setUsagePreviewIcon('bi-eye-slash');
@@ -1689,8 +1722,7 @@ class SnippetManager
   {
     const el = document.getElementById('renderUsage');
     if( ! el ) return;
-    const usageText = document.getElementById('snippetUsage')?.value || '';
-    el.innerHTML = usageText ? parseMd(usageText) : '';
+    el.innerHTML = this._buildUsageHtml();
   }
 
   toggleRenderView()

@@ -611,6 +611,59 @@ body {
   margin: 1rem 0;
 }
 
+/* Usage meta header (id + short) */
+.usage-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.usage-meta-id {
+  font-size: 0.78rem;
+  color: #6c757d;
+}
+
+.usage-meta-label {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-right: 0.25rem;
+}
+
+.usage-meta-short {
+  font-size: 0.85rem;
+  color: #333;
+  font-style: italic;
+}
+
+/* Usage vars table */
+.usage-meta-vars {
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.usage-vars-table {
+  width: 100%;
+  font-size: 0.8rem;
+  border-collapse: collapse;
+}
+
+.usage-vars-table th {
+  text-align: left;
+  font-weight: 600;
+  color: #6c757d;
+  padding-bottom: 0.2rem;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.usage-vars-table td {
+  padding: 0.15rem 0.4rem 0.15rem 0;
+  vertical-align: top;
+}
+
 /* Usage markdown preview panel */
 .usage-preview {
   font-size: 0.875rem;
