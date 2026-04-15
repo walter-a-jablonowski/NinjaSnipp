@@ -1634,7 +1634,8 @@ class SnippetManager
           .join('');
         html += `<div class="usage-meta usage-meta-vars"><table class="usage-vars-table"><thead><tr><th>Var</th><th>Description</th></tr></thead><tbody>${rows}</tbody></table></div>`;
       }
-      if( usage.text ) html += parseMd(usage.text);
+      if( usage.text )      html += parseMd(usage.text);
+      if( usage.secondary ) html += `<div class="usage-secondary">${parseMd(usage.secondary)}</div>`;
     }
     else if( typeof usage === 'string' && usage ) {
       html += parseMd(usage);

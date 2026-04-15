@@ -664,6 +664,17 @@ body {
   vertical-align: top;
 }
 
+/* Secondary usage section (muted) */
+.usage-secondary {
+  margin-top: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #dee2e6;
+  color: #888;
+  font-size: 0.85rem;
+}
+
+.usage-secondary * { color: inherit; }
+
 /* Usage markdown preview panel */
 .usage-preview {
   font-size: 0.875rem;

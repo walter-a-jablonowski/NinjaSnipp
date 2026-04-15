@@ -19,14 +19,15 @@ Combined base folders: cmn plus detail (see settings)
 version 2
 
 ```yml
-id:       # snipp version
-version:  # snipp file version
+id:           # snipp version
+version:      # snipp file version
 sc:
-short:    # short desc
-usage:    # full text or yml keys
+short:        # short desc
+usage:        # full text or yml keys
   vars:
     myVar: explanation
-  text:
+  text:       # Main details
+  secondary:  # Grey details
 content:
 ```
 
