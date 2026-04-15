@@ -14,6 +14,22 @@ Combined base folders: cmn plus detail (see settings)
 - Folder: `11 INCLUDE common`
 - current data folder only
 
+### File format
+
+version 2
+
+```yml
+id:       # snipp version
+version:  # snipp file version
+sc:
+short:    # short desc
+usage:    # full text or yml keys
+  vars:
+    myVar: explanation
+  text:
+content:
+```
+
 ### Placeholders
 
 - `{{placholder}}`

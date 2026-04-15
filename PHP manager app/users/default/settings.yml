@@ -1,10 +1,12 @@
 dataPaths:
-  'Demo 1':
-    'data/cmn': '#e8e8e8'
-    'data/demo_data_1': null
-  'Demo 2':
-    'data/cmn': '#e8e8e8'
-    'data/demo_data_2': null
+  # 'Demo 1':
+  #   'data/cmn': '#e8e8e8'
+  #   'data/demo_data_1': null
+  # 'Demo 2':
+  #   'data/cmn': '#e8e8e8'
+  #   'data/demo_data_2': null
+  AI:
+    "G:/Meine Ablage/50 Activity tree/11 Common/Dools/AI (#ai-usage)": null
 nav:
   foldersFirst: false
 render:
