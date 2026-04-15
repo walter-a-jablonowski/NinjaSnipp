@@ -1,4 +1,4 @@
-sh: sql--
+sc: sql--
 usage: |
   Generic SQL CRUDs snippet.
   Choose action and provide table and columns.

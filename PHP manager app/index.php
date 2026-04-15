@@ -260,8 +260,8 @@ if( isset($_GET['data']) )
                       <textarea class="form-control flex-grow-1" id="snippetUsage" rows="3" placeholder="Comments, usage and sample..."></textarea>
                       <div id="usagePreview" class="usage-preview flex-grow-1 overflow-auto" style="display: none;"></div>
                       <!-- YAML-only: Short Code (no label) -->
-                      <div id="fieldSh" class="mt-2">
-                        <input type="text" title="Short code" class="form-control form-control-sm" id="snippetSh" placeholder="Short code, e.g. arr--">
+                      <div id="fieldSc" class="mt-2">
+                        <input type="text" title="Short code" class="form-control form-control-sm" id="snippetSc" placeholder="Short code, e.g. arr--">
                       </div>
                     </div>
 

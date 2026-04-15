@@ -352,9 +352,9 @@ class SnippetManager
       if( $data['_type'] === 'yml' )
       {
         unset($data['_type'], $data['_name']);
-        // Ensure key order: sh, usage, content come first
+        // Ensure key order: sc, usage, content come first
         $ordered = [];
-        foreach( ['sh', 'usage', 'content'] as $k )
+        foreach( ['sc', 'usage', 'content'] as $k )
         {
           if( array_key_exists($k, $data) )
           {
@@ -455,7 +455,7 @@ class SnippetManager
     if( strpos(strtolower($snippet['_name']), $query) !== false )
       return true;
 
-    if( isset($snippet['sh']) && strpos(strtolower($snippet['sh']), $query) !== false )
+    if( isset($snippet['sc']) && strpos(strtolower($snippet['sc']), $query) !== false )
       return true;
 
     if( isset($snippet['usage']) && strpos(strtolower($snippet['usage']), $query) !== false )
@@ -499,9 +499,9 @@ class SnippetManager
     elseif( strpos(strtolower($snippet['_name']), $query) !== false )
       $score += 25;
 
-    if( isset($snippet['sh']) && strtolower($snippet['sh']) === $query )
+    if( isset($snippet['sc']) && strtolower($snippet['sc']) === $query )
       $score += 75;
-    elseif( isset($snippet['sh']) && strpos(strtolower($snippet['sh']), $query) !== false )
+    elseif( isset($snippet['sc']) && strpos(strtolower($snippet['sc']), $query) !== false )
       $score += 20;
 
     if( isset($snippet['usage']) && strpos(strtolower($snippet['usage']), $query) !== false )

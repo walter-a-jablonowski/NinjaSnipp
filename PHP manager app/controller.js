@@ -128,7 +128,7 @@ class SnippetManager
     const available = Math.max(200, Math.floor(window.innerHeight - rect.top - bottomPadding));
     ta.style.height = available + 'px';
 
-    // Also constrain fieldUsage height so fieldSh stays visible
+    // Also constrain fieldUsage height so fieldSc stays visible
     const fieldUsage = document.getElementById('fieldUsage');
     if( fieldUsage && window.innerWidth >= 768 ) {
       const fuRect = fieldUsage.getBoundingClientRect();
@@ -146,22 +146,22 @@ class SnippetManager
   {
     const fieldUsage  = document.getElementById('fieldUsage');
     const snippetUsage = document.getElementById('snippetUsage');
-    const fieldSh     = document.getElementById('fieldSh');
-    if( ! fieldSh || ! fieldUsage ) return;
+    const fieldSc     = document.getElementById('fieldSc');
+    if( ! fieldSc || ! fieldUsage ) return;
 
     const s = (e, p) => window.getComputedStyle(e).getPropertyValue(p);
     const fuRect  = fieldUsage.getBoundingClientRect();
-    const shRect  = fieldSh.getBoundingClientRect();
+    const scRect  = fieldSc.getBoundingClientRect();
     const usRect  = snippetUsage ? snippetUsage.getBoundingClientRect() : null;
 
-    console.group('fieldSh position debug');
+    console.group('fieldSc position debug');
     console.log('viewport                   :', window.innerHeight);
     console.log('#fieldUsage  top/bottom    :', Math.round(fuRect.top), '/', Math.round(fuRect.bottom), '| oh:', fieldUsage.offsetHeight);
     console.log('#fieldUsage  display/flex  :', s(fieldUsage, 'display'), '/', s(fieldUsage, 'flex-direction'));
     console.log('#snippetUsage top/bottom   :', usRect ? `${Math.round(usRect.top)} / ${Math.round(usRect.bottom)} | oh:${snippetUsage.offsetHeight}` : 'null');
-    console.log('#fieldSh     top/bottom    :', Math.round(shRect.top), '/', Math.round(shRect.bottom), '| oh:', fieldSh.offsetHeight);
-    console.log('#fieldSh     below viewport:', shRect.bottom > window.innerHeight);
-    console.log('#fieldSh     flex-shrink   :', s(fieldSh, 'flex-shrink'));
+    console.log('#fieldSc     top/bottom    :', Math.round(scRect.top), '/', Math.round(scRect.bottom), '| oh:', fieldSc.offsetHeight);
+    console.log('#fieldSc     below viewport:', scRect.bottom > window.innerHeight);
+    console.log('#fieldSc     flex-shrink   :', s(fieldSc, 'flex-shrink'));
     console.groupEnd();
   }
 
@@ -752,9 +752,9 @@ class SnippetManager
   {
     const editEmptyState = document.getElementById('editEmptyState');
     const editForm = document.getElementById('editForm');
-    const fieldSh = document.getElementById('fieldSh');
+    const fieldSc = document.getElementById('fieldSc');
     const fieldUsage = document.getElementById('fieldUsage');
-    const snippetSh = document.getElementById('snippetSh');
+    const snippetSc = document.getElementById('snippetSc');
     const snippetUsage = document.getElementById('snippetUsage');
     const snippetContent = document.getElementById('snippetContent');
     const labelSnippetContent = document.getElementById('labelSnippetContent');
@@ -767,12 +767,12 @@ class SnippetManager
     snippetContent.value = snippet.content || '';
 
     if( isYaml ) {
-      if( snippetSh ) snippetSh.value = snippet.sh || '';
+      if( snippetSc ) snippetSc.value = snippet.sc || '';
       if( snippetUsage ) snippetUsage.value = snippet.usage || '';
     }
 
     // Toggle YAML-only fields visibility (use class to beat Bootstrap's d-flex !important)
-    [fieldSh, fieldUsage].forEach(field => {
+    [fieldSc, fieldUsage].forEach(field => {
       if( field ) field.classList.toggle('force-hide', ! isYaml);
     });
 
@@ -876,10 +876,10 @@ class SnippetManager
     };
 
     if( this.currentSnippet._type === 'yml' ) {
-      const shInput = document.getElementById('snippetSh');
+      const scInput = document.getElementById('snippetSc');
       const usageInput = document.getElementById('snippetUsage');
 
-      data.sh = shInput.value.trim();
+      data.sc = scInput.value.trim();
       data.usage = usageInput.value.trim();
     }
 
@@ -908,11 +908,11 @@ class SnippetManager
   bindAutosaveHandlers()
   {
     if( this._autosaveBound ) return;
-    const shEl = document.getElementById('snippetSh');
+    const scEl = document.getElementById('snippetSc');
     const usageEl = document.getElementById('snippetUsage');
     const contentEl = document.getElementById('snippetContent');
     const handler = () => this.onEditFieldChanged();
-    [shEl, usageEl, contentEl].forEach(el => {
+    [scEl, usageEl, contentEl].forEach(el => {
       if( el ) {
         el.addEventListener('input', handler);
         el.addEventListener('blur', handler);
@@ -1049,7 +1049,7 @@ class SnippetManager
       editEmptyState.style.display = 'block';
 
       // Clear form values
-      const inputs = ['snippetSh', 'snippetUsage', 'snippetContent'];
+      const inputs = ['snippetSc', 'snippetUsage', 'snippetContent'];
       inputs.forEach(id => {
         const input = document.getElementById(id);
         if( input ) input.value = '';
@@ -2047,7 +2047,7 @@ class SnippetManager
     };
 
     if( type === 'yml' ) {
-      data.sh = '';
+      data.sc = '';
       data.usage = '';
     }
 

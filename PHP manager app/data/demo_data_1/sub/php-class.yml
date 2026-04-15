@@ -1,4 +1,4 @@
-sh: class--
+sc: class--
 usage: |
   Creates a PHP class with constructor and basic methods.
   Use {{ className }} for the class name, {{ property }} for a property name.

@@ -1,4 +1,4 @@
-sh: form--
+sc: form--
 usage: |-
   Creates an HTML form with common input fields.
   Use {{ formName }} for form name, {{ action }} for form action.

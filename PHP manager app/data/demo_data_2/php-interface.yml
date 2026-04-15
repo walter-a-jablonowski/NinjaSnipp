@@ -1,4 +1,4 @@
-sh: iface--
+sc: iface--
 usage: |
   PHP interface and a simple implementation skeleton.
   Customize names and method signature.

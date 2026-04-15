@@ -1,4 +1,4 @@
-sh: log--
+sc: log--
 usage: |
   Minimal PHP logger helper to standard error.
   Use level and message placeholders.

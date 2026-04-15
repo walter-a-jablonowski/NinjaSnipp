@@ -1,4 +1,4 @@
-sh: fetch--
+sc: fetch--
 usage: |
   Template for a JavaScript Fetch request with basic error handling.
   Choose method and provide URL and optional payload.

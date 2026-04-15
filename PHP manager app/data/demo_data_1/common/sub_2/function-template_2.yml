@@ -1,4 +1,4 @@
-sh: func--
+sc: func--
 usage: |
   Creates a function template with documentation.
   Includes common function patterns.
