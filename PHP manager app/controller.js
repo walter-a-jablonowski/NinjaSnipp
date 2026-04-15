@@ -744,7 +744,10 @@ class SnippetManager
 
     if( isYaml ) {
       if( snippetSc ) snippetSc.value = snippet.sc || '';
-      if( snippetUsage ) snippetUsage.value = snippet.usage || '';
+      if( snippetUsage ) {
+        const u = snippet.usage;
+        snippetUsage.value = (u && typeof u === 'object') ? (u.text || '') : (u || '');
+      }
     }
 
     // Toggle YAML-only fields visibility (use class to beat Bootstrap's d-flex !important)
