@@ -40,12 +40,12 @@ if( isset($_GET['data']) )
       </button>
 
       <a class="navbar-brand d-flex align-items-center" href="#">
-        <i class="bi bi-code-square me-2 fs-4"></i>
+        <i class="bi bi-code-square me-2 fs-4 d-none d-sm-inline"></i>
         <span class="fw-bold brand-full">Ninja</span>
         <span class="fw-bold brand-short">Ninja</span>
       </a>
       
-      <div class="navbar-nav ms-auto">
+      <div class="navbar-nav ms-auto d-flex flex-row align-items-center gap-2">
         <div class="nav-item">
           <div class="input-group">
             <input type="text" class="form-control" id="searchInput" placeholder="Search ..." autocomplete="off">
@@ -53,6 +53,9 @@ if( isset($_GET['data']) )
               <i class="bi bi-search"></i>
             </button>
           </div>
+        </div>
+        <div class="nav-item">
+          <button class="btn btn-outline-light" type="button" id="aiBtn">AI</button>
         </div>
       </div>
     </div>
