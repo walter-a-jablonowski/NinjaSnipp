@@ -283,7 +283,7 @@ if( isset($_GET['data']) )
 
       <!-- AI Chat Sidebar -->
       <aside class="app-ai-sidebar" id="aiSidebar">
-        <div class="ai-sidebar-header border-bottom d-flex align-items-center justify-content-between px-3">
+        <div class="ai-sidebar-header border-bottom d-flex align-items-center justify-content-between px-3 d-lg-none">
           <span class="fw-semibold small"><i class="bi bi-stars me-2 text-primary"></i>AI Assistant</span>
           <button type="button" class="btn-close" id="aiSidebarClose" aria-label="Close"></button>
         </div>
@@ -295,7 +295,7 @@ if( isset($_GET['data']) )
             <div class="ai-msg-bubble">You can store and organize reusable code templates here. Create a snippet, add your code with <code>{{ variable }}</code> placeholders, then use the preview tab to fill in values interactively.</div>
           </div>
         </div>
-        <div class="ai-input-area border-top p-2">
+        <div class="ai-input-area border-top p-2 pb-lg-3">
           <div class="input-group">
             <textarea class="form-control form-control-sm" id="aiInput" placeholder="Ask AI …" rows="2" style="resize: none;"></textarea>
             <button class="btn btn-primary btn-sm px-3" type="button" id="aiSendBtn">

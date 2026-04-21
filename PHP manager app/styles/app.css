@@ -1011,7 +1011,7 @@ ul.no-indent {
 @media (max-width: 991.98px) {
   .app-ai-sidebar.open {
     position: fixed;
-    top: 56px; /* mobile navbar height */
+    top: 0;
     left: 0;
     right: 0;
     bottom: 0;
