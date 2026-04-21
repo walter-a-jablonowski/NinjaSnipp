@@ -280,6 +280,30 @@ if( isset($_GET['data']) )
           </div>
         </div>
       </main>
+
+      <!-- AI Chat Sidebar -->
+      <aside class="app-ai-sidebar" id="aiSidebar">
+        <div class="ai-sidebar-header border-bottom d-flex align-items-center justify-content-between px-3">
+          <span class="fw-semibold small"><i class="bi bi-stars me-2 text-primary"></i>AI Assistant</span>
+          <button type="button" class="btn-close" id="aiSidebarClose" aria-label="Close"></button>
+        </div>
+        <div class="ai-messages" id="aiMessages">
+          <div class="ai-msg ai-msg-user">
+            <div class="ai-msg-bubble">How can I use this snippet manager for code templates?</div>
+          </div>
+          <div class="ai-msg ai-msg-ai">
+            <div class="ai-msg-bubble">You can store and organize reusable code templates here. Create a snippet, add your code with <code>{{ variable }}</code> placeholders, then use the preview tab to fill in values interactively.</div>
+          </div>
+        </div>
+        <div class="ai-input-area border-top p-2">
+          <div class="input-group">
+            <textarea class="form-control form-control-sm" id="aiInput" placeholder="Ask AI …" rows="2" style="resize: none;"></textarea>
+            <button class="btn btn-primary btn-sm px-3" type="button" id="aiSendBtn">
+              <i class="bi bi-send-fill"></i>
+            </button>
+          </div>
+        </div>
+      </aside>
   </div>
 
   <!-- Modals -->

@@ -240,6 +240,8 @@ class SnippetManager
       ['duplicateSnippetBtn', 'click', () => this.duplicateCurrentSnippet()],
       ['deleteSnippetBtn', 'click', () => this.deleteCurrentSnippet()],
       ['toggleLineWrapBtn', 'click', () => this.toggleLineWrap()],
+      ['aiBtn',            'click', () => this.toggleAiSidebar()],
+      ['aiSidebarClose',   'click', () => this.toggleAiSidebar(false)],
       ['confirmDuplicateBtn', 'click', () => this.performDuplicate()],
       ['confirmDeleteBtn', 'click', () => this.performDelete()],
       ['recent-tab', 'click', () => this.loadRecentSnippets()],
@@ -1152,6 +1154,14 @@ class SnippetManager
       const btn = document.getElementById(id);
       if( btn ) btn.disabled = !enabled;
     });
+  }
+
+  toggleAiSidebar( open )
+  {
+    const sidebar = document.getElementById('aiSidebar');
+    if( ! sidebar ) return;
+    const isOpen = open !== undefined ? open : ! sidebar.classList.contains('open');
+    sidebar.classList.toggle('open', isOpen);
   }
 
   toggleLineWrap()
