@@ -1191,8 +1191,10 @@ class SnippetManager
       if( ! el ) return;
       if( el.tagName === 'TEXTAREA' )
         el.style.whiteSpace = off ? 'nowrap' : '';
+      else if( id === 'inlineSnippet' )
+        el.style.whiteSpace = off ? 'pre' : '';     // preserve \n in text nodes
       else
-        el.style.whiteSpace = off ? 'nowrap' : '';
+        el.style.whiteSpace = off ? 'nowrap' : '';  // HTML content, \n irrelevant
       el.style.overflowX = 'hidden';
     });
   }
