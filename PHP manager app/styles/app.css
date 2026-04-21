@@ -575,6 +575,11 @@ body {
   margin-bottom: 0.75rem;
 }
 
+.markdown-preview li > ul,
+.markdown-preview li > ol,
+.markdown-preview li > pre,
+.markdown-preview li > blockquote { margin-bottom: 0; }
+
 .markdown-preview code {
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   font-size: 0.8125rem;
@@ -695,6 +700,10 @@ body {
 
 .usage-preview p { margin-bottom: 0.5rem; }
 .usage-preview p:last-child { margin-bottom: 0; }
+.usage-preview li > ul,
+.usage-preview li > ol,
+.usage-preview li > pre,
+.usage-preview li > blockquote { margin-bottom: 0; }
 
 .usage-preview code {
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
