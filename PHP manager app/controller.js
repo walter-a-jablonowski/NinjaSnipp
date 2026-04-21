@@ -29,7 +29,7 @@ class SnippetManager
     this._autosaveTimer = null; // debounce timer id
     this._autosaveDelayMs = 800; // debounce delay for autosave
     this._autosaveBound = false; // ensure we bind handlers once
-    this._lineWrapOff = false; // global line-wrap toggle state
+    this._lineWrapOff = true; // global line-wrap toggle state
 
     this.init();
   }
@@ -153,6 +153,7 @@ class SnippetManager
       const available = Math.max(200, Math.floor(window.innerHeight - rect.top - 8));
       mp.style.height = available + 'px';
       mp.style.overflowY = 'auto';
+      mp.style.overflowX = 'hidden';
       return;
     }
 
@@ -163,6 +164,7 @@ class SnippetManager
     const available = Math.max(200, Math.floor(window.innerHeight - rect.top - 8));
     el.style.height = available + 'px';
     el.style.overflowY = 'auto';
+    el.style.overflowX = 'hidden';
     // Keep usage preview the same height so both columns align
     const renderUsage = document.getElementById('renderUsage');
     if( renderUsage ) renderUsage.style.height = available + 'px';
@@ -716,6 +718,7 @@ class SnippetManager
         activateTab('render-tab');
         this.updateActionButtonsVisibility();
       }
+      this.applyLineWrap();
     }
     else {
       showError('Failed to load snippet: ' + result.message);
@@ -1161,14 +1164,11 @@ class SnippetManager
     ids.forEach(id => {
       const el = document.getElementById(id);
       if( ! el ) return;
-      if( el.tagName === 'TEXTAREA' ) {
+      if( el.tagName === 'TEXTAREA' )
         el.style.whiteSpace = off ? 'nowrap' : '';
-        el.style.overflowX  = off ? 'auto'   : '';
-      }
-      else {
-        el.style.whiteSpace = off ? 'pre'  : '';
-        el.style.overflowX  = off ? 'auto' : '';
-      }
+      else
+        el.style.whiteSpace = off ? 'pre' : '';
+      el.style.overflowX = 'hidden';
     });
   }
 

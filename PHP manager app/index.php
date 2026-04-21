@@ -206,7 +206,7 @@ if( isset($_GET['data']) )
                 <div class="row g-2 render-snippet-active" id="renderRow">
                   <!-- Usage preview (left) -->
                   <div class="col-md-6" id="renderUsageCol">
-                    <div id="renderUsage" class="usage-preview overflow-auto"></div>
+                    <div id="renderUsage" class="usage-preview"></div>
                   </div>
                   <!-- Snippet (right) -->
                   <div class="col-md-6" id="renderSnippetCol">
@@ -214,7 +214,7 @@ if( isset($_GET['data']) )
                   </div>
                 </div>
                 <!-- Markdown file: simple rendered preview -->
-                <div id="markdownPreview" class="markdown-preview overflow-auto" style="display: none;"></div>
+                <div id="markdownPreview" class="markdown-preview" style="display: none;"></div>
                 <!-- Choice menu for placeholders (shown on demand) -->
                 <div id="phChoiceMenu" class="dropdown-menu" tabindex="-1"></div>
               </div>
@@ -258,7 +258,7 @@ if( isset($_GET['data']) )
                         </button>
                       </div>
                       <textarea class="form-control flex-grow-1" id="snippetUsage" rows="3" placeholder="Comments, usage and sample..."></textarea>
-                      <div id="usagePreview" class="usage-preview flex-grow-1 overflow-auto" style="display: none;"></div>
+                      <div id="usagePreview" class="usage-preview flex-grow-1" style="display: none;"></div>
                       <!-- YAML-only: Short Code (no label) -->
                       <div id="fieldSc" class="mt-2">
                         <input type="text" title="Short code" class="form-control form-control-sm" id="snippetSc" placeholder="Short code, e.g. arr--">
