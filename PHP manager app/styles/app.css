@@ -645,6 +645,9 @@ body {
   font-style: italic;
 }
 
+/* Usage head */
+.usage-head { margin-bottom: 0.75rem; }
+
 /* Usage vars table */
 .usage-meta-vars {
   padding-bottom: 0.5rem;
