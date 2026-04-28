@@ -1655,6 +1655,7 @@ class SnippetManager
 
     if( usage && typeof usage === 'object' ) {
       // Structured usage: optional vars map + optional text
+      if( usage.head )      html += `<div class="usage-head">${parseMd(usage.head)}</div>`;
       if( usage.vars && typeof usage.vars === 'object' ) {
         const rows = Object.entries(usage.vars)
           .map(([k, v]) => `<tr><td><code>${k}</code></td><td>${v ?? ''}</td></tr>`)
