@@ -1656,6 +1656,12 @@ class SnippetManager
     if( usage && typeof usage === 'object' ) {
       // Structured usage: optional vars map + optional text
       if( usage.head )      html += `<div class="usage-head">${parseMd(usage.head)}</div>`;
+      if( usage.maybe && typeof usage.maybe === 'object' ) {
+        const rows = Object.entries(usage.maybe)
+          .map(([k, v]) => `<tr><td><code>${k}</code></td><td>${v ?? ''}</td></tr>`)
+          .join('');
+        html += `<div class="usage-meta usage-meta-vars"><table class="usage-vars-table"><thead><tr><th>Maybe</th><th>Description</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+      }
       if( usage.vars && typeof usage.vars === 'object' ) {
         const rows = Object.entries(usage.vars)
           .map(([k, v]) => `<tr><td><code>${k}</code></td><td>${v ?? ''}</td></tr>`)
