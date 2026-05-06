@@ -44,6 +44,14 @@ content:
   Some optional text
   {{ END-MAYBE }}
   ```
+- Optional text (inline): is merged in one line
+  ```
+  Before
+  {{ MAYBE: SomeName }}
+    Some optional text
+  {{ END-MAYBE }}
+  behind
+  ```
 - Trick for optional text: `{{optional=My optional text}}`
 
 ### Misc

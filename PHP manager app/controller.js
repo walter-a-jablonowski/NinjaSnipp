@@ -1838,7 +1838,16 @@ class SnippetManager
       parts.push(extractText(node));
     });
 
-    this.renderedText = parts.join('');
+    // Collapse single newlines into spaces (no blank line = same paragraph/sentence),
+    // but preserve blank lines (paragraph breaks).
+    // Strategy: split on blank lines, collapse single \n within each block, rejoin.
+    const rawText = parts.join('');
+    this.renderedText = rawText
+      .split(/\n{2,}/)
+      .map(block => block.replace(/\n/g, ' ').replace(/ {2,}/g, ' ').trim())
+      .filter(block => block.length > 0)
+      .join('\n\n');
+
     const copyRenderedBtn = document.getElementById('copyRenderedBtn');
     if( copyRenderedBtn ) copyRenderedBtn.disabled = this.renderedText.length === 0;
   }
