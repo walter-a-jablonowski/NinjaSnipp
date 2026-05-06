@@ -572,11 +572,15 @@ class SnippetManager
 
   private function processMaybeBlocks( string $content, bool $forInline ) : string
   {
-    $pattern = '/\{\{\s*MAYBE:\s*([^}]+)\s*\}\}(.*?)\{\{\s*END-MAYBE\s*\}\}/s';
+    // Consume the entire tag line (leading spaces + tag + trailing newline) so no blank lines remain
+    $pattern = '/[^\S\n]*\{\{\s*MAYBE:\s*([^}]+)\s*\}\}[^\S\n]*\n?(.*?)[^\S\n]*\{\{\s*END-MAYBE\s*\}\}[^\S\n]*\n?/s';
 
     return preg_replace_callback($pattern, function($matches) use ($forInline) {
       $name         = trim($matches[1]);
       $blockContent = $matches[2];
+      // Trim one leading and one trailing newline so block content doesn't add extra blank lines
+      $blockContent = ltrim($blockContent, "\n");
+      $blockContent = rtrim($blockContent, "\n ");
       $blockContent = $this->processMaybeBlocks($blockContent, $forInline);
 
       if( $forInline ) {
