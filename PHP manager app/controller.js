@@ -1799,7 +1799,10 @@ class SnippetManager
             content.childNodes.forEach(child => {
               text += extractText(child);
             });
-            return text;
+            // Wrap with spaces so the block never glues onto surrounding text
+            // (the PHP regex consumes the \n after {{ END-MAYBE }}). Any duplicate
+            // spaces are collapsed in the post-processing step below.
+            return ' ' + text + ' ';
           }
           return '';
         }
