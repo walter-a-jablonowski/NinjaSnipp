@@ -415,9 +415,17 @@ class SnippetManager
       this.resizeInlineSnippet();
     });
 
-    // File list dropdown actions (delegate)
+    // File list click and keyboard navigation
     const fileList = document.getElementById('fileList');
-    if( fileList ) fileList.addEventListener('click', (e) => this.handleFileListDropdownClick(e));
+    if( fileList ) {
+      fileList.addEventListener('click', (e) => this.handleFileListDropdownClick(e));
+      // Track last focused tree-item so arrow keys work even after focus drifts to body
+      fileList.addEventListener('focusin', (e) => {
+        const item = e.target.closest('.tree-item');
+        if( item ) this._focusedTreeItem = item;
+      });
+    }
+    document.addEventListener('keydown', (e) => this.fileListKeyDown(e));
 
     // Mobile Usage/Content pill switcher
     const usageFieldPill   = document.getElementById('usageFieldPill');
@@ -647,7 +655,7 @@ class SnippetManager
 
     return `<div class="tree-item${isFolder ? ' tree-folder' : ' tree-file'}${isIncluded ? ' tree-included' : ''}" ` +
       `data-path="${path}" data-fspath="${realFsPath}" data-type="${type}" data-extension="${extension || ''}" ` +
-      `style="${styleVal}">` +
+      `tabindex="0" style="${styleVal}">` +
       `<div class="d-flex align-items-center">` +
         toggleEl +
         `<i class="bi ${icon} file-icon"></i>` +
@@ -661,6 +669,77 @@ class SnippetManager
         `</div>` +
       `</div>` +
     `</div>`;
+  }
+
+  fileListKeyDown(e)
+  {
+    // Only handle navigation keys
+    if( ! ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Enter',' '].includes(e.key) ) return;
+
+    // Determine current item: prefer activeElement if it's a tree-item,
+    // otherwise fall back to the last item that had focus
+    const active = document.activeElement;
+    const current = active?.classList?.contains('tree-item')
+      ? active
+      : this._focusedTreeItem || null;
+
+    // Only act when we have a tracked path context
+    const trackedPath = current?.dataset?.path;
+    if( ! trackedPath ) return;
+
+    const items = Array.from(document.querySelectorAll('#fileList .tree-item'));
+    if( ! items.length ) return;
+
+    // Re-find item in the live DOM by path (handles re-renders replacing old elements)
+    const liveItem = items.find(i => i.dataset.path === trackedPath) || null;
+    if( ! liveItem ) return;
+    const idx = items.indexOf(liveItem);
+
+    if( e.key === 'ArrowDown' ) {
+      e.preventDefault();
+      const next = idx < items.length - 1 ? items[idx + 1] : items[0];
+      this._focusedTreeItem = next;
+      next.focus();
+    }
+    else if( e.key === 'ArrowUp' ) {
+      e.preventDefault();
+      const prev = idx > 0 ? items[idx - 1] : items[items.length - 1];
+      this._focusedTreeItem = prev;
+      prev.focus();
+    }
+    else if( e.key === 'ArrowRight' ) {
+      e.preventDefault();
+      if( liveItem.dataset.type === 'folder' ) {
+        const node = this.findNodeInTree(this.fileTree, trackedPath);
+        if( node && ! node.isOpen ) this.toggleFolder(trackedPath).then(() => {
+          const el = document.querySelector(`.tree-item[data-path="${trackedPath}"]`);
+          if( el ) { this._focusedTreeItem = el; el.focus(); }
+        });
+      }
+    }
+    else if( e.key === 'ArrowLeft' ) {
+      e.preventDefault();
+      if( liveItem.dataset.type === 'folder' ) {
+        const node = this.findNodeInTree(this.fileTree, trackedPath);
+        if( node && node.isOpen ) this.toggleFolder(trackedPath).then(() => {
+          const el = document.querySelector(`.tree-item[data-path="${trackedPath}"]`);
+          if( el ) { this._focusedTreeItem = el; el.focus(); }
+        });
+      }
+      else {
+        const parts = trackedPath.split('/');
+        parts.pop();
+        const parentPath = parts.join('/');
+        if( parentPath ) {
+          const parent = document.querySelector(`.tree-item[data-path="${parentPath}"]`);
+          if( parent ) { this._focusedTreeItem = parent; parent.focus(); }
+        }
+      }
+    }
+    else if( e.key === 'Enter' || e.key === ' ' ) {
+      e.preventDefault();
+      liveItem.click();
+    }
   }
 
   goBack()

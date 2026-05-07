@@ -187,6 +187,12 @@ body {
   background-color: #e9ecef;
 }
 
+.tree-item:focus {
+  outline: 2px solid var(--bs-primary);
+  outline-offset: -2px;
+  background-color: #e9ecef;
+}
+
 .tree-item.active {
   background-color: var(--bs-primary) !important;
   color: white;
