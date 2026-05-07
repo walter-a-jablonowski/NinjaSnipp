@@ -468,5 +468,10 @@ if( isset($_GET['data']) )
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="lib/functions.js?v=<?= time() ?>"></script>
   <script src="controller.js?v=<?= time() ?>"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      new SnippetManager();
+    });
+  </script>
 </body>
 </html>

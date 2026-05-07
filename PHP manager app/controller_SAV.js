@@ -1,3 +1,24 @@
+// Wrapper: parse markdown, add .no-indent to <ul>, and unwrap <p> inside <li>
+// (marked.js wraps loose-list items in <p>, causing extra spacing and blank lines on copy)
+function parseMd( src )
+{
+  const html = marked.parse(src).replace(/<ul>/g, '<ul class="no-indent">');
+  const tmp  = document.createElement('div');
+  tmp.innerHTML = html;
+
+  tmp.querySelectorAll('li').forEach(li => {
+    const ps = Array.from(li.querySelectorAll(':scope > p'));
+    ps.forEach((p, i) => {
+      const frag = document.createDocumentFragment();
+      while( p.firstChild ) frag.appendChild(p.firstChild);
+      if( i < ps.length - 1 ) frag.appendChild(document.createElement('br'));
+      p.replaceWith(frag);
+    });
+  });
+
+  return tmp.innerHTML;
+}
+
 class SnippetManager
 {
   constructor()
@@ -2313,3 +2334,7 @@ class SnippetManager
 
 }
 
+// Initialize the app when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+  new SnippetManager();
+});
