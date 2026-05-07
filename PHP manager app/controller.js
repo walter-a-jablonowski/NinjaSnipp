@@ -258,6 +258,13 @@ class SnippetManager
     // Auto-focus inputs when modals open
     const newSnippetModalEl = document.getElementById('newSnippetModal');
     if( newSnippetModalEl ) {
+      newSnippetModalEl.addEventListener('show.bs.modal', () => {
+        const row = document.getElementById('snippetBaseFolderRow');
+        const sel = document.getElementById('snippetBaseFolder');
+        const atRoot = ! this.currentPath;
+        if( row ) row.style.display = atRoot ? '' : 'none';
+        if( sel ) sel.value = this.currentDataPath;
+      });
       newSnippetModalEl.addEventListener('shown.bs.modal', () => {
         const input = document.getElementById('snippetName');
         if( input ) input.focus();
@@ -266,6 +273,13 @@ class SnippetManager
 
     const newFolderModalEl = document.getElementById('newFolderModal');
     if( newFolderModalEl ) {
+      newFolderModalEl.addEventListener('show.bs.modal', () => {
+        const row = document.getElementById('folderBaseFolderRow');
+        const sel = document.getElementById('folderBaseFolder');
+        const atRoot = ! this.currentPath;
+        if( row ) row.style.display = atRoot ? '' : 'none';
+        if( sel ) sel.value = this.currentDataPath;
+      });
       newFolderModalEl.addEventListener('shown.bs.modal', () => {
         const input = document.getElementById('folderName');
         if( input ) input.focus();
@@ -2199,8 +2213,11 @@ class SnippetManager
 
     const extension = type === 'yml' ? 'yml' : 'md';
     const path = (this.currentPath ? this.currentPath + '/' : '') + name + '.' + extension;
+    const dataPath = this.currentPath
+      ? this.currentDataPath
+      : (document.getElementById('snippetBaseFolder')?.value || this.currentDataPath);
 
-    const result = await apiCall(this.currentDataPath, 'saveSnippet', { path, data });
+    const result = await apiCall(dataPath, 'saveSnippet', { path, data });
 
     if( result.success ) {
       // Ensure parent folder is expanded so the new file is visible
@@ -2236,7 +2253,10 @@ class SnippetManager
     }
 
     const folderPath = (this.currentPath ? this.currentPath + '/' : '') + name;
-    const result     = await apiCall(this.currentDataPath, 'createFolder', { folderPath });
+    const dataPath = this.currentPath
+      ? this.currentDataPath
+      : (document.getElementById('folderBaseFolder')?.value || this.currentDataPath);
+    const result     = await apiCall(dataPath, 'createFolder', { folderPath });
 
     if( result.success ) {
       if( this.currentPath ) this.expandedFolders.add(this.currentPath);

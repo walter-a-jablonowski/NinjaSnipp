@@ -346,6 +346,14 @@ if( isset($_GET['data']) )
                 <option value="md">Markdown File</option>
               </select>
             </div>
+            <div class="mb-3" id="snippetBaseFolderRow">
+              <label for="snippetBaseFolder" class="form-label">Base Folder</label>
+              <select class="form-select" id="snippetBaseFolder">
+                <?php foreach( array_keys($manager->getDataPaths()) as $label ): ?>
+                  <option value="<?= htmlspecialchars($label) ?>"><?= htmlspecialchars($label) ?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
           </form>
         </div>
         <div class="modal-footer">
@@ -367,8 +375,16 @@ if( isset($_GET['data']) )
         <div class="modal-body">
           <form id="newFolderForm">
             <div class="mb-3">
-              <label for="folderName" class="form-label">Folder Name</label>
+              <label for="folderName" class="form-label">Name</label>
               <input type="text" class="form-control" id="folderName" required>
+            </div>
+            <div class="mb-3" id="folderBaseFolderRow">
+              <label for="folderBaseFolder" class="form-label">Base Folder</label>
+              <select class="form-select" id="folderBaseFolder">
+                <?php foreach( array_keys($manager->getDataPaths()) as $label ): ?>
+                  <option value="<?= htmlspecialchars($label) ?>"><?= htmlspecialchars($label) ?></option>
+                <?php endforeach; ?>
+              </select>
             </div>
           </form>
         </div>
