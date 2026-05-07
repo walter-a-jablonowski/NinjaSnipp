@@ -312,6 +312,8 @@ body {
   white-space: pre-wrap;
   word-wrap: break-word;
   min-height: 100px;
+  min-width: 0;        /* allow flex child to shrink/be bounded */
+  overflow-x: auto;    /* scroll container for horizontal overflow when wrap is off */
 }
 
 /* Included regions highlighting (works with nested includes) */

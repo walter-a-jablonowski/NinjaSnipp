@@ -168,7 +168,7 @@ class SnippetManager
       const available = Math.max(200, Math.floor(window.innerHeight - rect.top - 8));
       mp.style.height = available + 'px';
       mp.style.overflowY = 'auto';
-      mp.style.overflowX = 'hidden';
+      mp.style.overflowX = this._lineWrapOff ? 'auto' : 'hidden';
       return;
     }
 
@@ -179,7 +179,7 @@ class SnippetManager
     const available = Math.max(200, Math.floor(window.innerHeight - rect.top - 8));
     el.style.height = available + 'px';
     el.style.overflowY = 'auto';
-    el.style.overflowX = 'hidden';
+    el.style.overflowX = this._lineWrapOff ? 'auto' : 'hidden';
     // Keep usage preview the same height so both columns align
     const renderUsage = document.getElementById('renderUsage');
     if( renderUsage ) renderUsage.style.height = available + 'px';
@@ -1191,11 +1191,13 @@ class SnippetManager
       if( ! el ) return;
       if( el.tagName === 'TEXTAREA' )
         el.style.whiteSpace = off ? 'nowrap' : '';
-      else if( id === 'inlineSnippet' )
+      else if( id === 'inlineSnippet' ) {
         el.style.whiteSpace = off ? 'pre' : '';     // preserve \n in text nodes
+        el.style.wordWrap   = off ? 'normal' : '';  // CSS has word-wrap:break-word which would override pre
+      }
       else
         el.style.whiteSpace = off ? 'nowrap' : '';  // HTML content, \n irrelevant
-      el.style.overflowX = 'hidden';
+      el.style.overflowX = off ? 'auto' : '';
     });
   }
 
@@ -1243,6 +1245,8 @@ class SnippetManager
       this.updateRenderedOutput();
       // Adjust preview height after (re)render
       this.resizeInlineSnippet();
+      // Re-apply wrap/overflow state now that the DOM is populated
+      this.applyLineWrap();
     }
   }
 
