@@ -86,37 +86,55 @@ if( isset($_GET['data']) )
               </div>
 
               <!-- Tab Control -->
-              <ul class="nav nav-pills mb-3 gap-1 flex-lg-row flex-nowrap" id="sidebarTabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                  <button class="nav-link small py-1 px-2 active" id="files-tab" data-bs-toggle="pill" data-bs-target="#files-pane" type="button" role="tab">
-                    <i class="bi bi-folder me-2"></i>Files
-                  </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                  <button class="nav-link small py-1 px-2" id="recent-tab" data-bs-toggle="pill" data-bs-target="#recent-pane" type="button" role="tab">
-                    <i class="bi bi-clock-history me-2"></i>Recent
-                  </button>
-                </li>
-              </ul>
+              <div class="d-flex align-items-center mb-1" id="sidebarTabsRow">
+                <ul class="nav nav-pills gap-1 flex-lg-row flex-nowrap flex-grow-1" id="sidebarTabs" role="tablist">
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link small py-1 px-2 active" id="files-tab" data-bs-toggle="pill" data-bs-target="#files-pane" type="button" role="tab">
+                      <i class="bi bi-folder me-2"></i>Files
+                    </button>
+                  </li>
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link small py-1 px-2" id="recent-tab" data-bs-toggle="pill" data-bs-target="#recent-pane" type="button" role="tab">
+                      <i class="bi bi-clock-history me-2"></i>Recent
+                    </button>
+                  </li>
+                  <!-- Add new snippet/folder -->
+                  <li class="nav-item dropdown ms-auto">
+                    <button class="nav-link small py-1 px-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="New...">
+                      <i class="bi bi-plus-lg"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                      <li>
+                        <button class="dropdown-item small" id="newSnippetDropBtn">
+                          <i class="bi bi-file-earmark-plus me-2"></i>New Snippet
+                        </button>
+                      </li>
+                      <li>
+                        <button class="dropdown-item small" id="newFolderDropBtn">
+                          <i class="bi bi-folder-plus me-2"></i>New Folder
+                        </button>
+                      </li>
+                    </ul>
+                  </li>
+                </ul>
+              </div>
 
               <!-- Tab Content -->
               <div class="tab-content">
                 <!-- Files & Folders Tab -->
                 <div class="tab-pane fade show active" id="files-pane" role="tabpanel">
                   <!-- Action Buttons (debug only) -->
-                  <div class="d-flex gap-2 mb-3">
+                  <div class="d-flex gap-2 mb-1" style="<?= ($debug && $allBtns) ? '' : 'display:none!important' ?>">
                     <?php if( $debug && $allBtns ): ?>
                       <button class="btn btn-sm btn-outline-secondary" id="backBtn" title="Back">
                         <i class="bi bi-arrow-left"></i>
                       </button>
-                    <?php endif; ?>
-                    <button class="btn btn-sm btn-success" id="newSnippetBtn" title="New Snippet">
-                      <i class="bi bi-plus"></i>
-                    </button>
-                    <button class="btn btn-sm btn-primary" id="newFolderBtn" title="New Folder">
-                      <i class="bi bi-folder-plus"></i>
-                    </button>
-                    <?php if( $debug && $allBtns ): ?>
+                      <button class="btn btn-sm btn-success" id="newSnippetBtn" title="New Snippet">
+                        <i class="bi bi-plus"></i>
+                      </button>
+                      <button class="btn btn-sm btn-primary" id="newFolderBtn" title="New Folder">
+                        <i class="bi bi-folder-plus"></i>
+                      </button>
                       <button class="btn btn-sm btn-warning" id="selectBtn" title="Select" disabled>
                         <i class="bi bi-list-check"></i>
                       </button>

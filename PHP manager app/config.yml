@@ -3,4 +3,4 @@
 
 debug:
   on: true
-  showAllFileBtns: true
+  showAllFileBtns: false

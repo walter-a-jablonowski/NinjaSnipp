@@ -229,8 +229,10 @@ class SnippetManager
     const buttonEvents = [
       ['searchBtn', 'click', () => this.performSearch()],
       ['dataFolderSelect', 'change', (e) => this.changeDataFolder(e.target.value)],
-      ['newSnippetBtn', 'click', () => showModal('newSnippetModal')],
-      ['newFolderBtn', 'click', () => showModal('newFolderModal')],
+      ['newSnippetBtn',    'click', () => showModal('newSnippetModal')],
+      ['newFolderBtn',     'click', () => showModal('newFolderModal')],
+      ['newSnippetDropBtn','click', () => showModal('newSnippetModal')],
+      ['newFolderDropBtn', 'click', () => showModal('newFolderModal')],
       ['backBtn', 'click', () => this.goBack()],
       ['createSnippetBtn', 'click', () => this.createSnippet()],
       ['createFolderBtn', 'click', () => this.createFolder()],
