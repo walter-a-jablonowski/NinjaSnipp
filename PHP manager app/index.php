@@ -467,6 +467,10 @@ if( isset($_GET['data']) )
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="lib/functions.js?v=<?= time() ?>"></script>
+  <script src="controllers/file-tree.js?v=<?= time() ?>"></script>
+  <script src="controllers/editor.js?v=<?= time() ?>"></script>
+  <script src="controllers/render.js?v=<?= time() ?>"></script>
+  <script src="controllers/search.js?v=<?= time() ?>"></script>
   <script src="controller.js?v=<?= time() ?>"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
