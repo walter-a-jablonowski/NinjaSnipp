@@ -3,6 +3,15 @@ class FileTreeController
   constructor(app)
   {
     this.app = app;
+    this._folderColors = null; // cached palette from settings
+  }
+
+  async loadFolderColors()
+  {
+    if( this._folderColors !== null ) return this._folderColors;
+    const res = await apiCall(this.app.currentDataPath, 'getFolderColors');
+    this._folderColors = (res && res.success && Array.isArray(res.colors)) ? res.colors : [];
+    return this._folderColors;
   }
 
   // --- Tree state helpers ---
@@ -90,8 +99,11 @@ class FileTreeController
 
   // --- Tree rendering ---
 
-  renderTree()
+  async renderTree()
   {
+    // Pre-load palette so swatches render on first open
+    await this.loadFolderColors();
+
     const fileList = document.getElementById('fileList');
     if( ! fileList ) return;
 
@@ -144,6 +156,10 @@ class FileTreeController
       ? `padding-left: ${indentPx}px; background-color: ${color};`
       : `padding-left: ${indentPx}px;`;
 
+    const colorSwatches = isFolder && ! isIncluded
+      ? this._buildColorSwatchesHtml(color)
+      : '';
+
     let menuItems;
     if( isIncluded ) {
       menuItems = isFolder
@@ -155,6 +171,8 @@ class FileTreeController
       menuItems = isFolder
         ? `<li><a class="dropdown-item small" href="#" data-action="new-snippet">New Snippet</a></li>
            <li><a class="dropdown-item small" href="#" data-action="new-folder">New Folder</a></li>
+           <li><hr class="dropdown-divider"></li>
+           ${colorSwatches}
            <li><hr class="dropdown-divider"></li>
            <li><a class="dropdown-item small" href="#" data-action="rename">Rename</a></li>`
         : `<li><a class="dropdown-item small" href="#" data-action="rename">Rename</a></li>
@@ -179,9 +197,26 @@ class FileTreeController
     `</div>`;
   }
 
+  _buildColorSwatchesHtml(currentColor)
+  {
+    const colors = this._folderColors || [];
+    if( colors.length === 0 ) return '';
+
+    const swatches = colors.map(c => {
+      const active = c === currentColor ? ' swatch-active' : '';
+      return `<span class="folder-color-swatch${active}" data-action="set-color" data-color="${c}" style="background:${c}" title="${c}"></span>`;
+    }).join('');
+
+    const clearBtn = currentColor
+      ? `<span class="folder-color-swatch swatch-clear" data-action="set-color" data-color="" title="Clear color">✕</span>`
+      : '';
+
+    return `<li><div class="folder-color-row px-2 py-1">${swatches}${clearBtn}</div></li>`;
+  }
+
   handleFileListDropdownClick(e)
   {
-    const actionEl = e.target.closest('.dropdown-item');
+    const actionEl = e.target.closest('[data-action]');
     if( ! actionEl ) return;
     const action = actionEl.getAttribute('data-action');
     const item   = actionEl.closest('.tree-item');
@@ -205,6 +240,17 @@ class FileTreeController
       if( input ) input.value = base;
       showModal('renameItemModal');
     }
+    else if( action === 'set-color' ) {
+      e.stopPropagation(); // prevent Bootstrap from closing dropdown before we handle it
+      const color = actionEl.getAttribute('data-color') || null;
+      // Close the dropdown manually after selection
+      const dropdownEl = item.querySelector('.tree-menu-btn');
+      if( dropdownEl ) {
+        const dd = bootstrap.Dropdown.getInstance(dropdownEl);
+        if( dd ) dd.hide();
+      }
+      this._applyFolderColor(path, color || null);
+    }
     else if( action === 'new-snippet' ) {
       this.app.currentPath = fsPath;
       if( fsPath ) this.app.expandedFolders.add(path);
@@ -224,6 +270,19 @@ class FileTreeController
       if( nameEl ) nameEl.textContent = baseName;
       showModal('deleteSnippetModal');
     }
+  }
+
+  async _applyFolderColor(path, color)
+  {
+    const res = await apiCall(this.app.currentDataPath, 'setFolderColor', { folderPath: path, color });
+    if( ! (res && res.success) ) {
+      showError('Failed to set folder color');
+      return;
+    }
+    // Update tree node in memory so re-render is instant
+    const node = this.findNodeInTree(this.app.fileTree, path);
+    if( node ) node.color = color || null;
+    this.renderTree();
   }
 
   handleFileClick(e)

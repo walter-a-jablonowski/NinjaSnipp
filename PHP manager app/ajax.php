@@ -154,6 +154,25 @@ try {
         $response = ['success' => false, 'message' => 'Failed to create folder or folder already exists'];
       break;
 
+    case 'setFolderColor':
+      $folderPath = $input['folderPath'] ?? '';
+      $color      = isset($input['color']) ? (string)$input['color'] : null;
+      if( $color === '' ) $color = null;
+      if( $folderPath === '' ) {
+        $response = ['success' => false, 'message' => 'Missing folderPath'];
+        break;
+      }
+      if( $manager->writeFolderColor($folderPath, $color) )
+        $response = ['success' => true];
+      else
+        $response = ['success' => false, 'message' => 'Failed to write folder color'];
+      break;
+
+    case 'getFolderColors':
+      $colors = $config['folderColors'] ?? [];
+      $response = ['success' => true, 'colors' => array_values($colors)];
+      break;
+
     case 'setDataPath':
       $dataPath = $input['dataPath'] ?? '';
       

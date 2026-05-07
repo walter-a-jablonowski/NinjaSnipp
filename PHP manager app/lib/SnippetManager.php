@@ -157,7 +157,7 @@ class SnippetManager
 
     foreach( $files as $file )
     {
-      if( $file === '.' || $file === '..' )
+      if( $file === '.' || $file === '..' || $file === '.sys' )
         continue;
 
       $filePath     = "$fullPath/$file";
@@ -165,11 +165,12 @@ class SnippetManager
 
       if( is_dir($filePath) )
       {
+        $folderColor = $this->readFolderColor($filePath) ?? $color;
         $items[] = [
           'type'  => 'folder',
           'name'  => $file,
           'path'  => $relativePath,
-          'color' => $color
+          'color' => $folderColor
         ];
       }
       elseif( strpos($file, 'INCLUDE') !== false )
@@ -256,6 +257,38 @@ class SnippetManager
     }
 
     return [];
+  }
+
+  private function readFolderColor( string $folderPath ) : ?string
+  {
+    $file = "$folderPath/.sys/ninja.json";
+    if( ! is_file($file) )
+      return null;
+    $data = json_decode(file_get_contents($file), true);
+    return isset($data['color']) && is_string($data['color']) ? $data['color'] : null;
+  }
+
+  public function writeFolderColor( string $relativePath, ?string $color ) : bool
+  {
+    $base = $this->getCurrentDataPath();
+    $folderPath = rtrim($base, '/') . '/' . ltrim($relativePath, '/');
+
+    if( ! is_dir($folderPath) )
+      return false;
+
+    $sysDir = "$folderPath/.sys";
+    if( ! is_dir($sysDir) )
+      mkdir($sysDir, 0755, true);
+
+    $file    = "$sysDir/ninja.json";
+    $current = is_file($file) ? (json_decode(file_get_contents($file), true) ?: []) : [];
+
+    if( $color === null )
+      unset($current['color']);
+    else
+      $current['color'] = $color;
+
+    return file_put_contents($file, json_encode($current, JSON_PRETTY_PRINT)) !== false;
   }
 
   private function getDirectoryContentsRecursively( string $dirPath, string $basePath ) : array
