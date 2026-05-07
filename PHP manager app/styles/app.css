@@ -1066,3 +1066,51 @@ ul.no-indent {
     z-index: 1040;
   }
 }
+
+/* Sidebar resize handle: desktop only */
+#sidebarResizeHandle {
+  display: none;
+}
+
+@media (min-width: 992px) {
+  #sidebarResizeHandle {
+    display: block;
+    position: absolute;
+    top: 0;
+    right: -3px;
+    width: 6px;
+    height: 100%;
+    cursor: col-resize;
+    z-index: 20;
+  }
+
+  #sidebarResizeHandle::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 2px;
+    width: 2px;
+    height: 100%;
+    background-color: transparent;
+    transition: background-color 0.15s;
+  }
+
+  #sidebarResizeHandle:hover::after,
+  body.sidebar-resizing #sidebarResizeHandle::after {
+    background-color: rgba(var(--bs-primary-rgb), 0.45);
+  }
+
+  /* Prevent text selection and lock cursor while dragging */
+  body.sidebar-resizing {
+    cursor: col-resize !important;
+    user-select: none;
+  }
+
+  body.sidebar-resizing * {
+    pointer-events: none;
+  }
+
+  body.sidebar-resizing #sidebarResizeHandle {
+    pointer-events: auto;
+  }
+}

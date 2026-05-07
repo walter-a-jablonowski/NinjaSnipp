@@ -67,6 +67,7 @@ if( isset($_GET['data']) )
   <div class="app-shell layout">
       <!-- Sidebar / Offcanvas (overlay on <lg, static on >=lg) -->
       <div class="app-sidebar">
+        <div id="sidebarResizeHandle" title="Drag to resize · Double-click to reset"></div>
         <div class="offcanvas offcanvas-start offcanvas-lg" tabindex="-1" id="sidebarNav" aria-labelledby="sidebarNavLabel">
           <div class="offcanvas-header border-bottom">
             <h5 class="offcanvas-title" id="sidebarNavLabel">Navigation</h5>

@@ -357,6 +357,64 @@
 
     // Bind autosave handlers to edit form inputs (once)
     this.editor.bindAutosaveHandlers();
+
+    this.initSidebarResize();
+  }
+
+  initSidebarResize()
+  {
+    const handle  = document.getElementById('sidebarResizeHandle');
+    const sidebar = document.querySelector('.app-sidebar');
+    if( ! handle || ! sidebar ) return;
+
+    const minWidth     = 280;
+    const defaultWidth = 280;
+
+    const applyWidth = (w) => {
+      sidebar.style.setProperty('--sidebar-width', w + 'px');
+    };
+
+    // Restore persisted width
+    const saved = parseInt(localStorage.getItem('sidebarWidth'), 10);
+    if( ! isNaN(saved) && saved >= minWidth )
+      applyWidth(saved);
+
+    // Double-click: reset to default
+    handle.addEventListener('dblclick', () => {
+      applyWidth(defaultWidth);
+      localStorage.removeItem('sidebarWidth');
+    });
+
+    handle.addEventListener('mousedown', (e) => {
+      if( e.button !== 0 ) return;
+      e.preventDefault();
+
+      const startX     = e.clientX;
+      const startWidth = sidebar.getBoundingClientRect().width;
+
+      document.body.classList.add('sidebar-resizing');
+
+      const onMove = (e) => {
+        const maxWidth = Math.floor(window.innerWidth * 0.5);
+        const newWidth = Math.min(maxWidth, Math.max(minWidth, startWidth + e.clientX - startX));
+        applyWidth(newWidth);
+      };
+
+      const onUp = () => {
+        document.body.classList.remove('sidebar-resizing');
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+
+        const w = Math.round(sidebar.getBoundingClientRect().width);
+        if( w !== defaultWidth )
+          localStorage.setItem('sidebarWidth', w);
+        else
+          localStorage.removeItem('sidebarWidth');
+      };
+
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
   }
 
   _bindFormSubmit(formId, handler)
