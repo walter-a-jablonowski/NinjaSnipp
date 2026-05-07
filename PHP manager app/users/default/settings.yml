@@ -8,15 +8,15 @@ dataPaths:
   AI:
     "G:/Meine Ablage/50 Activity tree/11 Common/Dools/AI (#ai-usage)": null
 folderColors:
-  - '#fde8e8'
-  - '#fef3e2'
-  - '#fefde2'
-  - '#e8f8e8'
-  - '#e2f0fe'
-  - '#ede8fe'
-  - '#fce8f6'
-  - '#e8f4f8'
-  - '#f0f0f0'
+  red: '#fde8e8'
+  orange: '#fef3e2'
+  yellow: '#fefde2'
+  green: '#e8f8e8'
+  blue: '#e2f0fe'
+  purple: '#ede8fe'
+  pink: '#fce8f6'
+  teal: '#e8f4f8'
+  gray: '#f0f0f0'
 
 nav:
   foldersFirst: false

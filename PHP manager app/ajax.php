@@ -170,7 +170,7 @@ try {
 
     case 'getFolderColors':
       $colors = $config['folderColors'] ?? [];
-      $response = ['success' => true, 'colors' => array_values($colors)];
+      $response = ['success' => true, 'colors' => $colors];
       break;
 
     case 'setDataPath':

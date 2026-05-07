@@ -10,7 +10,7 @@ class FileTreeController
   {
     if( this._folderColors !== null ) return this._folderColors;
     const res = await apiCall(this.app.currentDataPath, 'getFolderColors');
-    this._folderColors = (res && res.success && Array.isArray(res.colors)) ? res.colors : [];
+    this._folderColors = (res && res.success && res.colors && typeof res.colors === 'object') ? res.colors : {};
     return this._folderColors;
   }
 
@@ -27,6 +27,7 @@ class FileTreeController
       modified: file.modified || null,
       isIncluded: file.isIncluded || false,
       color: file.color || null,
+      colorName: file.colorName || null,
       children: file.type === 'folder' ? null : undefined,
       isOpen: false
     }));
@@ -135,7 +136,7 @@ class FileTreeController
 
   renderTreeNode(node)
   {
-    const { type, _depth, path, fsPath, name, isOpen, extension, isIncluded, color } = node;
+    const { type, _depth, path, fsPath, name, isOpen, extension, isIncluded, color, colorName } = node;
     const isFolder  = type === 'folder';
     const indentPx  = 6 + _depth * 14;
     const realFsPath = fsPath || path;
@@ -157,7 +158,7 @@ class FileTreeController
       : `padding-left: ${indentPx}px;`;
 
     const colorSwatches = isFolder && ! isIncluded
-      ? this._buildColorSwatchesHtml(color)
+      ? this._buildColorSwatchesHtml(colorName)
       : '';
 
     let menuItems;
@@ -197,17 +198,18 @@ class FileTreeController
     `</div>`;
   }
 
-  _buildColorSwatchesHtml(currentColor)
+  _buildColorSwatchesHtml(currentColorName)
   {
-    const colors = this._folderColors || [];
-    if( colors.length === 0 ) return '';
+    const colors  = this._folderColors || {};
+    const entries = Object.entries(colors);
+    if( entries.length === 0 ) return '';
 
-    const swatches = colors.map(c => {
-      const active = c === currentColor ? ' swatch-active' : '';
-      return `<span class="folder-color-swatch${active}" data-action="set-color" data-color="${c}" style="background:${c}" title="${c}"></span>`;
+    const swatches = entries.map(([name, hex]) => {
+      const active = name === currentColorName ? ' swatch-active' : '';
+      return `<span class="folder-color-swatch${active}" data-action="set-color" data-color="${name}" style="background:${hex}" title="${name}"></span>`;
     }).join('');
 
-    const clearBtn = currentColor
+    const clearBtn = currentColorName
       ? `<span class="folder-color-swatch swatch-clear" data-action="set-color" data-color="" title="Clear color">✕</span>`
       : '';
 
@@ -272,16 +274,20 @@ class FileTreeController
     }
   }
 
-  async _applyFolderColor(path, color)
+  async _applyFolderColor(path, colorName)
   {
-    const res = await apiCall(this.app.currentDataPath, 'setFolderColor', { folderPath: path, color });
+    const res = await apiCall(this.app.currentDataPath, 'setFolderColor', { folderPath: path, color: colorName });
     if( ! (res && res.success) ) {
       showError('Failed to set folder color');
       return;
     }
     // Update tree node in memory so re-render is instant
     const node = this.findNodeInTree(this.app.fileTree, path);
-    if( node ) node.color = color || null;
+    if( node ) {
+      node.colorName = colorName || null;
+      const palette  = this._folderColors || {};
+      node.color     = colorName ? (palette[colorName] || null) : null;
+    }
     this.renderTree();
   }
 

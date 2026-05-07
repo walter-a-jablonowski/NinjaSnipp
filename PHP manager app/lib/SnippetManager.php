@@ -165,12 +165,14 @@ class SnippetManager
 
       if( is_dir($filePath) )
       {
-        $folderColor = $this->readFolderColor($filePath) ?? $color;
+        $colorName   = $this->readFolderColorName($filePath);
+        $folderColor = $colorName ? $this->resolveColorName($colorName) : $color;
         $items[] = [
-          'type'  => 'folder',
-          'name'  => $file,
-          'path'  => $relativePath,
-          'color' => $folderColor
+          'type'      => 'folder',
+          'name'      => $file,
+          'path'      => $relativePath,
+          'color'     => $folderColor,
+          'colorName' => $colorName,
         ];
       }
       elseif( strpos($file, 'INCLUDE') !== false )
@@ -259,13 +261,24 @@ class SnippetManager
     return [];
   }
 
-  private function readFolderColor( string $folderPath ) : ?string
+  private function readFolderColorName( string $folderPath ) : ?string
   {
     $file = "$folderPath/.sys/ninja.json";
     if( ! is_file($file) )
       return null;
     $data = json_decode(file_get_contents($file), true);
     return isset($data['color']) && is_string($data['color']) ? $data['color'] : null;
+  }
+
+  private function resolveColorName( ?string $colorName ) : ?string
+  {
+    if( $colorName === null )
+      return null;
+    // Legacy: stored value is already a hex color
+    if( strpos($colorName, '#') === 0 )
+      return $colorName;
+    $palette = $this->config['folderColors'] ?? [];
+    return isset($palette[$colorName]) ? $palette[$colorName] : null;
   }
 
   public function writeFolderColor( string $relativePath, ?string $color ) : bool
