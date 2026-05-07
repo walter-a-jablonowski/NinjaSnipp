@@ -188,8 +188,8 @@ body {
 }
 
 .tree-item:focus {
-  outline: 2px solid var(--bs-primary);
-  outline-offset: -2px;
+  outline: 1px solid rgba(var(--bs-primary-rgb), 0.4);
+  outline-offset: -1px;
   background-color: #e9ecef;
 }
 
