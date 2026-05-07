@@ -631,14 +631,14 @@ class SnippetManager
     if( isIncluded ) {
       // Included items: no structural actions (they live at their original location)
       menuItems = isFolder
-        ? `<li><a class="dropdown-item small" href="#" data-action="new-snippet">New Snippet here</a></li>
-           <li><a class="dropdown-item small" href="#" data-action="new-folder">New Folder here</a></li>`
+        ? `<li><a class="dropdown-item small" href="#" data-action="new-snippet">New Snippet</a></li>
+           <li><a class="dropdown-item small" href="#" data-action="new-folder">New Folder</a></li>`
         : `<li><span class="dropdown-item small text-muted disabled">Included file</span></li>`;
     }
     else {
       menuItems = isFolder
-        ? `<li><a class="dropdown-item small" href="#" data-action="new-snippet">New Snippet here</a></li>
-           <li><a class="dropdown-item small" href="#" data-action="new-folder">New Folder here</a></li>
+        ? `<li><a class="dropdown-item small" href="#" data-action="new-snippet">New Snippet</a></li>
+           <li><a class="dropdown-item small" href="#" data-action="new-folder">New Folder</a></li>
            <li><hr class="dropdown-divider"></li>
            <li><a class="dropdown-item small" href="#" data-action="rename">Rename</a></li>`
         : `<li><a class="dropdown-item small" href="#" data-action="rename">Rename</a></li>
