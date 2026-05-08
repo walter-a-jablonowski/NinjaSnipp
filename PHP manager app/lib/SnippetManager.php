@@ -286,10 +286,8 @@ class SnippetManager
 
   public function writeFileColor( string $relativePath, ?string $color ) : bool
   {
-    $base = $this->getCurrentDataPath();
-    $absPath = rtrim($base, '/') . '/' . ltrim($relativePath, '/');
-
-    if( ! is_file($absPath) )
+    $absPath = $this->resolveExistingFilePath($relativePath);
+    if( $absPath === null )
       return false;
 
     $folderPath = dirname($absPath);
@@ -327,12 +325,32 @@ class SnippetManager
     return isset($palette[$colorName]) ? $palette[$colorName] : null;
   }
 
+  private function resolveExistingFilePath( string $relativePath ) : ?string
+  {
+    foreach( $this->currentFolders as $folder )
+    {
+      $abs = rtrim($folder['path'], '/') . '/' . ltrim($relativePath, '/');
+      if( is_file($abs) )
+        return $abs;
+    }
+    return null;
+  }
+
+  private function resolveExistingFolderPath( string $relativePath ) : ?string
+  {
+    foreach( $this->currentFolders as $folder )
+    {
+      $abs = rtrim($folder['path'], '/') . '/' . ltrim($relativePath, '/');
+      if( is_dir($abs) )
+        return $abs;
+    }
+    return null;
+  }
+
   public function writeFolderColor( string $relativePath, ?string $color ) : bool
   {
-    $base = $this->getCurrentDataPath();
-    $folderPath = rtrim($base, '/') . '/' . ltrim($relativePath, '/');
-
-    if( ! is_dir($folderPath) )
+    $folderPath = $this->resolveExistingFolderPath($relativePath);
+    if( $folderPath === null )
       return false;
 
     $sysDir = "$folderPath/.sys";
