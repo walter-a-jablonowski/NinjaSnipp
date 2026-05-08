@@ -36,7 +36,7 @@ try {
     case 'listFiles':
       $subPath = $input['subPath'] ?? '';
       $files = $manager->listFiles($subPath);
-      $response = ['success' => true, 'files' => $files];
+      $response = ['success' => true, 'files' => $files, 'baseFolderLabels' => $manager->getBaseFolderLabels()];
       break;
 
     case 'loadSnippet':

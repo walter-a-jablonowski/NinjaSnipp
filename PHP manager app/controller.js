@@ -12,6 +12,7 @@
     this.placeholderGroups = new Map(); // name => [elements]
     this.renderedText = '';
     this.fileTree = []; // Tree state for file navigator
+    this.baseFolderLabels = {}; // path => label map from last listFiles call
     this.expandedFolders = new Set(); // Paths of currently expanded folders
     this._deleteContext = null; // Context for deleting via tree-item "..." menu
     this.isSearchMode = false; // Track if we're showing search results
@@ -587,6 +588,7 @@
 
     if( result.success ) {
       this.isSearchMode = false;
+      this.baseFolderLabels = result.baseFolderLabels || {};
       this.fileTree = this.buildTreeNodes(result.files);
       await this.restoreExpandedFolders(this.fileTree);
       this.renderTree();

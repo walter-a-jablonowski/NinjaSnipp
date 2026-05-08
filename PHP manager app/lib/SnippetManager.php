@@ -70,8 +70,17 @@ class SnippetManager
   {
     $folders = [];
     foreach( $this->dataPaths[$label] as $path => $color )
-      $folders[] = ['path' => $path, 'color' => $color];
+      $folders[] = ['path' => $path, 'color' => $color, 'label' => $label];
     return $folders;
+  }
+
+  // Returns path => label map for all current folders
+  public function getBaseFolderLabels() : array
+  {
+    $map = [];
+    foreach( $this->currentFolders as $folder )
+      $map[$folder['path']] = $folder['label'];
+    return $map;
   }
 
   private function ensureDataDirectories() : void
@@ -122,7 +131,10 @@ class SnippetManager
     {
       $items = $this->listFilesInFolder($folder['path'], $folder['color'], $subPath);
       foreach( $items as $item )
+      {
+        $item['basePath'] = $folder['path'];
         $merged[$item['path']] = $item;
+      }
     }
 
     $items = array_values($merged);

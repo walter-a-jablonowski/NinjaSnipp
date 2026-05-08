@@ -236,6 +236,13 @@ body {
   color: #868e96 !important;
 }
 
+.source-label {
+  font-size: 0.7rem !important;
+  letter-spacing: 0.03em;
+  opacity: 0.7;
+  cursor: default;
+}
+
 .tree-item:hover .tree-menu-btn {
   color: #495057 !important;
 }

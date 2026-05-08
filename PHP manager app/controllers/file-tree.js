@@ -28,6 +28,7 @@ class FileTreeController
       isIncluded: file.isIncluded || false,
       color: file.color || null,
       colorName: file.colorName || null,
+      basePath: file.basePath || null,
       children: file.type === 'folder' ? null : undefined,
       isOpen: false
     }));
@@ -134,9 +135,16 @@ class FileTreeController
     if( item ) item.classList.add('active');
   }
 
+  _getSourceLabel(basePath)
+  {
+    if( ! basePath ) return null;
+    const labels = this.app.baseFolderLabels || {};
+    return labels[basePath] || null;
+  }
+
   renderTreeNode(node)
   {
-    const { type, _depth, path, fsPath, name, isOpen, extension, isIncluded, color, colorName } = node;
+    const { type, _depth, path, fsPath, name, isOpen, extension, isIncluded, color, colorName, basePath } = node;
     const isFolder  = type === 'folder';
     const indentPx  = 6 + _depth * 14;
     const realFsPath = fsPath || path;
@@ -161,6 +169,12 @@ class FileTreeController
       ? this._buildColorSwatchesHtml(colorName)
       : '';
 
+    const sourceLabel = ! isIncluded ? this._getSourceLabel(basePath) : null;
+    const sourceLabelHtml = sourceLabel
+      ? `<li><span class="dropdown-item small text-muted pe-none source-label"><i class="bi bi-folder2 me-1"></i>${sourceLabel}</span></li>
+         <li><hr class="dropdown-divider"></li>`
+      : '';
+
     let menuItems;
     if( isIncluded ) {
       menuItems = isFolder
@@ -170,13 +184,15 @@ class FileTreeController
     }
     else {
       menuItems = isFolder
-        ? `<li><a class="dropdown-item small" href="#" data-action="new-snippet">New Snippet</a></li>
+        ? `${sourceLabelHtml}
+           <li><a class="dropdown-item small" href="#" data-action="new-snippet">New Snippet</a></li>
            <li><a class="dropdown-item small" href="#" data-action="new-folder">New Folder</a></li>
            <li><hr class="dropdown-divider"></li>
            ${colorSwatches}
            <li><hr class="dropdown-divider"></li>
            <li><a class="dropdown-item small" href="#" data-action="rename">Rename</a></li>`
-        : `${colorSwatches}
+        : `${sourceLabelHtml}
+           ${colorSwatches}
            <li><hr class="dropdown-divider"></li>
            <li><a class="dropdown-item small" href="#" data-action="rename">Rename</a></li>
            <li><a class="dropdown-item small text-danger" href="#" data-action="delete">Delete</a></li>`;
