@@ -157,7 +157,7 @@ class FileTreeController
       ? `padding-left: ${indentPx}px; background-color: ${color};`
       : `padding-left: ${indentPx}px;`;
 
-    const colorSwatches = isFolder && ! isIncluded
+    const colorSwatches = ! isIncluded
       ? this._buildColorSwatchesHtml(colorName)
       : '';
 
@@ -176,7 +176,9 @@ class FileTreeController
            ${colorSwatches}
            <li><hr class="dropdown-divider"></li>
            <li><a class="dropdown-item small" href="#" data-action="rename">Rename</a></li>`
-        : `<li><a class="dropdown-item small" href="#" data-action="rename">Rename</a></li>
+        : `${colorSwatches}
+           <li><hr class="dropdown-divider"></li>
+           <li><a class="dropdown-item small" href="#" data-action="rename">Rename</a></li>
            <li><a class="dropdown-item small text-danger" href="#" data-action="delete">Delete</a></li>`;
     }
 
@@ -251,7 +253,10 @@ class FileTreeController
         const dd = bootstrap.Dropdown.getInstance(dropdownEl);
         if( dd ) dd.hide();
       }
-      this._applyFolderColor(path, color || null);
+      if( type === 'folder' )
+        this._applyFolderColor(path, color || null);
+      else
+        this._applyFileColor(fsPath, path, color || null);
     }
     else if( action === 'new-snippet' ) {
       this.app.currentPath = fsPath;
@@ -272,6 +277,22 @@ class FileTreeController
       if( nameEl ) nameEl.textContent = baseName;
       showModal('deleteSnippetModal');
     }
+  }
+
+  async _applyFileColor(fsPath, treePath, colorName)
+  {
+    const res = await apiCall(this.app.currentDataPath, 'setFileColor', { filePath: fsPath, color: colorName });
+    if( ! (res && res.success) ) {
+      showError('Failed to set file color');
+      return;
+    }
+    const node = this.findNodeInTree(this.app.fileTree, treePath);
+    if( node ) {
+      node.colorName = colorName || null;
+      const palette  = this._folderColors || {};
+      node.color     = colorName ? (palette[colorName] || null) : null;
+    }
+    this.renderTree();
   }
 
   async _applyFolderColor(path, colorName)

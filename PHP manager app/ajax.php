@@ -168,6 +168,20 @@ try {
         $response = ['success' => false, 'message' => 'Failed to write folder color'];
       break;
 
+    case 'setFileColor':
+      $filePath = $input['filePath'] ?? '';
+      $color    = isset($input['color']) ? (string)$input['color'] : null;
+      if( $color === '' ) $color = null;
+      if( $filePath === '' ) {
+        $response = ['success' => false, 'message' => 'Missing filePath'];
+        break;
+      }
+      if( $manager->writeFileColor($filePath, $color) )
+        $response = ['success' => true];
+      else
+        $response = ['success' => false, 'message' => 'Failed to write file color'];
+      break;
+
     case 'getFolderColors':
       $colors = $config['folderColors'] ?? [];
       $response = ['success' => true, 'colors' => $colors];

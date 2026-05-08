@@ -182,13 +182,16 @@ class SnippetManager
       }
       elseif( pathinfo($file, PATHINFO_EXTENSION) === 'yml' || pathinfo($file, PATHINFO_EXTENSION) === 'md' )
       {
+        $fileColorName = $this->readFileColorName($fullPath, $file);
+        $fileColor     = $fileColorName ? $this->resolveColorName($fileColorName) : $color;
         $items[] = [
           'type'      => 'file',
           'name'      => pathinfo($file, PATHINFO_FILENAME),
           'extension' => pathinfo($file, PATHINFO_EXTENSION),
           'path'      => $relativePath,
           'modified'  => filemtime($filePath),
-          'color'     => $color
+          'color'     => $fileColor,
+          'colorName' => $fileColorName
         ];
       }
     }
@@ -268,6 +271,49 @@ class SnippetManager
       return null;
     $data = json_decode(file_get_contents($file), true);
     return isset($data['color']) && is_string($data['color']) ? $data['color'] : null;
+  }
+
+  private function readFileColorName( string $folderPath, string $fileName ) : ?string
+  {
+    $file = "$folderPath/.sys/ninja.json";
+    if( ! is_file($file) )
+      return null;
+    $data = json_decode(file_get_contents($file), true);
+    return isset($data['fileColors'][$fileName]) && is_string($data['fileColors'][$fileName])
+      ? $data['fileColors'][$fileName]
+      : null;
+  }
+
+  public function writeFileColor( string $relativePath, ?string $color ) : bool
+  {
+    $base = $this->getCurrentDataPath();
+    $absPath = rtrim($base, '/') . '/' . ltrim($relativePath, '/');
+
+    if( ! is_file($absPath) )
+      return false;
+
+    $folderPath = dirname($absPath);
+    $fileName   = basename($absPath);
+    $sysDir     = "$folderPath/.sys";
+
+    if( ! is_dir($sysDir) )
+      mkdir($sysDir, 0755, true);
+
+    $jsonFile = "$sysDir/ninja.json";
+    $current  = is_file($jsonFile) ? (json_decode(file_get_contents($jsonFile), true) ?: []) : [];
+
+    if( ! isset($current['fileColors']) || ! is_array($current['fileColors']) )
+      $current['fileColors'] = [];
+
+    if( $color === null )
+      unset($current['fileColors'][$fileName]);
+    else
+      $current['fileColors'][$fileName] = $color;
+
+    if( empty($current['fileColors']) )
+      unset($current['fileColors']);
+
+    return file_put_contents($jsonFile, json_encode($current, JSON_PRETTY_PRINT)) !== false;
   }
 
   private function resolveColorName( ?string $colorName ) : ?string
