@@ -104,7 +104,7 @@ if( isset($_GET['data']) )
                   <!-- Add new snippet/folder -->
                   <li class="nav-item dropdown ms-auto">
                     <button class="nav-link small py-1 px-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="New...">
-                      <i class="bi bi-plus-lg"></i>
+                      <i class="bi bi-list"></i>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
                       <li>
