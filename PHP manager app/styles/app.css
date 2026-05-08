@@ -837,6 +837,20 @@ body {
 .navbar-brand .brand-full { display: inline; }
 .navbar-brand .brand-short { display: none; }
 
+.navbar-brand .brand-source {
+  opacity: 0.8;
+}
+
+#brandDataLabel:not(:empty) {
+  margin-left: 0.35rem;
+}
+
+.brand-chevron {
+  font-size: 0.7em;
+  margin-left: 0.3rem;
+  opacity: 0.7;
+}
+
 /* Code highlighting */
 .highlight {
   background-color: #fff3cd;

@@ -128,8 +128,8 @@
   async init()
   {
     this.bindEvents();
-    const dataFolderSelect = document.getElementById('dataFolderSelect');
-    this.currentDataPath = dataFolderSelect?.value || '';
+    const dataFolderDropdown = document.getElementById('dataFolderDropdown');
+    this.currentDataPath = dataFolderDropdown?.dataset.current || '';
     // Load server-backed user lists (single user)
     try {
       const [h, r] = await Promise.all([
@@ -168,7 +168,6 @@
     // Button bindings
     const buttonEvents = [
       ['searchBtn',          'click', () => this.search.performSearch()],
-      ['dataFolderSelect',   'change', (e) => this.changeDataFolder(e.target.value)],
       ['newSnippetBtn',      'click', () => showModal('newSnippetModal')],
       ['newFolderBtn',       'click', () => showModal('newFolderModal')],
       ['newSnippetDropBtn',  'click', () => showModal('newSnippetModal')],
@@ -194,6 +193,16 @@
       const element = document.getElementById(elementId);
       if( element ) element.addEventListener(event, handler);
     });
+
+    // Data folder dropdown in navbar
+    const dataFolderDropdown = document.getElementById('dataFolderDropdown');
+    if( dataFolderDropdown )
+      dataFolderDropdown.addEventListener('click', (e) => {
+        const item = e.target.closest('[data-label]');
+        if( ! item ) return;
+        e.preventDefault();
+        this.changeDataFolder(item.dataset.label);
+      });
 
     // New snippet modal: show/hide base folder select
     const newSnippetModalEl = document.getElementById('newSnippetModal');
@@ -564,6 +573,7 @@
     const result = await apiCall(this.currentDataPath, 'setDataPath', { dataPath });
 
     if( result.success ) {
+      this._updateBrandLabel(dataPath);
       this.currentPath = '';
       this.fileTree = [];
       this.expandedFolders.clear();
@@ -576,6 +586,17 @@
     else {
       showError('Failed to change data folder: ' + result.message);
     }
+  }
+
+  _updateBrandLabel(label)
+  {
+    document.querySelectorAll('#dataFolderDropdown .dropdown-item').forEach(item => {
+      item.classList.toggle('active', item.dataset.label === label);
+    });
+    const el = document.getElementById('brandDataLabel');
+    const elMobile = document.getElementById('brandDataLabelMobile');
+    if( el ) el.textContent = label;
+    if( elMobile ) elMobile.textContent = label;
   }
 
   // apiCall moved to global helper in lib/functions.js

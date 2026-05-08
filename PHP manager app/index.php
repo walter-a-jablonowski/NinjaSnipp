@@ -39,11 +39,24 @@ if( isset($_GET['data']) )
         <span class="navbar-toggler-icon"></span>
       </button>
 
-      <a class="navbar-brand d-flex align-items-center" href="#">
-        <i class="bi bi-code-square me-2 fs-4 d-none d-sm-inline"></i>
-        <span class="fw-bold brand-full">Ninja</span>
-        <span class="fw-bold brand-short">Ninja</span>
-      </a>
+      <div class="dropdown">
+        <a class="navbar-brand d-flex align-items-center" href="#" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="bi bi-code-square me-2 fs-4 d-none d-sm-inline"></i>
+          <span class="fw-bold brand-full">Ninja</span>
+          <span class="brand-full brand-source" id="brandDataLabel"><?= htmlspecialchars($manager->getCurrentDataLabel()) ?></span>
+          <span class="fw-bold brand-short brand-source" id="brandDataLabelMobile"><?= htmlspecialchars($manager->getCurrentDataLabel()) ?></span>
+          <i class="bi bi-chevron-down brand-chevron"></i>
+        </a>
+        <ul class="dropdown-menu" id="dataFolderDropdown" data-current="<?= htmlspecialchars($manager->getCurrentDataLabel()) ?>">
+          <?php foreach( array_keys($manager->getDataPaths()) as $label ): ?>
+            <li>
+              <a class="dropdown-item<?= $label === $manager->getCurrentDataLabel() ? ' active' : '' ?>" href="#" data-label="<?= htmlspecialchars($label) ?>">
+                <?= htmlspecialchars($label) ?>
+              </a>
+            </li>
+          <?php endforeach; ?>
+        </ul>
+      </div>
       
       <div class="navbar-nav ms-auto d-flex flex-row align-items-center gap-2">
         <div class="nav-item">
@@ -75,17 +88,6 @@ if( isset($_GET['data']) )
           </div>
           <div class="offcanvas-body p-0">
             <div class="p-3" id="sidebarInner">
-              <!-- Data Folder Selection -->
-              <div class="mb-3">
-                <select id="dataFolderSelect" class="form-select" title="Data folder">
-                  <?php foreach( array_keys($manager->getDataPaths()) as $label ): ?>
-                    <option value="<?= htmlspecialchars($label) ?>" <?= $label === $manager->getCurrentDataLabel() ? 'selected' : '' ?>>
-                      <?= htmlspecialchars($label) ?>
-                    </option>
-                  <?php endforeach; ?>
-                </select>
-              </div>
-
               <!-- Tab Control -->
               <div class="d-flex align-items-center mb-1" id="sidebarTabsRow">
                 <ul class="nav nav-pills gap-1 flex-lg-row flex-nowrap flex-grow-1" id="sidebarTabs" role="tablist">
