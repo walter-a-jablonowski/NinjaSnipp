@@ -440,7 +440,10 @@ class RenderController
     const s = this.app.currentSnippet;
     if( ! s ) return '';
     const parts = [];
-    if( s.id )    parts.push(`<div class="usage-meta-id"><span class="usage-meta-label">ID</span> <code>${s.id}</code></div>`);
+    if( s.id ) {
+      const scHtml = s.sc ? `<code class="usage-meta-sc">${s.sc}</code>` : '';
+      parts.push(`<div class="usage-meta-id"><span class="usage-meta-label">ID</span> <code>${s.id}</code>${scHtml}</div>`);
+    }
     if( s.short ) parts.push(`<div class="usage-meta-short">${s.short}</div>`);
     return parts.length ? `<div class="usage-meta">${parts.join('')}</div>` : '';
   }

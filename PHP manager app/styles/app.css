@@ -647,6 +647,14 @@ body {
 }
 
 .usage-meta-id {
+  display: flex;
+  align-items: center;
+  font-size: 0.78rem;
+  color: #6c757d;
+}
+
+.usage-meta-sc {
+  margin-left: auto;
   font-size: 0.78rem;
   color: #6c757d;
 }
