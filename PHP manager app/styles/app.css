@@ -882,6 +882,15 @@ body {
   flex-shrink: 0;
 }
 
+@media (min-width: 768px) {
+  #usagePreviewBtn {
+    border: 1px solid #dee2e6 !important;
+    border-radius: 0.25rem;
+    padding: 0 0.4rem !important;
+    align-self: stretch;
+  }
+}
+
 /* Default (>= sm): show full brand, hide short brand */
 .navbar-brand .brand-full { display: inline; }
 .navbar-brand .brand-short { display: none; }
