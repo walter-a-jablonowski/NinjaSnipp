@@ -688,6 +688,38 @@ body {
   vertical-align: top;
 }
 
+/* Usage tabs (-- TabName ----- syntax) */
+.usage-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  border-bottom: 1px solid #dee2e6;
+  padding-bottom: 4px;
+}
+
+.usage-tab-btn {
+  font-size: 0.78rem;
+  padding: 2px 10px;
+  border-radius: 4px;
+  background: none;
+  border: 1px solid transparent;
+  color: #666;
+  cursor: pointer;
+  line-height: 1.6;
+}
+
+.usage-tab-btn:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.usage-tab-btn.active {
+  background: #e9ecef;
+  border-color: #dee2e6;
+  color: #212529;
+  font-weight: 500;
+}
+
 /* Secondary usage section (muted) */
 .usage-secondary {
   margin-top: 0.75rem;

@@ -465,18 +465,58 @@ class RenderController
           .join('');
         html += `<div class="usage-meta usage-meta-vars"><table class="usage-vars-table"><thead><tr><th>Var</th><th>Description</th></tr></thead><tbody>${rows}</tbody></table></div>`;
       }
-      if( usage.text ) {
-        // <secondary> is a marker — everything after it is rendered grey
-        const parts = usage.text.split('<secondary>');
-        html += parseMd(parts[0]);
-        if( parts.length > 1 )
-          html += `<div class="usage-secondary">${parseMd(parts[1])}</div>`;
-      }
+      if( usage.text )
+        html += this._buildUsageTextHtml(usage.text);
     }
     else if( typeof usage === 'string' && usage ) {
       html += parseMd(usage);
     }
 
+    return html;
+  }
+
+  // Splits text on -- TabName ----- markers and renders Bootstrap tabs if any are found
+  _buildUsageTextHtml(text)
+  {
+    const markerRe  = /^--\s+([^\-\n]+?)\s*-+\s*$/m;
+    const splitRe   = /^--\s+[^\-\n]+?\s*-+\s*$/m;
+    const sections  = text.split(splitRe);
+    const tabNames  = [...text.matchAll(new RegExp(markerRe.source, 'gm'))].map(m => m[1].trim());
+
+    if( tabNames.length === 0 )
+      return this._renderTextSection(text);
+
+    // Content before the first marker is an implicit first tab
+    const hasPreContent = sections[0].trim().length > 0;
+    const allSections   = hasPreContent ? sections : sections.slice(1);
+    const allNames      = hasPreContent ? ['Main', ...tabNames] : tabNames;
+
+    const uid = Math.random().toString(36).slice(2, 7);
+
+    const navItems = allNames.map((name, i) =>
+      `<li class="nav-item" role="presentation">
+        <button class="nav-link usage-tab-btn${i === 0 ? ' active' : ''}" data-bs-toggle="tab"
+          data-bs-target="#ut-${uid}-${i}" type="button" role="tab">${name}</button>
+      </li>`
+    ).join('');
+
+    const panes = allSections.map((content, i) =>
+      `<div class="tab-pane fade${i === 0 ? ' show active' : ''}" id="ut-${uid}-${i}" role="tabpanel">
+        ${this._renderTextSection(content)}
+      </div>`
+    ).join('');
+
+    return `<ul class="nav usage-tabs mb-2" role="tablist">${navItems}</ul>
+      <div class="tab-content">${panes}</div>`;
+  }
+
+  // Renders a text block, splitting on <secondary> for grey section
+  _renderTextSection(text)
+  {
+    const parts = text.split('<secondary>');
+    let html = parseMd(parts[0]);
+    if( parts.length > 1 )
+      html += `<div class="usage-secondary">${parseMd(parts[1])}</div>`;
     return html;
   }
 
