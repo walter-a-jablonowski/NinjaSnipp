@@ -16,37 +16,58 @@ Combined base folders: cmn plus detail (see settings)
 
 ### File format
 
-version 2
+version 3
 
 ```yml
 id:                     # Snipp and and version
-version:                # Snipp file version
-sc:
-short:                  # short desc
+version: 3              # Snipp file version
+sc:                     # Shortcut for use in a Win app
+short:                  # Short desc
 usage:                  # Full text or yml keys
   head: |               # Common information to show above the vars
+    Why/when use this prompt?
+
+    - Main Feature
+
+    Token usage: ?
   maybe:                # Optional include prompt portions (MAYBE-syntax)
     myVar: explanation
   vars:                 # Placeholders use in snippet
     myVar: explanation
   text: |               # Explaination with default headlines
-    ### TASKS
 
-    ### Usage
+    ### Prompt features
 
-    - Token usage: ?
+    - Detail features
 
-    ### Features
+    ### TASKS           # Things that eed to be worked on in this prompt
 
-    <secondary>         # Text below this rendered grey
+                        # v prompt usage information
+    ### Usage           # How to use the prompt
 
-    ### Explaination
+    -
 
-    ### Made with
+    ### Limitations
 
-    > You are a highly skilled developer and prompt engineer.
+    - Known issues
+
+    ### Prompt output handling
+
+    - Example output
+    - How to use...
+
+    <secondary>         # Text below this rendered grey ("promot deveopment information")
+
+    ### Explanation
+
+    - Details: Why the prompt was made this way
+    - Misc detail explaination
+
+    ### Made with       # How the prompt was made
 
     LLM:
+
+    > You are a highly skilled developer and prompt engineer...
 
     ### Changelog
 
