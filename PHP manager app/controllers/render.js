@@ -476,29 +476,31 @@ class RenderController
   }
 
   // Splits text on -- TabName ----- markers and renders Bootstrap tabs if any are found
+  // Supports optional color: -- TabName (color: red) --------
   _buildUsageTextHtml(text)
   {
-    const markerRe  = /^--\s+([^\-\n]+?)\s*-+\s*$/m;
-    const splitRe   = /^--\s+[^\-\n]+?\s*-+\s*$/m;
-    const sections  = text.split(splitRe);
-    const tabNames  = [...text.matchAll(new RegExp(markerRe.source, 'gm'))].map(m => m[1].trim());
+    const splitRe  = /^--\s+.+?\s*-+\s*$/m;
+    const markerRe = /^--\s+(.+?)\s*-+\s*$/gm;
+    const sections = text.split(splitRe);
+    const tabs     = [...text.matchAll(markerRe)].map(m => this._parseTabMarker(m[1]));
 
-    if( tabNames.length === 0 )
+    if( tabs.length === 0 )
       return this._renderTextSection(text);
 
-    // Content before the first marker is an implicit first tab
+    // Content before the first marker becomes an implicit first tab
     const hasPreContent = sections[0].trim().length > 0;
     const allSections   = hasPreContent ? sections : sections.slice(1);
-    const allNames      = hasPreContent ? ['Main', ...tabNames] : tabNames;
+    const allTabs       = hasPreContent ? [{ name: 'Main', color: null }, ...tabs] : tabs;
 
     const uid = Math.random().toString(36).slice(2, 7);
 
-    const navItems = allNames.map((name, i) =>
-      `<li class="nav-item" role="presentation">
+    const navItems = allTabs.map(({ name, color }, i) => {
+      const colorStyle = color ? ` style="color:${color}"` : '';
+      return `<li class="nav-item" role="presentation">
         <button class="nav-link usage-tab-btn${i === 0 ? ' active' : ''}" data-bs-toggle="tab"
-          data-bs-target="#ut-${uid}-${i}" type="button" role="tab">${name}</button>
-      </li>`
-    ).join('');
+          data-bs-target="#ut-${uid}-${i}" type="button" role="tab"${colorStyle}>${name}</button>
+      </li>`;
+    }).join('');
 
     const panes = allSections.map((content, i) =>
       `<div class="tab-pane fade${i === 0 ? ' show active' : ''}" id="ut-${uid}-${i}" role="tabpanel">
@@ -508,6 +510,14 @@ class RenderController
 
     return `<ul class="nav usage-tabs mb-2" role="tablist">${navItems}</ul>
       <div class="tab-content">${panes}</div>`;
+  }
+
+  _parseTabMarker(raw)
+  {
+    const colorMatch = raw.trim().match(/^(.+?)\s*\(color:\s*([^)]+)\)\s*$/);
+    if( colorMatch )
+      return { name: colorMatch[1].trim(), color: colorMatch[2].trim() };
+    return { name: raw.trim(), color: null };
   }
 
   // Renders a text block, splitting on <secondary> for grey section

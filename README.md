@@ -25,11 +25,9 @@ sc:                     # Shortcut for use in a Win app
 short:                  # Short desc
 usage:                  # Full text or yml keys
   head: |               # Common information to show above the vars
-    Why/when use this prompt?
+    Why/when use this prompt? (Token usage: ?)
 
     - Main Feature
-
-    Token usage: ?
   maybe:                # Optional include prompt portions (MAYBE-syntax)
     myVar: explanation
   vars:                 # Placeholders use in snippet
