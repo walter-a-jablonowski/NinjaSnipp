@@ -151,7 +151,7 @@ class FileTreeController
 
     const icon = isFolder
       ? (isOpen ? 'bi-folder2-open' : 'bi-folder')
-      : (extension === 'yml' ? 'bi-file-code' : 'bi-file-text');
+      : (extension === 'yml' ? 'bi-file-code' : 'bi-file-text-fill');
 
     const toggleEl = isFolder
       ? `<i class="bi ${isOpen ? 'bi-chevron-down' : 'bi-chevron-right'} tree-toggle"></i>`

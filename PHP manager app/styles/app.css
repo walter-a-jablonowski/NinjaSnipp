@@ -255,6 +255,10 @@ body {
   font-size: 0.85rem;
 }
 
+.bi-file-text-fill.file-icon {
+  color: #adb5bd;
+}
+
 /* Legacy file-item used for search results */
 .file-item {
   cursor: pointer;
@@ -806,7 +810,7 @@ body {
   /* On smartphones: hide full brand, show short brand */
   .navbar-brand .brand-full { display: none !important; }
   .navbar-brand .brand-short { display: inline !important; }
-  
+
   .action-buttons .btn {
     padding: 0.375rem 0.5rem;
   }
