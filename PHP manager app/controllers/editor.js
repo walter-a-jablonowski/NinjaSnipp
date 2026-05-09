@@ -146,11 +146,8 @@ class EditorController
       return;
     }
 
-    const data = {
-      _type: this.app.currentSnippet._type,
-      _name: this.app.currentSnippet._name,
-      content: contentInput.value
-    };
+    // Spread all current fields so non-editable keys (short, id, version, ...) are preserved
+    const data = { ...this.app.currentSnippet, content: contentInput.value };
 
     if( this.app.currentSnippet._type === 'yml' ) {
       const scInput = document.getElementById('snippetSc');
