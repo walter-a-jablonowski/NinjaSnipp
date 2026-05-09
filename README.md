@@ -19,16 +19,40 @@ Combined base folders: cmn plus detail (see settings)
 version 2
 
 ```yml
-id:           # snipp version
-version:      # snipp file version
+id:                     # Snipp and and version
+version:                # Snipp file version
 sc:
-short:        # short desc
-usage:        # full text or yml keys
-  vars:
+short:                  # short desc
+usage:                  # Full text or yml keys
+  head: |               # Common information to show above the vars
+  maybe:                # Optional include prompt portions (MAYBE-syntax)
     myVar: explanation
-  text:       # Main details
-  secondary:  # Grey details
-content:
+  vars:                 # Placeholders use in snippet
+    myVar: explanation
+  text: |               # Explaination with default headlines
+    ### TASKS
+
+    ### Usage
+
+    - Token usage: ?
+
+    ### Features
+
+    <secondary>         # Text below this rendered grey
+
+    ### Explaination
+
+    ### Made with
+
+    > You are a highly skilled developer and prompt engineer.
+
+    LLM:
+
+    ### Changelog
+
+    - 1.0:
+
+content: |    # Snippet
 ```
 
 ### Placeholders
