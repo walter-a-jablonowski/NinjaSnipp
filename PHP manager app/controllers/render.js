@@ -465,8 +465,13 @@ class RenderController
           .join('');
         html += `<div class="usage-meta usage-meta-vars"><table class="usage-vars-table"><thead><tr><th>Var</th><th>Description</th></tr></thead><tbody>${rows}</tbody></table></div>`;
       }
-      if( usage.text )      html += parseMd(usage.text);
-      if( usage.secondary ) html += `<div class="usage-secondary">${parseMd(usage.secondary)}</div>`;
+      if( usage.text ) {
+        // <secondary> is a marker — everything after it is rendered grey
+        const parts = usage.text.split('<secondary>');
+        html += parseMd(parts[0]);
+        if( parts.length > 1 )
+          html += `<div class="usage-secondary">${parseMd(parts[1])}</div>`;
+      }
     }
     else if( typeof usage === 'string' && usage ) {
       html += parseMd(usage);
