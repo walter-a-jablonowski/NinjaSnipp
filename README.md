@@ -36,10 +36,6 @@ usage:                  # Full text or yml keys
     myVar: explanation
   text: |               # Explaination with default headlines
 
-    ### Prompt features
-
-    - Detail features
-
     ### TASKS           # Things that eed to be worked on in this prompt
 
                         # v prompt usage information
@@ -51,16 +47,22 @@ usage:                  # Full text or yml keys
 
     - Known issues
 
+    <secondary>         # Text below this rendered grey ("promot deveopment information")
+
+    ### Features details
+
+    - Features details
+
     ### Prompt output handling
 
     - Example output
     - How to use...
 
-    <secondary>         # Text below this rendered grey ("promot deveopment information")
+    -- Dev --------
 
-    ### Explanation
+    ### How it works
 
-    - Details: Why the prompt was made this way
+    - How it works and why the prompt was made this way
     - Misc detail explaination
 
     ### Made with       # How the prompt was made
