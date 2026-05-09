@@ -275,6 +275,7 @@ if( isset($_GET['data']) )
                   <div class="row g-2 mobile-content-active" id="editFieldsRow">
                     <!-- Usage (YAML-only) -->
                     <div class="col-md-6 d-flex flex-column" id="fieldUsage">
+                      <label class="form-label mb-1 d-none d-md-block">Usage</label>
                       <div class="d-flex align-items-center gap-1 mb-1" id="fieldShortScRow">
                         <input type="text" class="form-control form-control-sm flex-grow-1" id="snippetShort" placeholder="Short description">
                         <input type="text" class="form-control form-control-sm" id="snippetSc" placeholder="Short code">
