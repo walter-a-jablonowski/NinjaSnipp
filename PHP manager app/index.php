@@ -275,18 +275,15 @@ if( isset($_GET['data']) )
                   <div class="row g-2 mobile-content-active" id="editFieldsRow">
                     <!-- Usage (YAML-only) -->
                     <div class="col-md-6 d-flex flex-column" id="fieldUsage">
-                      <div class="d-none d-md-flex justify-content-between align-items-center mb-1">
-                        <label for="snippetUsage" class="form-label mb-0">Usage</label>
-                        <button type="button" class="btn btn-sm btn-link p-0 text-muted d-none d-md-block" id="usagePreviewBtn" title="Preview usage">
+                      <div class="d-flex align-items-center gap-1 mb-1" id="fieldShortScRow">
+                        <input type="text" class="form-control form-control-sm flex-grow-1" id="snippetShort" placeholder="Short description">
+                        <input type="text" class="form-control form-control-sm" id="snippetSc" placeholder="Short code">
+                        <button type="button" class="btn btn-sm btn-link p-0 px-1 text-muted d-none d-md-inline-flex align-items-center" id="usagePreviewBtn" title="Preview usage">
                           <i class="bi bi-eye"></i>
                         </button>
                       </div>
-                      <textarea class="form-control flex-grow-1" id="snippetUsage" rows="3" placeholder="Comments, usage and sample..."></textarea>
+                      <textarea class="form-control flex-grow-1" id="snippetUsage" rows="3" placeholder="Usage..."></textarea>
                       <div id="usagePreview" class="usage-preview flex-grow-1" style="display: none;"></div>
-                      <!-- YAML-only: Short Code (no label) -->
-                      <div id="fieldSc" class="mt-2">
-                        <input type="text" title="Short code" class="form-control form-control-sm" id="snippetSc" placeholder="Short code, e.g. arr--">
-                      </div>
                     </div>
 
                     <!-- Content -->

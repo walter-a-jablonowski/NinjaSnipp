@@ -44,9 +44,9 @@ class EditorController
   {
     const editEmptyState = document.getElementById('editEmptyState');
     const editForm = document.getElementById('editForm');
-    const fieldSc = document.getElementById('fieldSc');
     const fieldUsage = document.getElementById('fieldUsage');
     const snippetSc = document.getElementById('snippetSc');
+    const snippetShort = document.getElementById('snippetShort');
     const snippetUsage = document.getElementById('snippetUsage');
     const snippetContent = document.getElementById('snippetContent');
     const labelSnippetContent = document.getElementById('labelSnippetContent');
@@ -58,14 +58,13 @@ class EditorController
     snippetContent.value = snippet.content || '';
 
     if( isYaml ) {
-      if( snippetSc ) snippetSc.value = snippet.sc || '';
+      if( snippetSc )    snippetSc.value    = snippet.sc    || '';
+      if( snippetShort ) snippetShort.value = snippet.short || '';
       if( snippetUsage )
         snippetUsage.value = this._serializeUsage(snippet.usage);
     }
 
-    [fieldSc, fieldUsage].forEach(field => {
-      if( field ) field.classList.toggle('force-hide', ! isYaml);
-    });
+    if( fieldUsage ) fieldUsage.classList.toggle('force-hide', ! isYaml);
 
     const fieldContent = document.getElementById('fieldContent');
     if( fieldContent )
@@ -150,10 +149,9 @@ class EditorController
     const data = { ...this.app.currentSnippet, content: contentInput.value };
 
     if( this.app.currentSnippet._type === 'yml' ) {
-      const scInput = document.getElementById('snippetSc');
-      const usageInput = document.getElementById('snippetUsage');
-      data.sc = scInput.value.trim();
-      data.usage = usageInput.value.trim();
+      data.sc    = document.getElementById('snippetSc')?.value.trim()    || '';
+      data.short = document.getElementById('snippetShort')?.value.trim() || '';
+      data.usage = document.getElementById('snippetUsage')?.value.trim() || '';
     }
 
     const extension = this.app.currentSnippet._type === 'yml' ? 'yml' : 'md';
@@ -179,11 +177,12 @@ class EditorController
   bindAutosaveHandlers()
   {
     if( this.app._autosaveBound ) return;
-    const scEl = document.getElementById('snippetSc');
-    const usageEl = document.getElementById('snippetUsage');
+    const scEl      = document.getElementById('snippetSc');
+    const shortEl   = document.getElementById('snippetShort');
+    const usageEl   = document.getElementById('snippetUsage');
     const contentEl = document.getElementById('snippetContent');
     const handler = () => this.onEditFieldChanged();
-    [scEl, usageEl, contentEl].forEach(el => {
+    [scEl, shortEl, usageEl, contentEl].forEach(el => {
       if( el ) {
         el.addEventListener('input', handler);
         el.addEventListener('blur', handler);
@@ -338,7 +337,7 @@ class EditorController
     if( editEmptyState && editForm ) {
       editForm.style.display = 'none';
       editEmptyState.style.display = 'block';
-      const inputs = ['snippetSc', 'snippetUsage', 'snippetContent'];
+      const inputs = ['snippetSc', 'snippetShort', 'snippetUsage', 'snippetContent'];
       inputs.forEach(id => {
         const input = document.getElementById(id);
         if( input ) input.value = '';

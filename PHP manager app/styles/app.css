@@ -873,7 +873,12 @@ body {
   min-height: 0;
 }
 
-#fieldSh {
+#fieldShortScRow {
+  flex-shrink: 0;
+}
+
+#snippetSc {
+  width: 110px;
   flex-shrink: 0;
 }
 
