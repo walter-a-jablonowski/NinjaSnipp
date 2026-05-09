@@ -59,10 +59,8 @@ class EditorController
 
     if( isYaml ) {
       if( snippetSc ) snippetSc.value = snippet.sc || '';
-      if( snippetUsage ) {
-        const u = snippet.usage;
-        snippetUsage.value = (u && typeof u === 'object') ? (u.text || '') : (u || '');
-      }
+      if( snippetUsage )
+        snippetUsage.value = this._serializeUsage(snippet.usage);
     }
 
     [fieldSc, fieldUsage].forEach(field => {
@@ -481,5 +479,36 @@ class EditorController
     else {
       showError('Failed to create folder: ' + result.message);
     }
+  }
+
+  // Serialize usage object to editable YAML text for the textarea
+  _serializeUsage(u)
+  {
+    if( ! u ) return '';
+    if( typeof u === 'string' ) return u;
+
+    const parts  = [];
+    const indent = '  ';
+
+    const addBlock = (key, value) => {
+      if( value == null ) return;
+      const indented = String(value).split('\n').map(l => indent + l).join('\n').trimEnd();
+      parts.push(`${key}: |\n${indented}`);
+    };
+
+    const addMapping = (key, obj) => {
+      if( ! obj || typeof obj !== 'object' ) return;
+      const entries = Object.entries(obj);
+      if( ! entries.length ) return;
+      const rows = entries.map(([k, v]) => `${indent}${k}: ${v ?? ''}`).join('\n');
+      parts.push(`${key}:\n${rows}`);
+    };
+
+    addBlock('head', u.head);
+    addMapping('maybe', u.maybe);
+    addMapping('vars', u.vars);
+    addBlock('text', u.text);
+
+    return parts.join('\n\n');
   }
 }

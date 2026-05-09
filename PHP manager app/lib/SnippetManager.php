@@ -474,6 +474,18 @@ class SnippetManager
       if( $data['_type'] === 'yml' )
       {
         unset($data['_type'], $data['_name']);
+
+        // If usage was sent as a YAML string from the textarea, parse it back to an array
+        if( isset($data['usage']) && is_string($data['usage']) && trim($data['usage']) !== '' )
+        {
+          try {
+            $parsed = Yaml::parse($data['usage']);
+            if( is_array($parsed) )
+              $data['usage'] = $parsed;
+          }
+          catch( \Exception $e ) {}
+        }
+
         // Ensure key order: sc, usage, content come first
         $ordered = [];
         foreach( ['sc', 'usage', 'content'] as $k )
