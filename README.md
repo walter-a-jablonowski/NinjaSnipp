@@ -36,7 +36,6 @@ usage:                  # Full text or yml keys
     myVar: explanation
   text: |               # Explaination with default headlines
 
-    ### TASKS           # Things that eed to be worked on in this prompt
 
                         # v prompt usage information
     ### Usage           # How to use the prompt
@@ -57,6 +56,8 @@ usage:                  # Full text or yml keys
 
     - Example output
     - How to use...
+
+    -- Tasks (color: red) --------   # Things that eed to be worked on in this prompt
 
     -- Dev --------
 
