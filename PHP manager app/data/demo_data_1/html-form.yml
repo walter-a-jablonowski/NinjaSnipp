@@ -1,26 +1,60 @@
+id: html-form v1
+version: 3
 sc: form--
-usage: |-
-  Creates an HTML form with common input fields.
-  Use {{ formName }} for form name, {{ action }} for form action.
-  Choose {{ method }} for HTTP method.
+short: HTML form with input fields and optional email block
+usage:
+  head: |
+    Generates a standard HTML form. The email field block is optional via MAYBE.
+
+    - Supports GET and POST
+    - Token usage: minimal
+  maybe:
+    SomeName: Include the optional email field block
+  vars:
+    formName: Name attribute of the form
+    action: Form submission URL
+    method: HTTP method (post or get)
+    fieldName: Name/id for the primary input field
+    submitText: Label for the submit button
+  text: |
+    ### Usage
+
+    - Set `action` to your endpoint
+    - Toggle `SomeName` to include the email field
+    - `fieldName` is reused for both `id` and `name` attributes
+
+    ### Limitations
+
+    - Static field layout; extend manually for more fields
+
+    -- Dev --------
+
+    ### Explanation
+
+    - MAYBE block demonstrates optional sections — useful for showing the feature in demos
+    - `fieldName` intentional reuse shows placeholder aliasing
+
+    ### Changelog
+
+    - 1.0: initial
 content: |
   <form name="{{ formName }}" action="{{ action=/submit }}" method="{{ method=post|get }}">
     <div class="form-group">
       <label for="{{ fieldName=name }}">Name:</label>
       <input type="text" id="{{ fieldName }}" name="{{ fieldName }}" required>
     </div>
-    
+
     {{ MAYBE: SomeName }}
     <div class="form-group">
       <label for="email">Email:</label>
       <input type="email" id="email" name="email" required>
     </div>
     {{ END-MAYBE }}
-    
+
     <div class="form-group">
       <label for="message">Message:</label>
       <textarea id="message" name="message" rows="4"></textarea>
     </div>
-    
+
     <button type="submit">{{ submitText=Submit }}</button>
   </form>

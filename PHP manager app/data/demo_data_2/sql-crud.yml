@@ -1,13 +1,44 @@
+id: sql-crud v1
+version: 3
 sc: sql--
-usage: |
-  Generic SQL CRUDs snippet.
-  Choose action and provide table and columns.
+short: Generic SQL statement for SELECT, INSERT, UPDATE or DELETE
+usage:
+  head: |
+    Single SQL statement scaffold. Choose the action and fill in table and columns.
 
+    - Token usage: minimal
+  vars:
+    action: SQL operation
+    table: Target table name
+    columns: Column list for SELECT
+    where: WHERE clause condition
+    id: Example parameter value
+  text: |
+    ### Usage
+
+    - Pick `action` from the dropdown
+    - Adjust `where` to match your primary key or filter condition
+    - For INSERT/UPDATE the columns line needs manual adjustment
+
+    ### Limitations
+
+    - One statement per snippet; no JOIN or subquery scaffold
+
+    <secondary>
+
+    ### Explanation
+
+    - `action` appears twice (comment + statement) to keep the output self-documenting
+    - Parameters use `:name` style for PDO compatibility
+
+    ### Changelog
+
+    - 1.0: initial
 content: |
   -- {{ action=SELECT|INSERT|UPDATE|DELETE }} on {{ table=users }}
   {{ action=SELECT }} {{ columns= id, name, email }}
   FROM {{ table }}
   WHERE {{ where=id = :id }};
-  
+
   -- Example parameters
   -- :id = {{ id=1 }}

@@ -1,11 +1,57 @@
+id: function-template v1
+version: 3
 sc: func--
-usage: |
-  Included in error-handling.yml as a sub include
+short: PHP function with docblock and optional error guard
+usage:
+  head: |
+    Full PHP function scaffold with PHPDoc. Optionally includes the error-handling guard via MAYBE.
 
+    - Token usage: minimal
+  maybe:
+    SomeName: Include the error-handling guard inside the function body
+  vars:
+    description: One-line function description for the docblock
+    paramType: Type hint for the parameter
+    paramName: Parameter variable name
+    paramDesc: Parameter description for the docblock
+    returnType: Return type hint
+    returnDesc: Return value description for the docblock
+    functionName: Name of the function
+    body: Placeholder for the function body
+    returnValue: Value returned at the end
+  text: |
+    ### Usage
+
+    - Toggle `SomeName` to add input validation at the top
+    - Replace `body` with actual implementation
+
+    ### Limitations
+
+    - Single parameter; duplicate `@param` lines for more
+
+    -- Tasks (color: red) --------
+
+    - Add typed property support
+    - Consider adding return type narrowing example
+
+    -- Dev --------
+
+    ### Explanation
+
+    - MAYBE toggle around the include shows how to make error-handling optional per call site
+    - `paramName` is reused across docblock and signature to keep them in sync
+
+    ### Made with
+
+    LLM: hand-written
+
+    ### Changelog
+
+    - 1.0: initial
 content: |
   /**
    * {{ description=Function description }}
-   * 
+   *
    * @param {{ paramType=string }} ${{ paramName=param }} {{ paramDesc=Parameter description }}
    * @return {{ returnType=void }} {{ returnDesc=Return description }}
    */
@@ -14,9 +60,9 @@ content: |
     {{ MAYBE: SomeName }}
     {{ include: "error-handling" }}
     {{ END-MAYBE }}
-    
+
     // Function body
     {{ body=// TASK: Implement function logic }}
-    
+
     return {{ returnValue=null }};
   }

@@ -1,7 +1,27 @@
-sc: err--
-usage: |
-  Basic error handling pattern for functions.
-  Can be included in misc snippets.
+id: error-handling-2 v1
+version: 3
+sc: err2--
+short: Sub-include used by error-handling
+usage:
+  head: |
+    Minimal sub-snippet included by error-handling. Demonstrates nested includes.
 
+    - Token usage: minimal
+  vars:
+    var: Placeholder variable name
+  text: |
+    ### Usage
+
+    - Not meant to be used standalone; included via error-handling
+
+    <secondary>
+
+    ### Explanation
+
+    - Exists purely to demonstrate two levels of include nesting in the demo data
+
+    ### Changelog
+
+    - 1.0: initial
 content: |
   // Some {{var}} comment

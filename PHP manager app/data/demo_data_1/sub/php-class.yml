@@ -1,9 +1,36 @@
+id: php-class v1
+version: 3
 sc: class--
-usage: |
-  Creates a PHP class with constructor and basic methods.
-  Use {{ className }} for the class name, {{ property }} for a property name.
-  Choose {{ visibility }} for property visibility.
+short: PHP class with constructor, getter and setter
+usage:
+  head: |
+    Minimal PHP class with one property, constructor, getter and setter.
 
+    - Token usage: minimal
+  vars:
+    className: Name of the class
+    property: Property name (reused in constructor and accessors)
+    visibility: Property visibility modifier
+  text: |
+    ### Usage
+
+    - Set `className` and `property` to match your domain
+    - Duplicate the getter/setter block for additional properties
+
+    ### Limitations
+
+    - Single property scaffold; extend manually for more
+
+    -- Dev --------
+
+    ### Explanation
+
+    - `property` placeholder is intentionally reused in constructor arg, assignment and accessor names
+    - Demonstrates that a single placeholder can appear many times in one snippet
+
+    ### Changelog
+
+    - 1.0: initial
 content: |
   class {{ className=MyClass }}
   {

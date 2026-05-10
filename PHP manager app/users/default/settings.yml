@@ -5,6 +5,8 @@ dataPaths:
   # 'Demo 2':
   #   'data/cmn': '#e8e8e8'
   #   'data/demo_data_2': null
+  # 'Prompt demo':
+  #   'data/Prompt_demo': null
   AI:
     "G:/Meine Ablage/50 Activity tree/11 Common/Dools/AI (#ai-usage)": null
 folderColors:

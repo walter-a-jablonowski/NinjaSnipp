@@ -1,0 +1,36 @@
+id:      "YYYY-MM-DD.01-V1"
+version: 2
+sc:      ""
+short:   ""
+usage:
+  head: |
+    Some demo explanation
+  maybe:
+    myVar:
+  vars:
+    myVar:
+  text: |
+
+    ### TASKS
+
+    ### Usage
+
+    - Token usage: ?
+
+    ### Prompt features
+
+    <secondary>
+
+    ### Explanation
+
+    ### Made with
+
+    > You are a highly skilled developer and prompt engineer.
+
+    LLM:
+
+    ### Changelog
+
+    - 1.0:
+content: |
+  Included Linked in style guide ...

@@ -1,8 +1,37 @@
+id: error-handling v1
+version: 3
 sc: err--
-usage: |
-  Basic error handling pattern for functions.
-  Can be included in misc snippets.
+short: Guard clause that throws on invalid input
+usage:
+  head: |
+    Null/falsy guard for function parameters. Includes error-handling-2 via nested include.
 
+    - Drop at the top of any function
+    - Token usage: minimal
+  vars:
+    paramName: Name of the parameter to check
+    errorType: Exception class to throw
+    errorMessage: Message passed to the exception
+  text: |
+    ### Usage
+
+    - Place at the start of a function body
+    - Combine with function-template for a full pattern
+
+    ### Limitations
+
+    - Single-parameter check only; add multiple instances for multiple params
+
+    <secondary>
+
+    ### Explanation
+
+    - Demonstrates nested includes: this snippet includes error-handling-2
+    - Guard-clause style keeps the happy path unindented
+
+    ### Changelog
+
+    - 1.0: initial
 content: |
   {{ include: "error-handling-2" }}
   if( ! {{ paramName }} ) {

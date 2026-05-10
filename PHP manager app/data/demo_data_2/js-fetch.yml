@@ -1,14 +1,48 @@
+id: js-fetch v1
+version: 3
 sc: fetch--
-usage: |
-  Template for a JavaScript Fetch request with basic error handling.
-  Choose method and provide URL and optional payload.
+short: JavaScript Fetch request with error handling
+usage:
+  head: |
+    Async Fetch wrapper with try/catch. Supports GET, POST, PUT and DELETE.
 
+    - Token usage: minimal
+  vars:
+    url: Target API endpoint
+    method: HTTP method
+    payload: Request body object (ignored for GET)
+  text: |
+    ### Usage
+
+    - Set `method` to GET for read operations (body is omitted automatically)
+    - `payload` is JSON-serialized for non-GET methods
+
+    ### Limitations
+
+    - No retry logic or timeout handling
+    - Auth headers must be added manually
+
+    -- Tasks (color: red) --------
+
+    - Add AbortController / timeout example
+    - Add Bearer token auth header variant
+
+    -- Dev --------
+
+    ### Explanation
+
+    - Body is conditionally `undefined` for GET so `fetch` skips the Content-Type header automatically
+    - Error handling uses status check before `.json()` to avoid parsing error bodies as data
+
+    ### Changelog
+
+    - 1.0: initial
 content: |
   const url = '{{ url=https://api.example.com/items }}';
   const method = '{{ method=GET|POST|PUT|DELETE }}';
   const headers = { 'Content-Type': 'application/json' };
   const body = method === 'GET' ? undefined : JSON.stringify({{ payload }});
-  
+
   try {
     const res = await fetch(url, { method, headers, body });
     if( ! res.ok ) {

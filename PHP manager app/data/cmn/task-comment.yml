@@ -1,6 +1,36 @@
+id: task-comment v1
+version: 3
 sc: todo--
-usage: |-
-  Structured TODO comment for code reviews and task tracking.
+short: Structured TODO comment with author and ticket reference
+usage:
+  head: |
+    Inline TODO marker for code review and task tracking.
+
+    - Token usage: minimal
+  vars:
+    author: Developer handle or initials
+    task: Description of what needs to be done
+    ref: Ticket or issue reference
+  text: |
+    ### Usage
+
+    - Drop above the code that needs attention
+    - Fill `ref` with a Linear/GitHub/Jira issue key
+
+    ### Limitations
+
+    - Single-line comment only
+
+    <secondary>
+
+    ### Explanation
+
+    - Two-line format separates the what (task) from the where (ref) for easier grep
+    - `author` makes ownership clear during code review
+
+    ### Changelog
+
+    - 1.0: initial
 content: |
   // TODO({{ author=dev }}): {{ task=describe what needs to be done }}
   // REF: {{ ref=ticket/issue reference }}

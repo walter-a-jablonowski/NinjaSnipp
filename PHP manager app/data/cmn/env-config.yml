@@ -1,5 +1,42 @@
+id: env-config v1
+version: 3
 sc: env--
-usage: 'Environment configuration block. Use for .env files or config templates shared across environments.'
+short: Environment config block for .env files
+usage:
+  head: |
+    Standard .env template covering app settings and database credentials.
+
+    - Shared across environments via cmn folder
+    - Token usage: minimal
+  vars:
+    env: Application environment
+    debug: Debug flag
+    url: Application base URL
+    dbHost: Database host
+    dbPort: Database port
+    dbName: Database name
+    dbUser: Database username
+    dbPass: Database password
+  text: |
+    ### Usage
+
+    - Copy into your `.env` file and fill in real values
+    - Switch `env` to `development` locally
+
+    ### Limitations
+
+    - No cache, queue or mail settings; extend as needed
+
+    <secondary>
+
+    ### Explanation
+
+    - Lives in cmn so it can be included across multiple data sets
+    - Grouped by concern (app / db) to match Laravel / Symfony conventions
+
+    ### Changelog
+
+    - 1.0: initial
 content: |
   APP_ENV={{ env=production|development|testing }}
   APP_DEBUG={{ debug=false|true }}

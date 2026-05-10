@@ -1,0 +1,81 @@
+id:      "2026-05-08.01-DEMO"
+version: 2
+sc:      ""
+short:   "LinkedIn post generator – demo for all placeholder features"
+usage:
+  head: |
+    Demo snippet — shows every placeholder type available in the app.
+    Generates a LinkedIn post about a software project.
+  maybe:
+    Tone:
+    TechStack:
+    CallToAction:
+    Hashtags:
+  vars:
+    PROJECT: My Project
+    AUDIENCE: developers
+    LANGUAGE: English
+  text: |
+
+    ### Purpose
+
+    Demonstrates all placeholder types in one snippet:
+
+    | Feature | Syntax |
+    |---|---|
+    | Simple placeholder | `{{PROJECT}}` |
+    | Default value | `{{AUDIENCE=developers}}` |
+    | Option list | `{{LANGUAGE=English|German|French}}` |
+    | Optional block | `{{ MAYBE: TechStack }}` / `{{ END-MAYBE }}` |
+    | Inline optional | same syntax, text merged into one line |
+    | Include | `{{include: "LinkedIn Style Guide"}}` |
+
+    ### Usage
+
+    1. Fill in placeholders on the right panel
+    2. Toggle optional sections on/off
+    3. Copy the rendered prompt and paste into your AI tool
+
+    - Token usage: low
+
+    <secondary>
+
+    ### Explanation
+
+    A practical demo that generates a LinkedIn post.
+    Every placeholder type appears at least once in the template.
+
+    ### Changelog
+
+    - V1: Initial demo for LinkedIn article
+content: |
+  Write a LinkedIn post in {{LANGUAGE=English|German|French}} about my project "{{PROJECT}}".
+
+  Target audience: {{AUDIENCE=developers}}
+
+  {{ MAYBE: Tone }}
+  Tone of voice: {{TONE=professional|casual|enthusiastic}}
+  {{ END-MAYBE }}
+
+  Cover the following points:
+  - What the project does and what problem it solves
+  {{ MAYBE: TechStack }}
+  - Technologies used: {{FRONTEND=React|Vue|Angular}} frontend, {{BACKEND=PHP|Node|Python}} backend
+  {{ END-MAYBE }}
+  - Why I built it with AI assistance and what that experience was like
+
+  Write the post in
+  {{ MAYBE: Tone }}
+  a {{TONE}} style,
+  {{ END-MAYBE }}
+  keeping it concise and authentic.
+
+  {{ MAYBE: CallToAction }}
+  End with a call to action: {{CTA=ask readers for feedback|invite them to try it|ask about their experience with AI tools}}
+  {{ END-MAYBE }}
+
+  {{ MAYBE: Hashtags }}
+  Finish with 3–5 relevant hashtags.
+  {{ END-MAYBE }}
+
+  {{include: "LinkedIn Style Guide"}}

@@ -1,21 +1,53 @@
+id: function-template-2 v1
+version: 3
 sc: func--
-usage: |
-  Creates a function template with documentation.
-  Includes common function patterns.
+short: PHP function scaffold (variant without MAYBE)
+usage:
+  head: |
+    Simpler function template — always includes the error-handling guard.
 
+    - Token usage: minimal
+  vars:
+    description: One-line function description for the docblock
+    paramType: Type hint for the parameter
+    paramName: Parameter variable name
+    paramDesc: Parameter description for the docblock
+    returnType: Return type hint
+    returnDesc: Return value description for the docblock
+    functionName: Name of the function
+    body: Placeholder for the function body
+    returnValue: Value returned at the end
+  text: |
+    ### Usage
+
+    - Always inlines error-handling; use function-template if you need MAYBE toggle
+
+    ### Limitations
+
+    - Single parameter only
+
+    <secondary>
+
+    ### Explanation
+
+    - Variant of function-template kept in sub_2 to demonstrate subfolder includes
+
+    ### Changelog
+
+    - 1.0: initial
 content: |
   /**
    * {{ description=Function description }}
-   * 
+   *
    * @param {{ paramType=string }} ${{ paramName=param }} {{ paramDesc=Parameter description }}
    * @return {{ returnType=void }} {{ returnDesc=Return description }}
    */
   function {{ functionName=myFunction }}( ${{ paramName }} )
   {
     {{ include: "error-handling" }}
-    
+
     // Function body
     {{ body=// TASK: Implement function logic }}
-    
+
     return {{ returnValue=null }};
   }

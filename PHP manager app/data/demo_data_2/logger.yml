@@ -1,8 +1,35 @@
+id: logger v1
+version: 3
 sc: log--
-usage: |
-  Minimal PHP logger helper to standard error.
-  Use level and message placeholders.
+short: Minimal PHP logger writing to error_log
+usage:
+  head: |
+    Lightweight single-function logger. No dependencies, writes to PHP's error_log.
 
+    - Token usage: minimal
+  vars:
+    channel: Log channel name prepended to each line
+    level: Default log level
+  text: |
+    ### Usage
+
+    - Include this snippet, then call `log_app('message')` anywhere
+    - Override `level` per call: `log_app('msg', 'DEBUG')`
+
+    ### Limitations
+
+    - Writes to `error_log` only; swap for PSR-3 in production
+
+    <secondary>
+
+    ### Explanation
+
+    - `channel` in the function name makes it easy to grep logs per subsystem
+    - Timestamp uses `date('c')` (ISO 8601) for easy parsing
+
+    ### Changelog
+
+    - 1.0: initial
 content: |
   /**
    * Simple logger

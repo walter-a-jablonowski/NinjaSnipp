@@ -1,21 +1,56 @@
+id: php-interface v1
+version: 3
 sc: iface--
-usage: |
-  PHP interface and a simple implementation skeleton.
-  Customize names and method signature.
+short: PHP interface + implementation skeleton with logger
+usage:
+  head: |
+    Generates a PHP interface and a concrete class that implements it. Includes logger via include.
 
+    - Token usage: minimal
+  vars:
+    interfaceName: Interface name
+    methodName: Method defined on the interface
+    returnType: Return type of the method
+    className: Name of the implementing class
+  text: |
+    ### Usage
+
+    - Set `interfaceName` and `className` to your domain names
+    - Fill `methodName` with the primary lookup/command method
+    - The logger include wires up `log_app` automatically
+
+    ### Limitations
+
+    - Single method on the interface; add more manually
+
+    -- Tasks (color: red) --------
+
+    - Add a second method example (e.g. findAll)
+    - Show constructor injection pattern
+
+    -- Dev --------
+
+    ### Explanation
+
+    - Interface + implementation in one snippet shows the contract/concrete split in context
+    - Logger include demonstrates cross-snippet reuse within a single rendered output
+
+    ### Changelog
+
+    - 1.0: initial
 content: |
   interface {{ interfaceName=MyRepositoryInterface }}
   {
     public function {{ methodName=findById }}( int $id ) : {{ returnType=mixed }};
   }
-  
+
   class {{ className=MyRepository }} implements {{ interfaceName }}
   {
     public function __construct()
     {
       // init resources
     }
-    
+
     public function {{ methodName }}( int $id ) : {{ returnType }}
     {
       {{ include: "logger" }}

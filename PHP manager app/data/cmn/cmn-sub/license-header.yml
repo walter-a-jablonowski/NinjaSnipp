@@ -1,7 +1,37 @@
+id: license-header v1
+version: 3
 sc: lic--
-usage: |-
-  Standard license/copyright header for source files.
-  Fill in year, author and project name.
+short: Copyright/license header for source files
+usage:
+  head: |
+    Standard file header with project name, author, license and year.
+
+    - Token usage: minimal
+  vars:
+    project: Project or product name
+    author: Author name
+    license: SPDX license identifier
+    year: Copyright year
+  text: |
+    ### Usage
+
+    - Paste at the top of any source file
+    - Use the license dropdown for the most common OSS licenses
+
+    ### Limitations
+
+    - Single author only; add lines manually for multiple contributors
+
+    <secondary>
+
+    ### Explanation
+
+    - Uses SPDX identifiers so the license is machine-readable as well as human-readable
+    - `@year` is kept separate from `@author` to make mass-update scripts easier
+
+    ### Changelog
+
+    - 1.0: initial
 content: |
   /**
    * {{ project=MyProject }}
