@@ -7,8 +7,14 @@ dataPaths:
   #   'data/demo_data_2': null
   # 'Prompt demo':
   #   'data/Prompt_demo': null
-  AI:
+  Common:
     "G:/Meine Ablage/50 Activity tree/11 Common/Dools/AI (#ai-usage)": null
+  Dev:
+    "G:/Meine Ablage/50 Activity tree/11 Common/Dools/AI (#ai-usage)": null
+    "G:/Meine Ablage/50 Activity tree/11 Common/Dev/prompts": null
+  Biz:
+    "G:/Meine Ablage/50 Activity tree/11 Common/Dools/AI (#ai-usage)": null
+    "G:/Meine Ablage/50 Activity tree/15 VISION  Become superh/11 VISION  Independence (#Indep)/VISION  Fin Unabh (#Biz)/Common/Prompts": null
 folderColors:
   red: '#fde8e8'
   orange: '#fef3e2'
