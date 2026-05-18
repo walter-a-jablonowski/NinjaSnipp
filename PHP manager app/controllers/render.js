@@ -258,20 +258,16 @@ class RenderController
             el.textContent = sharedDefault;
           }
         });
-        const colorClass = `ph-group-${groupIndex % 8}`;
-        group.forEach(el => {
-          el.classList.remove('ph-group-0', 'ph-group-1', 'ph-group-2', 'ph-group-3',
-                             'ph-group-4', 'ph-group-5', 'ph-group-6', 'ph-group-7');
-          el.classList.add(colorClass);
-        });
-        groupIndex++;
       }
-      else {
-        group.forEach(el => {
-          el.classList.remove('ph-group-0', 'ph-group-1', 'ph-group-2', 'ph-group-3',
-                             'ph-group-4', 'ph-group-5', 'ph-group-6', 'ph-group-7');
-        });
-      }
+
+      // Every unique placeholder name gets a distinct color (same name = same color)
+      const colorClass = `ph-group-${groupIndex % 8}`;
+      group.forEach(el => {
+        el.classList.remove('ph-group-0', 'ph-group-1', 'ph-group-2', 'ph-group-3',
+                           'ph-group-4', 'ph-group-5', 'ph-group-6', 'ph-group-7');
+        el.classList.add(colorClass);
+      });
+      groupIndex++;
     });
 
     const setGroupValue = (name, value) => {
@@ -612,7 +608,18 @@ class RenderController
   bindVarInputEvents()
   {
     const inputs = document.querySelectorAll('#renderUsage .var-input');
+    let colorIdx = 0;
     inputs.forEach(input => {
+      const name = input.dataset.varName;
+      const group = this.app.placeholderGroups?.get(name) || [];
+      let assignedGroup = -1;
+      for( let i = 0; i < 8; i++ ) {
+        if( group[0]?.classList.contains(`ph-group-${i}`) ) {
+          assignedGroup = i;
+          break;
+        }
+      }
+      input.dataset.phGroup = assignedGroup !== -1 ? assignedGroup : (colorIdx++ % 8);
       input.addEventListener('input', (e) => {
         const name = e.target.dataset.varName;
         const value = e.target.value;

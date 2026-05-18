@@ -706,6 +706,15 @@ body {
 .usage-vars-table .var-input { padding: 0.1rem 0.3rem; font-size: 0.8rem; width: 100%; }
 .maybe-cb-th { width: 1%; white-space: nowrap; }
 .maybe-table-cb { margin-top: 5px; }
+.usage-vars-table .var-input[data-ph-group] { border: none; border-radius: 0.2rem; }
+.usage-vars-table .var-input[data-ph-group="0"] { background-color: #e8f5e8; border-bottom: 1px dashed #28a745; }
+.usage-vars-table .var-input[data-ph-group="1"] { background-color: #e3f2fd; border-bottom: 1px dashed #2196f3; }
+.usage-vars-table .var-input[data-ph-group="2"] { background-color: #fce4ec; border-bottom: 1px dashed #e91e63; }
+.usage-vars-table .var-input[data-ph-group="3"] { background-color: #f3e5f5; border-bottom: 1px dashed #9c27b0; }
+.usage-vars-table .var-input[data-ph-group="4"] { background-color: #fff3e0; border-bottom: 1px dashed #ff9800; }
+.usage-vars-table .var-input[data-ph-group="5"] { background-color: #e0f2f1; border-bottom: 1px dashed #009688; }
+.usage-vars-table .var-input[data-ph-group="6"] { background-color: #f1f8e9; border-bottom: 1px dashed #8bc34a; }
+.usage-vars-table .var-input[data-ph-group="7"] { background-color: #fdf2e9; border-bottom: 1px dashed #795548; }
 
 /* Usage tabs (-- TabName ----- syntax) */
 .usage-tabs {
