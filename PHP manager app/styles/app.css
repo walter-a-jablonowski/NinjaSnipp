@@ -700,6 +700,11 @@ body {
   vertical-align: top;
 }
 
+.var-name-td { width: 18%; white-space: nowrap; }
+.var-desc-td { width: 32%; word-break: break-word; white-space: normal; }
+.var-input-th { width: 50%; }
+.usage-vars-table .var-input { padding: 0.1rem 0.3rem; font-size: 0.8rem; width: 100%; }
+
 /* Usage tabs (-- TabName ----- syntax) */
 .usage-tabs {
   display: flex;

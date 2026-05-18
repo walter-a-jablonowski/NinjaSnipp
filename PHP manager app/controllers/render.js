@@ -448,7 +448,7 @@ class RenderController
     return parts.length ? `<div class="usage-meta">${parts.join('')}</div>` : '';
   }
 
-  _buildUsageHtml()
+  _buildUsageHtml(withInputs = false)
   {
     const s = this.app.currentSnippet;
     const usage = s?.usage ?? null;
@@ -463,10 +463,16 @@ class RenderController
         html += `<div class="usage-meta usage-meta-vars"><table class="usage-vars-table"><thead><tr><th>Maybe</th><th>Description</th></tr></thead><tbody>${rows}</tbody></table></div>`;
       }
       if( usage.vars && typeof usage.vars === 'object' ) {
+        const thExtra = withInputs ? '<th class="var-input-th">Value</th>' : '';
         const rows = Object.entries(usage.vars)
-          .map(([k, v]) => `<tr><td><code>${k}</code></td><td>${v ?? ''}</td></tr>`)
+          .map(([k, v]) => {
+            const inputTd = withInputs
+              ? `<td><input type="text" class="form-control form-control-sm var-input" data-var-name="${escapeHtml(k)}" placeholder="…"></td>`
+              : '';
+            return `<tr><td class="var-name-td"><code>${k}</code></td><td class="var-desc-td">${v ?? ''}</td>${inputTd}</tr>`;
+          })
           .join('');
-        html += `<div class="usage-meta usage-meta-vars"><table class="usage-vars-table"><thead><tr><th>Var</th><th>Description</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+        html += `<div class="usage-meta usage-meta-vars"><table class="usage-vars-table"><thead><tr><th>Var</th><th>Description</th>${thExtra}</tr></thead><tbody>${rows}</tbody></table></div>`;
       }
       if( usage.text )
         html += this._buildUsageTextHtml(usage.text);
@@ -593,7 +599,25 @@ class RenderController
   {
     const el = document.getElementById('renderUsage');
     if( ! el ) return;
-    el.innerHTML = this._buildUsageHtml();
+    el.innerHTML = this._buildUsageHtml(true);
+    this.bindVarInputEvents();
+  }
+
+  bindVarInputEvents()
+  {
+    const inputs = document.querySelectorAll('#renderUsage .var-input');
+    inputs.forEach(input => {
+      input.addEventListener('input', (e) => {
+        const name = e.target.dataset.varName;
+        const value = e.target.value;
+        const group = this.app.placeholderGroups?.get(name) || [];
+        group.forEach(node => {
+          node.textContent = value;
+          node.dataset.edited = '1';
+        });
+        this.updateRenderedOutput();
+      });
+    });
   }
 
   toggleRenderView()

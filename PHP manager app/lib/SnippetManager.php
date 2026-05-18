@@ -111,10 +111,23 @@ class SnippetManager
     return true;
   }
 
-  // Returns the first folder's path — used for write operations for now
+  // Returns the first folder's path (used as fallback for new files)
   public function getCurrentDataPath() : string
   {
     return $this->currentFolders[0]['path'] ?? '';
+  }
+
+  // Returns the last folder that contains $relativePath, or first folder as fallback for new files
+  private function resolveWritePath( string $relativePath ) : string
+  {
+    $match = null;
+    foreach( $this->currentFolders as $folder )
+    {
+      $abs = $folder['path'] . '/' . ltrim($relativePath, '/');
+      if( file_exists($abs) )
+        $match = $folder['path'];
+    }
+    return $match ?? $this->getCurrentDataPath();
   }
 
   public function getCurrentDataLabel() : string
@@ -339,24 +352,26 @@ class SnippetManager
 
   private function resolveExistingFilePath( string $relativePath ) : ?string
   {
+    $match = null;
     foreach( $this->currentFolders as $folder )
     {
       $abs = rtrim($folder['path'], '/') . '/' . ltrim($relativePath, '/');
       if( is_file($abs) )
-        return $abs;
+        $match = $abs;
     }
-    return null;
+    return $match;
   }
 
   private function resolveExistingFolderPath( string $relativePath ) : ?string
   {
+    $match = null;
     foreach( $this->currentFolders as $folder )
     {
       $abs = rtrim($folder['path'], '/') . '/' . ltrim($relativePath, '/');
       if( is_dir($abs) )
-        return $abs;
+        $match = $abs;
     }
-    return null;
+    return $match;
   }
 
   public function writeFolderColor( string $relativePath, ?string $color ) : bool
@@ -427,14 +442,16 @@ class SnippetManager
 
   public function loadSnippet( string $path ) : ?array
   {
+    // Mirror listFiles: later folders overwrite earlier ones (last folder wins)
+    $result    = null;
+    $extension = pathinfo($path, PATHINFO_EXTENSION);
+
     foreach( $this->currentFolders as $folder )
     {
       $fullPath = $folder['path'] . "/$path";
 
       if( ! file_exists($fullPath) )
         continue;
-
-      $extension = pathinfo($fullPath, PATHINFO_EXTENSION);
 
       if( $extension === 'yml' )
       {
@@ -443,7 +460,7 @@ class SnippetManager
           $data    = Yaml::parse($content);
           $data['_type'] = 'yml';
           $data['_name'] = pathinfo($path, PATHINFO_FILENAME);
-          return $data;
+          $result  = $data;
         }
         catch( \Exception $e ) {
           continue;
@@ -451,7 +468,7 @@ class SnippetManager
       }
       elseif( $extension === 'md' )
       {
-        return [
+        $result = [
           '_type'   => 'md',
           '_name'   => pathinfo($path, PATHINFO_FILENAME),
           'content' => file_get_contents($fullPath)
@@ -459,12 +476,12 @@ class SnippetManager
       }
     }
 
-    return null;
+    return $result;
   }
 
   public function saveSnippet( string $path, array $data ) : bool
   {
-    $fullPath = $this->getCurrentDataPath() . "/$path";
+    $fullPath = $this->resolveWritePath($path) . "/$path";
     $dir = dirname($fullPath);
 
     if( ! is_dir($dir) )
@@ -514,7 +531,7 @@ class SnippetManager
 
   public function deleteSnippet( string $path ) : bool
   {
-    $fullPath = $this->getCurrentDataPath() . "/$path";
+    $fullPath = $this->resolveWritePath($path) . "/$path";
 
     if( file_exists($fullPath) )
       return unlink($fullPath);
