@@ -6,6 +6,10 @@ A snippet manager app that has some special features
 - Nested includes
 - "Soft links": Files and folders can be used multiple times
 
+### URL args
+
+- initially load data folder `index.php?data=Demo%202` (key from config)
+
 ### File system include feature
 
 Combined base folders: cmn plus detail (see settings)
@@ -99,10 +103,6 @@ content: |    # Snippet
   behind
   ```
 - Trick for optional text: `{{optional=My optional text}}`
-
-### Misc
-
-- initially load data folder `index.php?data=Demo%202` (key from config)
 
 ### Sample
 
