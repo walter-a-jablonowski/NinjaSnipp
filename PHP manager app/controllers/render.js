@@ -457,10 +457,16 @@ class RenderController
     if( usage && typeof usage === 'object' ) {
       if( usage.head )      html += `<div class="usage-head">${parseMd(usage.head)}</div>`;
       if( usage.maybe && typeof usage.maybe === 'object' ) {
+        const cbTh = withInputs ? '<th class="maybe-cb-th"></th>' : '';
         const rows = Object.entries(usage.maybe)
-          .map(([k, v]) => `<tr><td><code>${k}</code></td><td>${v ?? ''}</td></tr>`)
+          .map(([k, v]) => {
+            const cbTd = withInputs
+              ? `<td><input type="checkbox" class="maybe-table-cb" data-maybe-name="${escapeHtml(k)}" checked></td>`
+              : '';
+            return `<tr>${cbTd}<td><code>${k}</code></td><td>${v ?? ''}</td></tr>`;
+          })
           .join('');
-        html += `<div class="usage-meta usage-meta-vars"><table class="usage-vars-table"><thead><tr><th>Maybe</th><th>Description</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+        html += `<div class="usage-meta usage-meta-vars"><table class="usage-vars-table"><thead><tr>${cbTh}<th>Maybe</th><th>Description</th></tr></thead><tbody>${rows}</tbody></table></div>`;
       }
       if( usage.vars && typeof usage.vars === 'object' ) {
         const thExtra = withInputs ? '<th class="var-input-th">Value</th>' : '';
@@ -616,6 +622,38 @@ class RenderController
           node.dataset.edited = '1';
         });
         this.updateRenderedOutput();
+      });
+    });
+
+    // Table maybe checkboxes → sync inline snippet block
+    const maybeCbs = document.querySelectorAll('#renderUsage .maybe-table-cb');
+    maybeCbs.forEach(cb => {
+      cb.addEventListener('change', (e) => {
+        const name = e.target.dataset.maybeName;
+        const enabled = e.target.checked;
+        let block = null;
+        document.querySelectorAll('#inlineSnippet .maybe-block').forEach(b => {
+          if( b.dataset.maybe === name ) block = b;
+        });
+        if( block ) {
+          block.dataset.enabled = enabled ? 'true' : 'false';
+          const inlineCb = block.querySelector('.maybe-checkbox');
+          if( inlineCb ) inlineCb.checked = enabled;
+          this.updateRenderedOutput();
+        }
+      });
+    });
+
+    // Inline maybe checkboxes → sync back to table checkboxes (two-way)
+    const inlineCbs = document.querySelectorAll('#inlineSnippet .maybe-checkbox');
+    inlineCbs.forEach(inlineCb => {
+      inlineCb.addEventListener('change', (e) => {
+        const block = e.target.closest('.maybe-block');
+        if( ! block ) return;
+        const name = block.dataset.maybe;
+        maybeCbs.forEach(tableCb => {
+          if( tableCb.dataset.maybeName === name ) tableCb.checked = e.target.checked;
+        });
       });
     });
   }
