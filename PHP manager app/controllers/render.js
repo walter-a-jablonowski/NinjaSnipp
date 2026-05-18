@@ -647,6 +647,7 @@ class RenderController
           const inlineCb = block.querySelector('.maybe-checkbox');
           if( inlineCb ) inlineCb.checked = enabled;
           this.updateRenderedOutput();
+          this.updateVarRowVisibility();
         }
       });
     });
@@ -661,6 +662,7 @@ class RenderController
         maybeCbs.forEach(tableCb => {
           if( tableCb.dataset.maybeName === name ) tableCb.checked = e.target.checked;
         });
+        this.updateVarRowVisibility();
       });
     });
 
@@ -673,6 +675,23 @@ class RenderController
           if( input.dataset.varName === name ) input.value = value;
         });
       });
+    });
+
+    this.updateVarRowVisibility();
+  }
+
+  updateVarRowVisibility()
+  {
+    // For each var row: hide if ALL its placeholders are inside disabled maybe-blocks
+    document.querySelectorAll('#renderUsage .var-input').forEach(input => {
+      const name = input.dataset.varName;
+      const phs  = [...document.querySelectorAll('#inlineSnippet .ph')].filter(ph => ph.dataset.ph === name);
+      const allHidden = phs.length > 0 && phs.every(ph => {
+        const block = ph.closest('.maybe-block');
+        return block && block.dataset.enabled === 'false';
+      });
+      const row = input.closest('tr');
+      if( row ) row.style.display = allHidden ? 'none' : '';
     });
   }
 
