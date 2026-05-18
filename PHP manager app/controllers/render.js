@@ -663,6 +663,17 @@ class RenderController
         });
       });
     });
+
+    // Inline placeholders → sync back to renderUsage inputs (two-way)
+    document.querySelectorAll('#inlineSnippet .ph').forEach(ph => {
+      ph.addEventListener('input', (e) => {
+        const name = e.target.dataset.ph;
+        const value = (e.target.textContent || '').trim();
+        inputs.forEach(input => {
+          if( input.dataset.varName === name ) input.value = value;
+        });
+      });
+    });
   }
 
   toggleRenderView()
