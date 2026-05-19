@@ -155,12 +155,12 @@ class SearchController
       const timeStr = timeAgo(item.timestamp);
 
       return `
-        <div class="list-group-item file-item" data-path="${item.path}"
+        <div class="list-group-item file-item recent-file-item" data-path="${item.path}"
              data-type="file" data-extension="${extension}">
           <div class="d-flex align-items-center">
             <i class="bi ${icon} file-icon me-2"></i>
-            <div class="flex-grow-1">
-              <div class="fw-medium">${item.name}</div>
+            <div class="flex-grow-1 overflow-hidden">
+              <div class="recent-file-name">${item.name}</div>
               <div class="file-meta">${timeStr}</div>
             </div>
           </div>

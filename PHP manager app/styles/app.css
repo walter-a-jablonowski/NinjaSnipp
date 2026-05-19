@@ -118,6 +118,19 @@ body {
   overflow-y: auto;
 }
 
+/* Recent file list */
+.recent-file-item {
+  padding-right: 0.5rem;
+}
+
+.recent-file-name {
+  font-size: 0.875rem;
+  font-weight: normal;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* Search input styling */
 #searchInput {
   width: 300px;
