@@ -200,7 +200,7 @@ class FileTreeController
 
     return `<div class="tree-item${isFolder ? ' tree-folder' : ' tree-file'}${isIncluded ? ' tree-included' : ''}" ` +
       `data-path="${path}" data-fspath="${realFsPath}" data-type="${type}" data-extension="${extension || ''}" ` +
-      `tabindex="0" style="${styleVal}">` +
+      `tabindex="0" title="${name}" style="${styleVal}">` +
       `<div class="d-flex align-items-center">` +
         toggleEl +
         `<i class="bi ${icon} file-icon"></i>` +
