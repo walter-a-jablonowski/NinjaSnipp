@@ -547,6 +547,28 @@ class SnippetManager
     return false;
   }
 
+  public function deleteFolder( string $path ) : bool
+  {
+    $fullPath = $this->resolveExistingFolderPath($path);
+    if( $fullPath === null ) return false;
+    return $this->deleteFolderRecursive($fullPath);
+  }
+
+  private function deleteFolderRecursive( string $path ) : bool
+  {
+    if( ! is_dir($path) ) return false;
+    foreach( scandir($path) as $item )
+    {
+      if( $item === '.' || $item === '..' ) continue;
+      $full = "$path/$item";
+      if( is_dir($full) )
+        $this->deleteFolderRecursive($full);
+      else
+        unlink($full);
+    }
+    return rmdir($path);
+  }
+
   public function duplicateSnippet( string $sourcePath, string $targetPath ) : bool
   {
     $snippet = $this->loadSnippet($sourcePath);

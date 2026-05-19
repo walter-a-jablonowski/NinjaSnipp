@@ -286,7 +286,8 @@ class EditorController
       return;
     }
 
-    const result = await apiCall(this.app.currentDataPath, 'deleteSnippet', { path });
+    const isFolder = this.app._deleteContext?.type === 'folder';
+    const result = await apiCall(this.app.currentDataPath, isFolder ? 'deleteFolder' : 'deleteSnippet', { path });
     if( result.success ) {
       showSuccess('Deleted successfully');
       const modal = bootstrap.Modal.getInstance(document.getElementById('deleteSnippetModal'));

@@ -68,6 +68,15 @@ try {
         $response = ['success' => false, 'message' => 'Failed to delete snippet'];
       break;
 
+    case 'deleteFolder':
+      $path = $input['path'] ?? '';
+
+      if( $manager->deleteFolder($path) )
+        $response = ['success' => true, 'message' => 'Folder deleted successfully'];
+      else
+        $response = ['success' => false, 'message' => 'Failed to delete folder'];
+      break;
+
     case 'duplicateSnippet':
       $sourcePath = $input['sourcePath'] ?? '';
       $targetPath = $input['targetPath'] ?? '';

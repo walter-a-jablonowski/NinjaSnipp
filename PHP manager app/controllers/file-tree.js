@@ -197,7 +197,9 @@ class FileTreeController
            ${colorSwatches}
            <li><hr class="dropdown-divider"></li>
            <li><a class="dropdown-item small" href="#" data-action="rename">Rename</a></li>
-           ${explorerItem ? explorerItem : ''}`
+           ${explorerItem ? explorerItem : ''}
+           <li><hr class="dropdown-divider"></li>
+           <li><a class="dropdown-item small text-danger" href="#" data-action="delete">Delete</a></li>`
         : `${sourceLabelHtml}
            ${colorSwatches}
            <li><hr class="dropdown-divider"></li>
@@ -296,7 +298,7 @@ class FileTreeController
       const nameParts = path.split('/');
       const fullName  = nameParts.pop();
       const baseName  = ext ? fullName.replace(new RegExp('\\.' + ext + '$', 'i'), '') : fullName;
-      this.app._deleteContext = { path, name: baseName };
+      this.app._deleteContext = { path, name: baseName, type };
       const nameEl = document.getElementById('deleteSnippetName');
       if( nameEl ) nameEl.textContent = baseName;
       showModal('deleteSnippetModal');
