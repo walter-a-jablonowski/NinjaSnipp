@@ -22,38 +22,45 @@ class SnippetManager
     {
       if( is_string($key) )
       {
-        $label = $key;
+        $label   = $key;
+        $folders = [];
 
         if( is_string($value) )
         {
-          // Old format: label => path
-          $path = str_replace('\\', '/', $value);
-          $normalized[$label] = [$path => null];
+          // label => path  (old single-folder shorthand)
+          $folders[] = ['path' => str_replace('\\', '/', $value), 'color' => null, 'subLabel' => null];
         }
         elseif( is_array($value) )
         {
-          // New format: label => [path => color|null, ...]
-          $folders = [];
-          foreach( $value as $p => $color )
+          foreach( $value as $k => $v )
           {
-            $p = str_replace('\\', '/', (string)$p);
-            $folders[$p] = $color;
+            if( is_string($v) && strpos($v, '#') !== 0 )
+            {
+              // New format: subLabel => path
+              $folders[] = ['path' => str_replace('\\', '/', $v), 'color' => null, 'subLabel' => (string)$k];
+            }
+            else
+            {
+              // Old format: path => color|null
+              $folders[] = ['path' => str_replace('\\', '/', (string)$k), 'color' => $v, 'subLabel' => null];
+            }
           }
-          if( ! empty($folders) )
-            $normalized[$label] = $folders;
         }
+
+        if( ! empty($folders) )
+          $normalized[$label] = $folders;
       }
       else
       {
         // Numeric key fallback: use path as label
         $path = is_string($value) ? str_replace('\\', '/', $value) : '';
         if( $path !== '' )
-          $normalized[$path] = [$path => null];
+          $normalized[$path] = [['path' => $path, 'color' => null, 'subLabel' => null]];
       }
     }
 
     if( empty($normalized) )
-      $normalized = ['data' => ['data' => null]];
+      $normalized = ['data' => [['path' => 'data', 'color' => null, 'subLabel' => null]]];
 
     $this->dataPaths = $normalized;
     $this->config    = $config;
@@ -68,27 +75,27 @@ class SnippetManager
   // Build the current-folders array from a label
   private function buildFolders( string $label ) : array
   {
-    $folders = [];
-    foreach( $this->dataPaths[$label] as $path => $color )
-      $folders[] = ['path' => $path, 'color' => $color, 'label' => $label];
-    return $folders;
+    return array_map(
+      fn($f) => array_merge($f, ['label' => $label]),
+      $this->dataPaths[$label]
+    );
   }
 
-  // Returns path => label map for all current folders
+  // Returns path => displayLabel map; prefers subLabel over main label
   public function getBaseFolderLabels() : array
   {
     $map = [];
     foreach( $this->currentFolders as $folder )
-      $map[$folder['path']] = $folder['label'];
+      $map[$folder['path']] = $folder['subLabel'] ?? $folder['label'];
     return $map;
   }
 
   private function ensureDataDirectories() : void
   {
     foreach( $this->dataPaths as $folders )
-      foreach( array_keys($folders) as $path )
-        if( ! is_dir($path) )
-          mkdir($path, 0755, true);
+      foreach( $folders as $folder )
+        if( ! is_dir($folder['path']) )
+          mkdir($folder['path'], 0755, true);
   }
 
   public function getDataPaths() : array

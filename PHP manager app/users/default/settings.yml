@@ -1,20 +1,20 @@
 dataPaths:
   # 'Demo 1':
-  #   'data/cmn': '#e8e8e8'
-  #   'data/demo_data_1': null
+  #   Common:'data/cmn'
+  #   Demo1:'data/demo_data_1'
   # 'Demo 2':
-  #   'data/cmn': '#e8e8e8'
-  #   'data/demo_data_2': null
+  #   Common:'data/cmn'
+  #   Demo2:'data/demo_data_2'
   # 'Prompt demo':
-  #   'data/Prompt_demo': null
+  #   Demo: 'data/Prompt_demo'
   Common:
-    "G:/Meine Ablage/50 Activity tree/11 Common/Dools/AI (#ai-usage)": null
+    Common: "G:/Meine Ablage/50 Activity tree/11 Common/Dools/AI (#ai-usage)"
   Dev:
-    "G:/Meine Ablage/50 Activity tree/11 Common/Dools/AI (#ai-usage)": null
-    "G:/Meine Ablage/50 Activity tree/11 Common/Dev/prompts": null
+    Coommon: "G:/Meine Ablage/50 Activity tree/11 Common/Dools/AI (#ai-usage)"
+    Dev: "G:/Meine Ablage/50 Activity tree/11 Common/Dev/prompts"
   Biz:
-    "G:/Meine Ablage/50 Activity tree/11 Common/Dools/AI (#ai-usage)": null
-    "G:/Meine Ablage/50 Activity tree/15 VISION  Become superh/11 VISION  Independence (#Indep)/VISION  Fin Unabh (#Biz)/Common/Prompts": null
+    Coommon: "G:/Meine Ablage/50 Activity tree/11 Common/Dools/AI (#ai-usage)"
+    Biz: "G:/Meine Ablage/50 Activity tree/15 VISION  Become superh/11 VISION  Independence (#Indep)/VISION  Fin Unabh (#Biz)/Common/Prompts"
 folderColors:
   red: '#fde8e8'
   orange: '#fef3e2'
@@ -28,6 +28,7 @@ folderColors:
 
 nav:
   foldersFirst: false
+  foldersMerged: true
 render:
   includedSameIndent: true
   highlightInclude: true
