@@ -168,10 +168,10 @@
     // Button bindings
     const buttonEvents = [
       ['searchBtn',          'click', () => this.search.performSearch()],
-      ['newSnippetBtn',      'click', () => { this.currentPath = ''; showModal('newSnippetModal'); }],
-      ['newFolderBtn',       'click', () => { this.currentPath = ''; showModal('newFolderModal'); }],
-      ['newSnippetDropBtn',  'click', () => { this.currentPath = ''; showModal('newSnippetModal'); }],
-      ['newFolderDropBtn',   'click', () => { this.currentPath = ''; showModal('newFolderModal'); }],
+      ['newSnippetBtn',      'click', () => { this.currentPath = ''; this.currentMergedBases = null; showModal('newSnippetModal'); }],
+      ['newFolderBtn',       'click', () => { this.currentPath = ''; this.currentMergedBases = null; showModal('newFolderModal'); }],
+      ['newSnippetDropBtn',  'click', () => { this.currentPath = ''; this.currentMergedBases = null; showModal('newSnippetModal'); }],
+      ['newFolderDropBtn',   'click', () => { this.currentPath = ''; this.currentMergedBases = null; showModal('newFolderModal'); }],
       ['backBtn',            'click', () => this.goBack()],
       ['createSnippetBtn',   'click', () => this.editor.createSnippet()],
       ['createFolderBtn',    'click', () => this.editor.createFolder()],
@@ -208,11 +208,13 @@
     const newSnippetModalEl = document.getElementById('newSnippetModal');
     if( newSnippetModalEl ) {
       newSnippetModalEl.addEventListener('show.bs.modal', () => {
-        const row = document.getElementById('snippetBaseFolderRow');
-        const sel = document.getElementById('snippetBaseFolder');
-        const atRoot = ! this.currentPath;
-        this._populateBaseFolderSelect(sel);
-        if( row ) row.style.display = (atRoot && sel && sel.options.length > 1) ? '' : 'none';
+        const row     = document.getElementById('snippetBaseFolderRow');
+        const sel     = document.getElementById('snippetBaseFolder');
+        const atRoot  = ! this.currentPath;
+        const merged  = this.currentMergedBases;
+        this._populateBaseFolderSelect(sel, merged);
+        const show = (atRoot || (merged && merged.length > 1)) && sel && sel.options.length > 1;
+        if( row ) row.style.display = show ? '' : 'none';
       });
       newSnippetModalEl.addEventListener('shown.bs.modal', () => {
         const input = document.getElementById('snippetName');
@@ -224,11 +226,13 @@
     const newFolderModalEl = document.getElementById('newFolderModal');
     if( newFolderModalEl ) {
       newFolderModalEl.addEventListener('show.bs.modal', () => {
-        const row = document.getElementById('folderBaseFolderRow');
-        const sel = document.getElementById('folderBaseFolder');
-        const atRoot = ! this.currentPath;
-        this._populateBaseFolderSelect(sel);
-        if( row ) row.style.display = (atRoot && sel && sel.options.length > 1) ? '' : 'none';
+        const row     = document.getElementById('folderBaseFolderRow');
+        const sel     = document.getElementById('folderBaseFolder');
+        const atRoot  = ! this.currentPath;
+        const merged  = this.currentMergedBases;
+        this._populateBaseFolderSelect(sel, merged);
+        const show = (atRoot || (merged && merged.length > 1)) && sel && sel.options.length > 1;
+        if( row ) row.style.display = show ? '' : 'none';
       });
       newFolderModalEl.addEventListener('shown.bs.modal', () => {
         const input = document.getElementById('folderName');
@@ -588,13 +592,17 @@
     }
   }
 
-  // Populates a <select> with entries from baseFolderLabels (physicalPath => subLabel)
-  _populateBaseFolderSelect(sel)
+  // Populates a <select> with source folder options.
+  // overrideBases: array of physical paths to use instead of all baseFolderLabels (for merged folder context)
+  _populateBaseFolderSelect(sel, overrideBases = null)
   {
     if( ! sel ) return;
     sel.innerHTML = '';
-    const labels = this.baseFolderLabels || {};
-    Object.entries(labels).forEach(([path, label]) => {
+    const labels  = this.baseFolderLabels || {};
+    const entries = overrideBases
+      ? overrideBases.map(p => [p, labels[p] || p.split('/').pop()])
+      : Object.entries(labels);
+    entries.forEach(([path, label]) => {
       const opt = document.createElement('option');
       opt.value = path;
       opt.textContent = label;

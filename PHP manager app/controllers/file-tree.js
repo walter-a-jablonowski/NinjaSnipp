@@ -335,12 +335,14 @@ class FileTreeController
       }
     }
     else if( action === 'new-snippet' ) {
-      this.app.currentPath = fsPath;
+      this.app.currentPath        = fsPath;
+      this.app.currentMergedBases = mergedBases || null;
       if( fsPath ) this.app.expandedFolders.add(path);
       showModal('newSnippetModal');
     }
     else if( action === 'new-folder' ) {
-      this.app.currentPath = fsPath;
+      this.app.currentPath        = fsPath;
+      this.app.currentMergedBases = mergedBases || null;
       if( fsPath ) this.app.expandedFolders.add(path);
       showModal('newFolderModal');
     }

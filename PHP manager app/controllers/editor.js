@@ -448,7 +448,8 @@ class EditorController
     const extension = type === 'yml' ? 'yml' : 'md';
     const path = (this.app.currentPath ? this.app.currentPath + '/' : '') + name + '.' + extension;
     const baseFolderSel = document.getElementById('snippetBaseFolder');
-    const targetBasePath = (! this.app.currentPath && baseFolderSel && baseFolderSel.options.length > 0)
+    const needTarget     = ! this.app.currentPath || (this.app.currentMergedBases && this.app.currentMergedBases.length > 1);
+    const targetBasePath = (needTarget && baseFolderSel && baseFolderSel.options.length > 0)
       ? baseFolderSel.value
       : null;
 
@@ -487,7 +488,8 @@ class EditorController
 
     const folderPath = (this.app.currentPath ? this.app.currentPath + '/' : '') + name;
     const baseFolderSel = document.getElementById('folderBaseFolder');
-    const targetBasePath = (! this.app.currentPath && baseFolderSel && baseFolderSel.options.length > 0)
+    const needTarget     = ! this.app.currentPath || (this.app.currentMergedBases && this.app.currentMergedBases.length > 1);
+    const targetBasePath = (needTarget && baseFolderSel && baseFolderSel.options.length > 0)
       ? baseFolderSel.value
       : null;
 
