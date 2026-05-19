@@ -117,6 +117,14 @@ class SnippetManager
     return $this->currentFolders[0]['path'] ?? '';
   }
 
+  // Returns the full OS path for a relative path (last-wins across merged folders), or null if not found
+  public function resolvePhysicalPath( string $relativePath, string $type = 'file' ) : ?string
+  {
+    return $type === 'folder'
+      ? $this->resolveExistingFolderPath($relativePath)
+      : $this->resolveExistingFilePath($relativePath);
+  }
+
   // Returns the last folder that contains $relativePath, or first folder as fallback for new files
   private function resolveWritePath( string $relativePath ) : string
   {

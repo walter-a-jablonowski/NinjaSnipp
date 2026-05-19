@@ -257,6 +257,25 @@ try {
         $response = ['success' => false, 'message' => 'Failed to write settings'];
       break;
 
+    case 'openInExplorer':
+      $relPath  = $input['path']     ?? '';
+      $itemType = $input['itemType'] ?? 'file';
+      $fullPath = $manager->resolvePhysicalPath($relPath, $itemType);
+
+      if( $fullPath === null ) {
+        $response = ['success' => false, 'message' => 'Path not found'];
+        break;
+      }
+
+      $winPath = str_replace('/', '\\', $fullPath);
+      if( $itemType === 'folder' )
+        pclose(popen("start \"\" explorer.exe \"{$winPath}\"", 'r'));
+      else
+        pclose(popen("start \"\" explorer.exe /select,\"{$winPath}\"", 'r'));
+
+      $response = ['success' => true];
+      break;
+
     default:
       $response = ['success' => false, 'message' => "Unknown action: $action"];
   }

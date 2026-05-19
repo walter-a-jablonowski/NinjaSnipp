@@ -464,7 +464,7 @@ if( isset($_GET['data']) )
     </div>
   </div>
 
-  <script>const APP_DEBUG = <?= json_encode($debug) ?>;</script>
+  <script>const APP_DEBUG = <?= json_encode($debug) ?>; const APP_SPECIAL = <?= json_encode((bool)($appConfig['special'] ?? false)) ?>;</script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="lib/functions.js?v=<?= time() ?>"></script>

@@ -4,3 +4,5 @@
 debug:
   on: true
   showAllFileBtns: false
+
+special: true

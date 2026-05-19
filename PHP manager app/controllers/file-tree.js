@@ -175,12 +175,18 @@ class FileTreeController
          <li><hr class="dropdown-divider"></li>`
       : '';
 
+    const explorerItem = (typeof APP_SPECIAL !== 'undefined' && APP_SPECIAL)
+      ? `<li><a class="dropdown-item small" href="#" data-action="open-in-explorer">Open in Explorer</a></li>`
+      : '';
+
     let menuItems;
     if( isIncluded ) {
       menuItems = isFolder
         ? `<li><a class="dropdown-item small" href="#" data-action="new-snippet">New Snippet</a></li>
-           <li><a class="dropdown-item small" href="#" data-action="new-folder">New Folder</a></li>`
-        : `<li><span class="dropdown-item small text-muted disabled">Included file</span></li>`;
+           <li><a class="dropdown-item small" href="#" data-action="new-folder">New Folder</a></li>
+           ${explorerItem ? explorerItem : ''}`
+        : `<li><span class="dropdown-item small text-muted disabled">Included file</span></li>
+           ${explorerItem}`;
     }
     else {
       menuItems = isFolder
@@ -190,11 +196,13 @@ class FileTreeController
            <li><hr class="dropdown-divider"></li>
            ${colorSwatches}
            <li><hr class="dropdown-divider"></li>
-           <li><a class="dropdown-item small" href="#" data-action="rename">Rename</a></li>`
+           <li><a class="dropdown-item small" href="#" data-action="rename">Rename</a></li>
+           ${explorerItem ? explorerItem : ''}`
         : `${sourceLabelHtml}
            ${colorSwatches}
            <li><hr class="dropdown-divider"></li>
            <li><a class="dropdown-item small" href="#" data-action="rename">Rename</a></li>
+           ${explorerItem ? explorerItem + '<li><hr class="dropdown-divider"></li>' : ''}
            <li><a class="dropdown-item small text-danger" href="#" data-action="delete">Delete</a></li>`;
     }
 
@@ -292,6 +300,9 @@ class FileTreeController
       const nameEl = document.getElementById('deleteSnippetName');
       if( nameEl ) nameEl.textContent = baseName;
       showModal('deleteSnippetModal');
+    }
+    else if( action === 'open-in-explorer' ) {
+      apiCall(this.app.currentDataPath, 'openInExplorer', { path: fsPath, itemType: type });
     }
   }
 
