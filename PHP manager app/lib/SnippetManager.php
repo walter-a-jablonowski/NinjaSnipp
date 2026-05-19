@@ -494,9 +494,10 @@ class SnippetManager
     return $result;
   }
 
-  public function saveSnippet( string $path, array $data ) : bool
+  public function saveSnippet( string $path, array $data, ?string $targetBasePath = null ) : bool
   {
-    $fullPath = $this->resolveWritePath($path) . "/$path";
+    $base     = $targetBasePath ?? $this->resolveWritePath($path);
+    $fullPath = rtrim($base, '/') . '/' . ltrim($path, '/');
     $dir = dirname($fullPath);
 
     if( ! is_dir($dir) )

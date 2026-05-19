@@ -348,12 +348,8 @@ if( isset($_GET['data']) )
               </select>
             </div>
             <div class="mb-3" id="snippetBaseFolderRow">
-              <label for="snippetBaseFolder" class="form-label">Base Folder</label>
-              <select class="form-select" id="snippetBaseFolder">
-                <?php foreach( array_keys($manager->getDataPaths()) as $label ): ?>
-                  <option value="<?= htmlspecialchars($label) ?>"><?= htmlspecialchars($label) ?></option>
-                <?php endforeach; ?>
-              </select>
+              <label for="snippetBaseFolder" class="form-label">Source Folder</label>
+              <select class="form-select" id="snippetBaseFolder"></select>
             </div>
           </form>
         </div>
@@ -380,12 +376,8 @@ if( isset($_GET['data']) )
               <input type="text" class="form-control" id="folderName" required>
             </div>
             <div class="mb-3" id="folderBaseFolderRow">
-              <label for="folderBaseFolder" class="form-label">Base Folder</label>
-              <select class="form-select" id="folderBaseFolder">
-                <?php foreach( array_keys($manager->getDataPaths()) as $label ): ?>
-                  <option value="<?= htmlspecialchars($label) ?>"><?= htmlspecialchars($label) ?></option>
-                <?php endforeach; ?>
-              </select>
+              <label for="folderBaseFolder" class="form-label">Source Folder</label>
+              <select class="form-select" id="folderBaseFolder"></select>
             </div>
           </form>
         </div>

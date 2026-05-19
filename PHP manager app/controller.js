@@ -168,10 +168,10 @@
     // Button bindings
     const buttonEvents = [
       ['searchBtn',          'click', () => this.search.performSearch()],
-      ['newSnippetBtn',      'click', () => showModal('newSnippetModal')],
-      ['newFolderBtn',       'click', () => showModal('newFolderModal')],
-      ['newSnippetDropBtn',  'click', () => showModal('newSnippetModal')],
-      ['newFolderDropBtn',   'click', () => showModal('newFolderModal')],
+      ['newSnippetBtn',      'click', () => { this.currentPath = ''; showModal('newSnippetModal'); }],
+      ['newFolderBtn',       'click', () => { this.currentPath = ''; showModal('newFolderModal'); }],
+      ['newSnippetDropBtn',  'click', () => { this.currentPath = ''; showModal('newSnippetModal'); }],
+      ['newFolderDropBtn',   'click', () => { this.currentPath = ''; showModal('newFolderModal'); }],
       ['backBtn',            'click', () => this.goBack()],
       ['createSnippetBtn',   'click', () => this.editor.createSnippet()],
       ['createFolderBtn',    'click', () => this.editor.createFolder()],
@@ -204,15 +204,15 @@
         this.changeDataFolder(item.dataset.label);
       });
 
-    // New snippet modal: show/hide base folder select
+    // New snippet modal: show/hide source folder select
     const newSnippetModalEl = document.getElementById('newSnippetModal');
     if( newSnippetModalEl ) {
       newSnippetModalEl.addEventListener('show.bs.modal', () => {
         const row = document.getElementById('snippetBaseFolderRow');
         const sel = document.getElementById('snippetBaseFolder');
         const atRoot = ! this.currentPath;
-        if( row ) row.style.display = atRoot ? '' : 'none';
-        if( sel ) sel.value = this.currentDataPath;
+        this._populateBaseFolderSelect(sel);
+        if( row ) row.style.display = (atRoot && sel && sel.options.length > 1) ? '' : 'none';
       });
       newSnippetModalEl.addEventListener('shown.bs.modal', () => {
         const input = document.getElementById('snippetName');
@@ -220,15 +220,15 @@
       });
     }
 
-    // New folder modal: show/hide base folder select
+    // New folder modal: show/hide source folder select
     const newFolderModalEl = document.getElementById('newFolderModal');
     if( newFolderModalEl ) {
       newFolderModalEl.addEventListener('show.bs.modal', () => {
         const row = document.getElementById('folderBaseFolderRow');
         const sel = document.getElementById('folderBaseFolder');
         const atRoot = ! this.currentPath;
-        if( row ) row.style.display = atRoot ? '' : 'none';
-        if( sel ) sel.value = this.currentDataPath;
+        this._populateBaseFolderSelect(sel);
+        if( row ) row.style.display = (atRoot && sel && sel.options.length > 1) ? '' : 'none';
       });
       newFolderModalEl.addEventListener('shown.bs.modal', () => {
         const input = document.getElementById('folderName');
@@ -586,6 +586,20 @@
     else {
       showError('Failed to change data folder: ' + result.message);
     }
+  }
+
+  // Populates a <select> with entries from baseFolderLabels (physicalPath => subLabel)
+  _populateBaseFolderSelect(sel)
+  {
+    if( ! sel ) return;
+    sel.innerHTML = '';
+    const labels = this.baseFolderLabels || {};
+    Object.entries(labels).forEach(([path, label]) => {
+      const opt = document.createElement('option');
+      opt.value = path;
+      opt.textContent = label;
+      sel.appendChild(opt);
+    });
   }
 
   _updateBrandLabel(label)

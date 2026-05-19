@@ -50,10 +50,11 @@ try {
       break;
 
     case 'saveSnippet':
-      $path = $input['path'] ?? '';
-      $data = $input['data'] ?? [];
-      
-      if( $manager->saveSnippet($path, $data) )
+      $path           = $input['path'] ?? '';
+      $data           = $input['data'] ?? [];
+      $targetBasePath = $input['targetBasePath'] ?? null;
+
+      if( $manager->saveSnippet($path, $data, $targetBasePath) )
         $response = ['success' => true, 'message' => 'Snippet saved successfully'];
       else
         $response = ['success' => false, 'message' => 'Failed to save snippet'];
@@ -154,9 +155,11 @@ try {
       break;
 
     case 'createFolder':
-      $folderPath = $input['folderPath'] ?? '';
-      $fullPath = $manager->getCurrentDataPath() . '/' . $folderPath;
-      
+      $folderPath     = $input['folderPath'] ?? '';
+      $targetBasePath = $input['targetBasePath'] ?? null;
+      $base           = $targetBasePath ?? $manager->getCurrentDataPath();
+      $fullPath       = rtrim($base, '/') . '/' . ltrim($folderPath, '/');
+
       if( ! is_dir($fullPath) && mkdir($fullPath, 0755, true) )
         $response = ['success' => true, 'message' => 'Folder created successfully'];
       else

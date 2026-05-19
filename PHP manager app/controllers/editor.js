@@ -426,11 +426,15 @@ class EditorController
 
     const extension = type === 'yml' ? 'yml' : 'md';
     const path = (this.app.currentPath ? this.app.currentPath + '/' : '') + name + '.' + extension;
-    const dataPath = this.app.currentPath
-      ? this.app.currentDataPath
-      : (document.getElementById('snippetBaseFolder')?.value || this.app.currentDataPath);
+    const baseFolderSel = document.getElementById('snippetBaseFolder');
+    const targetBasePath = (! this.app.currentPath && baseFolderSel && baseFolderSel.options.length > 0)
+      ? baseFolderSel.value
+      : null;
 
-    const result = await apiCall(dataPath, 'saveSnippet', { path, data });
+    const payload = { path, data };
+    if( targetBasePath ) payload.targetBasePath = targetBasePath;
+
+    const result = await apiCall(this.app.currentDataPath, 'saveSnippet', payload);
 
     if( result.success ) {
       if( this.app.currentPath ) this.app.expandedFolders.add(this.app.currentPath);
@@ -461,10 +465,15 @@ class EditorController
     }
 
     const folderPath = (this.app.currentPath ? this.app.currentPath + '/' : '') + name;
-    const dataPath = this.app.currentPath
-      ? this.app.currentDataPath
-      : (document.getElementById('folderBaseFolder')?.value || this.app.currentDataPath);
-    const result = await apiCall(dataPath, 'createFolder', { folderPath });
+    const baseFolderSel = document.getElementById('folderBaseFolder');
+    const targetBasePath = (! this.app.currentPath && baseFolderSel && baseFolderSel.options.length > 0)
+      ? baseFolderSel.value
+      : null;
+
+    const payload = { folderPath };
+    if( targetBasePath ) payload.targetBasePath = targetBasePath;
+
+    const result = await apiCall(this.app.currentDataPath, 'createFolder', payload);
 
     if( result.success ) {
       if( this.app.currentPath ) this.app.expandedFolders.add(this.app.currentPath);
