@@ -29,6 +29,7 @@ class FileTreeController
       color: file.color || null,
       colorName: file.colorName || null,
       basePath: file.basePath || null,
+      mergedBases: file.mergedBases || null,
       children: file.type === 'folder' ? null : undefined,
       isOpen: false
     }));
@@ -144,13 +145,14 @@ class FileTreeController
 
   renderTreeNode(node)
   {
-    const { type, _depth, path, fsPath, name, isOpen, extension, isIncluded, color, colorName, basePath } = node;
-    const isFolder  = type === 'folder';
-    const indentPx  = 6 + _depth * 14;
+    const { type, _depth, path, fsPath, name, isOpen, extension, isIncluded, color, colorName, basePath, mergedBases } = node;
+    const isFolder   = type === 'folder';
+    const isMerged   = isFolder && mergedBases && mergedBases.length > 1;
+    const indentPx   = 6 + _depth * 14;
     const realFsPath = fsPath || path;
 
     const icon = isFolder
-      ? (isOpen ? 'bi-folder2-open' : 'bi-folder')
+      ? (isMerged ? (isOpen ? 'bi-folder-symlink' : 'bi-folder-symlink') : (isOpen ? 'bi-folder2-open' : 'bi-folder'))
       : (extension === 'yml' ? 'bi-file-code' : 'bi-file-text-fill');
 
     const toggleEl = isFolder
@@ -169,15 +171,39 @@ class FileTreeController
       ? this._buildColorSwatchesHtml(colorName)
       : '';
 
-    const sourceLabel = ! isIncluded ? this._getSourceLabel(basePath) : null;
-    const sourceLabelHtml = sourceLabel
-      ? `<li><span class="dropdown-item small text-muted pe-none source-label"><i class="bi bi-folder2 me-1"></i>${sourceLabel}</span></li>
-         <li><hr class="dropdown-divider"></li>`
-      : '';
+    let sourceLabelHtml = '';
+    if( ! isIncluded ) {
+      if( isMerged ) {
+        const labels = mergedBases.map(base => {
+          const label = (this.app.baseFolderLabels || {})[base] || base.split('/').pop();
+          return `<i class="bi bi-folder2 me-1"></i>${label}`;
+        }).join('&nbsp;&amp;&nbsp;');
+        sourceLabelHtml = `<li><span class="dropdown-item small text-muted pe-none source-label">${labels}</span></li>
+           <li><hr class="dropdown-divider"></li>`;
+      }
+      else {
+        const sourceLabel = this._getSourceLabel(basePath);
+        if( sourceLabel )
+          sourceLabelHtml = `<li><span class="dropdown-item small text-muted pe-none source-label"><i class="bi bi-folder2 me-1"></i>${sourceLabel}</span></li>
+             <li><hr class="dropdown-divider"></li>`;
+      }
+    }
 
-    const explorerItem = (typeof APP_SPECIAL !== 'undefined' && APP_SPECIAL)
-      ? `<li><a class="dropdown-item small" href="#" data-action="open-in-explorer">Open in Explorer</a></li>`
-      : '';
+    let explorerItem = '';
+    if( typeof APP_SPECIAL !== 'undefined' && APP_SPECIAL ) {
+      if( isMerged ) {
+        explorerItem = `<li><span class="dropdown-item small text-muted pe-none">Open in Explorer</span></li>` +
+          mergedBases.map(base => {
+            const label = (this.app.baseFolderLabels || {})[base] || base.split('/').pop();
+            return `<li><a class="dropdown-item small ps-4" href="#" data-action="open-in-explorer" data-base-path="${base}">${label}</a></li>`;
+          }).join('');
+      }
+      else {
+        explorerItem = `<li><a class="dropdown-item small" href="#" data-action="open-in-explorer">Open in Explorer</a></li>`;
+      }
+    }
+
+    const mergedBasesAttr = isMerged ? ` data-merged-bases='${JSON.stringify(mergedBases)}'` : '';
 
     let menuItems;
     if( isIncluded ) {
@@ -208,8 +234,8 @@ class FileTreeController
            <li><a class="dropdown-item small text-danger" href="#" data-action="delete">Delete</a></li>`;
     }
 
-    return `<div class="tree-item${isFolder ? ' tree-folder' : ' tree-file'}${isIncluded ? ' tree-included' : ''}" ` +
-      `data-path="${path}" data-fspath="${realFsPath}" data-type="${type}" data-extension="${extension || ''}" ` +
+    return `<div class="tree-item${isFolder ? ' tree-folder' : ' tree-file'}${isIncluded ? ' tree-included' : ''}${isMerged ? ' tree-merged' : ''}" ` +
+      `data-path="${path}" data-fspath="${realFsPath}" data-type="${type}" data-extension="${extension || ''}"${mergedBasesAttr} ` +
       `tabindex="0" title="${name}" style="${styleVal}">` +
       `<div class="d-flex align-items-center">` +
         toggleEl +
@@ -244,6 +270,13 @@ class FileTreeController
     return `<li><div class="folder-color-row px-2 py-1">${swatches}${clearBtn}</div></li>`;
   }
 
+  _getMergedBases(item)
+  {
+    const raw = item.getAttribute('data-merged-bases');
+    if( ! raw ) return null;
+    try { return JSON.parse(raw); } catch(e) { return null; }
+  }
+
   handleFileListDropdownClick(e)
   {
     const actionEl = e.target.closest('[data-action]');
@@ -251,10 +284,11 @@ class FileTreeController
     const action = actionEl.getAttribute('data-action');
     const item   = actionEl.closest('.tree-item');
     if( ! item ) return;
-    const path   = item.getAttribute('data-path');
-    const fsPath = item.getAttribute('data-fspath') || path;
-    const type   = item.getAttribute('data-type');
-    const ext    = item.getAttribute('data-extension') || '';
+    const path        = item.getAttribute('data-path');
+    const fsPath      = item.getAttribute('data-fspath') || path;
+    const type        = item.getAttribute('data-type');
+    const ext         = item.getAttribute('data-extension') || '';
+    const mergedBases = this._getMergedBases(item);
 
     if( action === 'rename' ) {
       const parts    = path.split('/');
@@ -265,24 +299,40 @@ class FileTreeController
         const dExt = '.' + ext;
         if( base.toLowerCase().endsWith(dExt) ) base = base.slice(0, -dExt.length);
       }
-      this.app._renameContext = { oldPath: path, parent, type, ext };
+      this.app._renameContext = { oldPath: path, parent, type, ext, mergedBases };
       const input = document.getElementById('renameNameInput');
       if( input ) input.value = base;
       showModal('renameItemModal');
     }
     else if( action === 'set-color' ) {
-      e.stopPropagation(); // prevent Bootstrap from closing dropdown before we handle it
+      e.stopPropagation();
       const color = actionEl.getAttribute('data-color') || null;
-      // Close the dropdown manually after selection
       const dropdownEl = item.querySelector('.tree-menu-btn');
       if( dropdownEl ) {
         const dd = bootstrap.Dropdown.getInstance(dropdownEl);
         if( dd ) dd.hide();
       }
-      if( type === 'folder' )
-        this._applyFolderColor(path, color || null);
-      else
+      if( type === 'folder' ) {
+        if( mergedBases && mergedBases.length > 1 ) {
+          Promise.all(mergedBases.map(base =>
+            apiCall(this.app.currentDataPath, 'setFolderColor', { folderPath: path, color: color || null, targetBase: base })
+          )).then(() => {
+            const node = this.findNodeInTree(this.app.fileTree, path);
+            if( node ) {
+              node.colorName = color || null;
+              const palette = this._folderColors || {};
+              node.color = color ? (palette[color] || null) : null;
+            }
+            this.renderTree();
+          });
+        }
+        else {
+          this._applyFolderColor(path, color || null);
+        }
+      }
+      else {
         this._applyFileColor(fsPath, path, color || null);
+      }
     }
     else if( action === 'new-snippet' ) {
       this.app.currentPath = fsPath;
@@ -298,13 +348,16 @@ class FileTreeController
       const nameParts = path.split('/');
       const fullName  = nameParts.pop();
       const baseName  = ext ? fullName.replace(new RegExp('\\.' + ext + '$', 'i'), '') : fullName;
-      this.app._deleteContext = { path, name: baseName, type };
+      this.app._deleteContext = { path, name: baseName, type, mergedBases };
       const nameEl = document.getElementById('deleteSnippetName');
       if( nameEl ) nameEl.textContent = baseName;
       showModal('deleteSnippetModal');
     }
     else if( action === 'open-in-explorer' ) {
-      apiCall(this.app.currentDataPath, 'openInExplorer', { path: fsPath, itemType: type });
+      const basePath = actionEl.getAttribute('data-base-path');
+      const payload  = { path: fsPath, itemType: type };
+      if( basePath ) payload.fullPath = basePath + '/' + fsPath;
+      apiCall(this.app.currentDataPath, 'openInExplorer', payload);
     }
   }
 

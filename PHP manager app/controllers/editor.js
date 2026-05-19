@@ -286,8 +286,20 @@ class EditorController
       return;
     }
 
-    const isFolder = this.app._deleteContext?.type === 'folder';
-    const result = await apiCall(this.app.currentDataPath, isFolder ? 'deleteFolder' : 'deleteSnippet', { path });
+    const isFolder    = this.app._deleteContext?.type === 'folder';
+    const mergedBases = this.app._deleteContext?.mergedBases;
+    let result;
+
+    if( isFolder && mergedBases && mergedBases.length > 1 ) {
+      const results = await Promise.all(
+        mergedBases.map(base => apiCall(this.app.currentDataPath, 'deleteFolder', { path, targetBase: base }))
+      );
+      result = { success: results.every(r => r && r.success), message: results.find(r => !r?.success)?.message };
+    }
+    else {
+      result = await apiCall(this.app.currentDataPath, isFolder ? 'deleteFolder' : 'deleteSnippet', { path });
+    }
+
     if( result.success ) {
       showSuccess('Deleted successfully');
       const modal = bootstrap.Modal.getInstance(document.getElementById('deleteSnippetModal'));
@@ -312,7 +324,16 @@ class EditorController
     const safeName = (input?.value || '').trim();
     if( ! safeName ) return;
     const newPath = (ctx.parent ? ctx.parent + '/' : '') + (ctx.type === 'file' && ctx.ext ? (safeName + '.' + ctx.ext) : safeName);
-    const result = await apiCall(this.app.currentDataPath, 'renameItem', { oldPath: ctx.oldPath, newPath });
+    let result;
+    if( ctx.mergedBases && ctx.mergedBases.length > 1 ) {
+      const results = await Promise.all(
+        ctx.mergedBases.map(base => apiCall(this.app.currentDataPath, 'renameItem', { oldPath: ctx.oldPath, newPath, basePath: base }))
+      );
+      result = { success: results.every(r => r && r.success), message: results.find(r => !r?.success)?.message };
+    }
+    else {
+      result = await apiCall(this.app.currentDataPath, 'renameItem', { oldPath: ctx.oldPath, newPath });
+    }
     if( result && result.success ) {
       const modal = bootstrap.Modal.getInstance(document.getElementById('renameItemModal')) || new bootstrap.Modal(document.getElementById('renameItemModal'));
       if( modal ) modal.hide();

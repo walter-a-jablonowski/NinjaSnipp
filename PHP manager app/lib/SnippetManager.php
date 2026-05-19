@@ -152,8 +152,8 @@ class SnippetManager
 
   public function listFiles( string $subPath = '' ) : array
   {
-    // Merge files from all folders; later folders overwrite earlier ones on same path
-    $merged = [];
+    $foldersMerged = (bool)($this->config['nav']['foldersMerged'] ?? false);
+    $byPath        = [];
 
     foreach( $this->currentFolders as $folder )
     {
@@ -161,11 +161,48 @@ class SnippetManager
       foreach( $items as $item )
       {
         $item['basePath'] = $folder['path'];
-        $merged[$item['path']] = $item;
+        $byPath[$item['path']][] = $item;
       }
     }
 
-    $items = array_values($merged);
+    if( ! $foldersMerged )
+    {
+      // Default: last source wins for same path
+      $resultMap = [];
+      foreach( $byPath as $path => $group )
+        $resultMap[$path] = $group[count($group) - 1];
+      $items = array_values($resultMap);
+    }
+    else
+    {
+      $items = [];
+      foreach( $byPath as $group )
+      {
+        if( count($group) === 1 )
+        {
+          $items[] = $group[0];
+        }
+        elseif( $group[0]['type'] === 'folder' )
+        {
+          // Merge: one tree entry, store all physical base paths
+          $entry = $group[count($group) - 1];
+          $entry['mergedBases'] = array_map(fn($i) => $i['basePath'], $group);
+          $items[] = $entry;
+        }
+        else
+        {
+          // Duplicate files: show all; make path unique for 2nd+ entries
+          foreach( $group as $idx => $fileItem )
+          {
+            if( $idx > 0 ) {
+              $fileItem['fsPath'] = $fileItem['path'];
+              $fileItem['path']   = $fileItem['path'] . '#' . $idx;
+            }
+            $items[] = $fileItem;
+          }
+        }
+      }
+    }
 
     if( $this->foldersFirst )
     {
@@ -389,11 +426,12 @@ class SnippetManager
     return $match;
   }
 
-  public function writeFolderColor( string $relativePath, ?string $color ) : bool
+  public function writeFolderColor( string $relativePath, ?string $color, ?string $targetBase = null ) : bool
   {
-    $folderPath = $this->resolveExistingFolderPath($relativePath);
-    if( $folderPath === null )
-      return false;
+    $folderPath = $targetBase
+      ? rtrim($targetBase, '/') . '/' . ltrim($relativePath, '/')
+      : $this->resolveExistingFolderPath($relativePath);
+    if( $folderPath === null ) return false;
 
     $sysDir = "$folderPath/.sys";
     if( ! is_dir($sysDir) )
@@ -555,9 +593,11 @@ class SnippetManager
     return false;
   }
 
-  public function deleteFolder( string $path ) : bool
+  public function deleteFolder( string $path, ?string $targetBase = null ) : bool
   {
-    $fullPath = $this->resolveExistingFolderPath($path);
+    $fullPath = $targetBase
+      ? rtrim($targetBase, '/') . '/' . ltrim($path, '/')
+      : $this->resolveExistingFolderPath($path);
     if( $fullPath === null ) return false;
     return $this->deleteFolderRecursive($fullPath);
   }

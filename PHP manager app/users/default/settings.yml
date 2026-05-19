@@ -10,10 +10,10 @@ dataPaths:
   Common:
     Common: "G:/Meine Ablage/50 Activity tree/11 Common/Dools/AI (#ai-usage)"
   Dev:
-    Coommon: "G:/Meine Ablage/50 Activity tree/11 Common/Dools/AI (#ai-usage)"
+    Common: "G:/Meine Ablage/50 Activity tree/11 Common/Dools/AI (#ai-usage)"
     Dev: "G:/Meine Ablage/50 Activity tree/11 Common/Dev/prompts"
   Biz:
-    Coommon: "G:/Meine Ablage/50 Activity tree/11 Common/Dools/AI (#ai-usage)"
+    Common: "G:/Meine Ablage/50 Activity tree/11 Common/Dools/AI (#ai-usage)"
     Biz: "G:/Meine Ablage/50 Activity tree/15 VISION  Become superh/11 VISION  Independence (#Indep)/VISION  Fin Unabh (#Biz)/Common/Prompts"
 folderColors:
   red: '#fde8e8'

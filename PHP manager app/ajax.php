@@ -70,9 +70,10 @@ try {
       break;
 
     case 'deleteFolder':
-      $path = $input['path'] ?? '';
+      $path       = $input['path'] ?? '';
+      $targetBase = $input['targetBase'] ?? null;
 
-      if( $manager->deleteFolder($path) )
+      if( $manager->deleteFolder($path, $targetBase) )
         $response = ['success' => true, 'message' => 'Folder deleted successfully'];
       else
         $response = ['success' => false, 'message' => 'Failed to delete folder'];
@@ -91,7 +92,9 @@ try {
     case 'renameItem':
       $oldPath = $input['oldPath'] ?? '';
       $newPath = $input['newPath'] ?? '';
-      $base    = rtrim($manager->getCurrentDataPath(), '/');
+      $base    = isset($input['basePath']) && $input['basePath'] !== ''
+        ? rtrim($input['basePath'], '/')
+        : rtrim($manager->getCurrentDataPath(), '/');
 
       // Build absolute paths
       $oldFull = $base . '/' . ltrim($oldPath, '/');
@@ -174,7 +177,8 @@ try {
         $response = ['success' => false, 'message' => 'Missing folderPath'];
         break;
       }
-      if( $manager->writeFolderColor($folderPath, $color) )
+      $targetBase = $input['targetBase'] ?? null;
+      if( $manager->writeFolderColor($folderPath, $color, $targetBase) )
         $response = ['success' => true];
       else
         $response = ['success' => false, 'message' => 'Failed to write folder color'];
@@ -272,7 +276,9 @@ try {
     case 'openInExplorer':
       $relPath  = $input['path']     ?? '';
       $itemType = $input['itemType'] ?? 'file';
-      $fullPath = $manager->resolvePhysicalPath($relPath, $itemType);
+      $fullPath = isset($input['fullPath']) && $input['fullPath'] !== ''
+        ? $input['fullPath']
+        : $manager->resolvePhysicalPath($relPath, $itemType);
 
       if( $fullPath === null ) {
         $response = ['success' => false, 'message' => 'Path not found'];
