@@ -27,15 +27,15 @@ folderColors:
   teal: '#e8f4f8'
   gray: '#f0f0f0'
 folderColorsDark:
-  red: '#4a2328'
-  orange: '#4d3320'
-  yellow: '#494327'
-  green: '#1f3d2f'
-  blue: '#243a4d'
-  purple: '#3a2d4f'
-  pink: '#4a2842'
-  teal: '#1f4145'
-  gray: '#343a40'
+  red: '#5a2a30'
+  orange: '#5b3a22'
+  yellow: '#565028'
+  green: '#244838'
+  blue: '#28465d'
+  purple: '#463562'
+  pink: '#5b314f'
+  teal: '#255056'
+  gray: '#3a4148'
 
 nav:
   foldersFirst: false

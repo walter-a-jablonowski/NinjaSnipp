@@ -196,25 +196,25 @@
 [data-theme="dark"] .usage-vars-table .var-input[data-ph-group="7"] { background-color: #4a352a !important; border-bottom-color: #cda58a !important; }
 
 [data-theme="dark"] .nav-tabs {
-  --bs-nav-link-color: #ff8f8f;
-  --bs-nav-link-hover-color: #ffc0c0;
+  --bs-nav-link-color: #ffb15a;
+  --bs-nav-link-hover-color: #ffd29a;
   --bs-nav-tabs-border-color: #31404f;
   --bs-nav-tabs-link-active-bg: #1a2330;
-  --bs-nav-tabs-link-active-border-color: #ff8f8f #ff8f8f #1a2330;
-  --bs-nav-tabs-link-active-color: #ff8f8f;
+  --bs-nav-tabs-link-active-border-color: #ffb15a #ffb15a #1a2330;
+  --bs-nav-tabs-link-active-color: #ffb15a;
 }
 
 [data-theme="dark"] #contentTabs .nav-link {
-  color: #ff8f8f !important;
+  color: #ffb15a !important;
 }
 
 [data-theme="dark"] #contentTabs .nav-link:hover,
 [data-theme="dark"] #contentTabs .nav-link:focus {
-  color: #ffc0c0 !important;
+  color: #ffd29a !important;
 }
 
 [data-theme="dark"] #contentTabs .nav-link.active {
-  color: #ff8f8f !important;
+  color: #ffb15a !important;
 }
 
 [data-theme="dark"] .dropdown-menu,
