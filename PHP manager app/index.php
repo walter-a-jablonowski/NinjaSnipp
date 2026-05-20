@@ -11,6 +11,7 @@ $debug     = (bool) $appConfig['debug']['on'];
 $allBtns   = (bool) $appConfig['debug']['showAllFileBtns'];
 
 $config  = Yaml::parseFile('users/default/settings.yml');
+$initialTheme = $config['theme'] ?? 'light';
 $manager = new SnippetManager( $config['dataPaths'] ?? ['data'], $config);
 if( isset($config['nav']['foldersFirst']) )
   $manager->setFoldersFirst( (bool)$config['nav']['foldersFirst'] );
@@ -29,6 +30,7 @@ if( isset($_GET['data']) )
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
   <link href="styles/theme.css?v=<?= time() ?>" rel="stylesheet">
+  <link href="styles/theme-dark.css?v=<?= time() ?>" rel="stylesheet">
   <link href="styles/app.css?v=<?= time() ?>" rel="stylesheet">
 </head>
 <body>
@@ -69,6 +71,11 @@ if( isset($_GET['data']) )
         </div>
         <div class="nav-item">
           <button class="btn btn-outline-light" type="button" id="aiBtn">AI</button>
+        </div>
+        <div class="nav-item">
+          <button class="btn btn-outline-light" type="button" id="themeToggleBtn" title="Toggle theme" aria-label="Toggle theme">
+            <i class="bi bi-moon-stars"></i>
+          </button>
         </div>
       </div>
     </div>
@@ -456,7 +463,7 @@ if( isset($_GET['data']) )
     </div>
   </div>
 
-  <script>const APP_DEBUG = <?= json_encode($debug) ?>; const APP_SPECIAL = <?= json_encode((bool)($appConfig['special'] ?? false)) ?>;</script>
+  <script>const APP_DEBUG = <?= json_encode($debug) ?>; const APP_SPECIAL = <?= json_encode((bool)($appConfig['special'] ?? false)) ?>; const APP_INITIAL_THEME = <?= json_encode($initialTheme) ?>;</script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="lib/functions.js?v=<?= time() ?>"></script>
@@ -467,7 +474,7 @@ if( isset($_GET['data']) )
   <script src="controller.js?v=<?= time() ?>"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      new SnippetManager();
+      new SnippetManager({ initialTheme: APP_INITIAL_THEME });
     });
   </script>
 </body>

@@ -151,14 +151,19 @@ body {
 }
 
 #searchBtn,
-#aiBtn {
+#aiBtn,
+#themeToggleBtn {
   border-color: rgba(255, 255, 255, 0.3);
   color: white;
   background: rgba(255, 255, 255, 0.1);
 }
 
 #searchBtn:hover,
-#searchBtn:focus {
+#searchBtn:focus,
+#aiBtn:hover,
+#aiBtn:focus,
+#themeToggleBtn:hover,
+#themeToggleBtn:focus {
   background: rgba(255, 255, 255, 0.2);
   border-color: rgba(255, 255, 255, 0.5);
   color: white;

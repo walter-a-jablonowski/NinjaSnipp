@@ -9,7 +9,8 @@ class FileTreeController
   async loadFolderColors()
   {
     if( this._folderColors !== null ) return this._folderColors;
-    const res = await apiCall(this.app.currentDataPath, 'getFolderColors');
+    const themeMode = document.documentElement.getAttribute('data-theme') || 'light';
+    const res = await apiCall(this.app.currentDataPath, 'getFolderColors', { themeMode });
     this._folderColors = (res && res.success && res.colors && typeof res.colors === 'object') ? res.colors : {};
     return this._folderColors;
   }
@@ -163,8 +164,10 @@ class FileTreeController
       ? '<i class="bi bi-link-45deg text-primary ms-1" title="Included"></i>'
       : '';
 
-    const styleVal = color
-      ? `padding-left: ${indentPx}px; background-color: ${color};`
+    const palette = this._folderColors || {};
+    const effectiveColor = colorName && palette[colorName] ? palette[colorName] : color;
+    const styleVal = effectiveColor
+      ? `padding-left: ${indentPx}px; background-color: ${effectiveColor};`
       : `padding-left: ${indentPx}px;`;
 
     const colorSwatches = ! isIncluded

@@ -1,6 +1,6 @@
 ﻿class SnippetManager
 {
-  constructor()
+  constructor(options = {})
   {
     // Shared state accessed by sub-controllers via this.app
     this.currentPath = '';
@@ -26,6 +26,9 @@
     this._autosaveDelayMs = 800; // debounce delay for autosave
     this._autosaveBound = false; // ensure we bind handlers once
     this._lineWrapOff = true; // global line-wrap toggle state
+    this._themeMediaBound = false;
+    this.currentTheme = 'light';
+    this.themePreference = options.initialTheme || 'light';
 
     // Sub-controllers (each receives `this` as `app`)
     this.tree   = new FileTreeController(this);
@@ -127,6 +130,9 @@
 
   async init()
   {
+    this.bootstrapInitialTheme();
+    this.applyThemePreference(this.themePreference);
+    this.bindSystemThemeListener();
     this.bindEvents();
     const dataFolderDropdown = document.getElementById('dataFolderDropdown');
     this.currentDataPath = dataFolderDropdown?.dataset.current || '';
@@ -182,6 +188,7 @@
       ['deleteSnippetBtn',   'click', () => this.editor.deleteCurrentSnippet()],
       ['toggleLineWrapBtn',  'click', () => this.render.toggleLineWrap()],
       ['aiBtn',              'click', () => this.toggleAiSidebar()],
+      ['themeToggleBtn',     'click', () => this.toggleTheme()],
       ['aiSidebarClose',     'click', () => this.toggleAiSidebar(false)],
       ['confirmDuplicateBtn','click', () => this.editor.performDuplicate()],
       ['confirmDeleteBtn',   'click', () => this.editor.performDelete()],
@@ -513,6 +520,8 @@
       const enabled = !!(this.userSettings.edit && this.userSettings.edit.autosave);
       autosaveSwitch.checked = enabled;
     }
+    const configuredTheme = this.userSettings.theme || this.themePreference || 'light';
+    this.applyThemePreference(configuredTheme);
   }
 
   async setAutosave(enabled)
@@ -532,6 +541,88 @@
     if( ! sidebar ) return;
     const isOpen = open !== undefined ? open : ! sidebar.classList.contains('open');
     sidebar.classList.toggle('open', isOpen);
+  }
+
+  resolveThemeMode(themePreference)
+  {
+    if( themePreference === 'dark' ) return 'dark';
+    if( themePreference === 'light' ) return 'light';
+    if( window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches )
+      return 'dark';
+    return 'light';
+  }
+
+  bootstrapInitialTheme()
+  {
+    const pref = this.themePreference;
+    const isDarkSystem = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const mode = pref === 'dark' ? 'dark' : (pref === 'light' ? 'light' : (isDarkSystem ? 'dark' : 'light'));
+    document.documentElement.setAttribute('data-theme', mode);
+    document.documentElement.setAttribute('data-bs-theme', mode);
+    document.documentElement.setAttribute('data-theme-preference', pref);
+  }
+
+  applyThemePreference(themePreference)
+  {
+    const pref = ['light', 'dark', 'system'].includes(themePreference) ? themePreference : 'system';
+    this.themePreference = pref;
+    const mode = this.resolveThemeMode(pref);
+    this.currentTheme = mode;
+    document.documentElement.setAttribute('data-bs-theme', mode);
+    document.documentElement.setAttribute('data-theme', mode);
+    document.documentElement.setAttribute('data-theme-preference', pref);
+    this.updateThemeButton();
+  }
+
+  updateThemeButton()
+  {
+    const button = document.getElementById('themeToggleBtn');
+    if( ! button ) return;
+    const icon = button.querySelector('i');
+    if( icon ) {
+      if( this.themePreference === 'system' )
+        icon.className = 'bi bi-circle-half';
+      else if( this.currentTheme === 'dark' )
+        icon.className = 'bi bi-sun-fill';
+      else
+        icon.className = 'bi bi-moon-stars';
+    }
+    const nextTheme = this.getNextThemePreference();
+    button.title = `Theme: ${this.themePreference} (next: ${nextTheme})`;
+    button.setAttribute('aria-label', button.title);
+  }
+
+  getNextThemePreference()
+  {
+    if( this.themePreference === 'light' ) return 'dark';
+    if( this.themePreference === 'dark' ) return 'system';
+    return 'light';
+  }
+
+  async toggleTheme()
+  {
+    const nextTheme = this.getNextThemePreference();
+    this.applyThemePreference(nextTheme);
+    this.tree._folderColors = null;
+    this.tree.renderTree();
+    this.userSettings.theme = nextTheme;
+    const payload = { settings: { theme: nextTheme } };
+    const res = await apiCall(this.currentDataPath, 'setUserSettings', payload);
+    if( ! (res && res.success) ) {
+      showError('Failed to save theme setting');
+      return;
+    }
+  }
+
+  bindSystemThemeListener()
+  {
+    if( ! window.matchMedia || this._themeMediaBound ) return;
+    this._themeMediaBound = true;
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    media.addEventListener('change', () => {
+      if( this.themePreference === 'system' )
+        this.applyThemePreference('system');
+    });
   }
 
   toggleLineWrap()               { return this.render.toggleLineWrap(); }

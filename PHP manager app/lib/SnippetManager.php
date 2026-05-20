@@ -398,7 +398,11 @@ class SnippetManager
     // Legacy: stored value is already a hex color
     if( strpos($colorName, '#') === 0 )
       return $colorName;
-    $palette = $this->config['folderColors'] ?? [];
+    $theme = (string)($this->config['theme'] ?? 'light');
+    if( $theme === 'dark' )
+      $palette = $this->config['folderColorsDark'] ?? ($this->config['folderColors'] ?? []);
+    else
+      $palette = $this->config['folderColors'] ?? [];
     return isset($palette[$colorName]) ? $palette[$colorName] : null;
   }
 

@@ -199,7 +199,11 @@ try {
       break;
 
     case 'getFolderColors':
-      $colors = $config['folderColors'] ?? [];
+      $themeMode = (string)($input['themeMode'] ?? 'light');
+      if( $themeMode === 'dark' )
+        $colors = $config['folderColorsDark'] ?? ($config['folderColors'] ?? []);
+      else
+        $colors = $config['folderColors'] ?? [];
       $response = ['success' => true, 'colors' => $colors];
       break;
 
