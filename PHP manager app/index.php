@@ -72,7 +72,7 @@ if( isset($_GET['data']) )
         <div class="nav-item">
           <button class="btn btn-outline-light" type="button" id="aiBtn">AI</button>
         </div>
-        <div class="nav-item">
+        <div class="nav-item d-none d-lg-flex">
           <button class="btn btn-outline-light" type="button" id="themeToggleBtn" title="Toggle theme" aria-label="Toggle theme">
             <i class="bi bi-moon-stars"></i>
           </button>
@@ -91,6 +91,9 @@ if( isset($_GET['data']) )
         <div class="offcanvas offcanvas-start offcanvas-lg" tabindex="-1" id="sidebarNav" aria-labelledby="sidebarNavLabel">
           <div class="offcanvas-header border-bottom">
             <h5 class="offcanvas-title" id="sidebarNavLabel">Navigation</h5>
+            <button type="button" class="btn btn-sm btn-outline-secondary ms-auto me-2 d-lg-none" id="themeToggleSidebarBtn" title="Toggle theme" aria-label="Toggle theme">
+              <i class="bi bi-moon-stars"></i>
+            </button>
             <button type="button" class="btn-close d-lg-none" data-bs-dismiss="offcanvas" aria-label="Close"></button>
           </div>
           <div class="offcanvas-body p-0">

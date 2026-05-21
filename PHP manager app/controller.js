@@ -188,7 +188,8 @@
       ['deleteSnippetBtn',   'click', () => this.editor.deleteCurrentSnippet()],
       ['toggleLineWrapBtn',  'click', () => this.render.toggleLineWrap()],
       ['aiBtn',              'click', () => this.toggleAiSidebar()],
-      ['themeToggleBtn',     'click', () => this.toggleTheme()],
+      ['themeToggleBtn',        'click', () => this.toggleTheme()],
+      ['themeToggleSidebarBtn', 'click', () => this.toggleTheme()],
       ['aiSidebarClose',     'click', () => this.toggleAiSidebar(false)],
       ['confirmDuplicateBtn','click', () => this.editor.performDuplicate()],
       ['confirmDeleteBtn',   'click', () => this.editor.performDelete()],
@@ -576,20 +577,24 @@
 
   updateThemeButton()
   {
-    const button = document.getElementById('themeToggleBtn');
-    if( ! button ) return;
-    const icon = button.querySelector('i');
-    if( icon ) {
-      if( this.themePreference === 'system' )
-        icon.className = 'bi bi-circle-half';
-      else if( this.currentTheme === 'dark' )
-        icon.className = 'bi bi-sun-fill';
-      else
-        icon.className = 'bi bi-moon-stars';
-    }
     const nextTheme = this.getNextThemePreference();
-    button.title = `Theme: ${this.themePreference} (next: ${nextTheme})`;
-    button.setAttribute('aria-label', button.title);
+    const title = `Theme: ${this.themePreference} (next: ${nextTheme})`;
+    let iconClass;
+    if( this.themePreference === 'system' )
+      iconClass = 'bi bi-circle-half';
+    else if( this.currentTheme === 'dark' )
+      iconClass = 'bi bi-sun-fill';
+    else
+      iconClass = 'bi bi-moon-stars';
+
+    ['themeToggleBtn', 'themeToggleSidebarBtn'].forEach(id => {
+      const btn = document.getElementById(id);
+      if( ! btn ) return;
+      const icon = btn.querySelector('i');
+      if( icon ) icon.className = iconClass;
+      btn.title = title;
+      btn.setAttribute('aria-label', title);
+    });
   }
 
   getNextThemePreference()
