@@ -1,11 +1,13 @@
 id:      "2026-05-08.01-DEMO"
 version: 2
 sc:      ""
-short:   "LinkedIn post generator – demo for all placeholder features"
+short:   "Demo for all placeholder features"
 usage:
   head: |
     Demo snippet — shows every placeholder type available in the app.
-    Generates a LinkedIn post about a software project.
+    Generates a LinkedIn article about a software project.
+
+    Token usage: low
   maybe:
     Tone:
     TechStack:
@@ -17,7 +19,17 @@ usage:
     LANGUAGE: English
   text: |
 
-    ### Purpose
+    ### Usage
+
+    1. Fill in placeholders on the right panel
+    2. Toggle optional sections on/off
+    3. Copy the rendered prompt and paste into your AI tool
+
+    ### Limitations
+
+    - ...
+
+    ### Features details
 
     Demonstrates all placeholder types in one snippet:
 
@@ -30,26 +42,32 @@ usage:
     | Inline optional | same syntax, text merged into one line |
     | Include | `{{include: "LinkedIn Style Guide"}}` |
 
-    ### Usage
-
-    1. Fill in placeholders on the right panel
-    2. Toggle optional sections on/off
-    3. Copy the rendered prompt and paste into your AI tool
-
-    - Token usage: low
-
     <secondary>
 
-    ### Explanation
+    ### Prompt output handling
 
-    A practical demo that generates a LinkedIn post.
+    - ...
+
+    -- Tasks (color: red) --------
+
+    -- Dev --------
+
+    ### How it works
+
+    A practical demo that generates a LinkedIn article.
     Every placeholder type appears at least once in the template.
+
+    ### Made with
+
+    LLM:
+
+    > You are a highly skilled developer and prompt engineer...
 
     ### Changelog
 
     - V1: Initial demo for LinkedIn article
 content: |
-  Write a LinkedIn post in {{LANGUAGE=English|German|French}} about my project "{{PROJECT}}".
+  Write a LinkedIn article in {{LANGUAGE=English|German|French}} about my project "{{PROJECT}}".
 
   Target audience: {{AUDIENCE=developers}}
 
@@ -64,7 +82,7 @@ content: |
   {{ END-MAYBE }}
   - Why I built it with AI assistance and what that experience was like
 
-  Write the post in
+  Write the article in
   {{ MAYBE: Tone }}
   a {{TONE}} style,
   {{ END-MAYBE }}
