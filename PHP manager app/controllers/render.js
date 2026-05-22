@@ -359,13 +359,33 @@ class RenderController
     maybeCheckboxes.forEach(checkbox => {
       checkbox.addEventListener('change', (e) => {
         const maybeBlock = e.target.closest('.maybe-block');
-        if( maybeBlock ) {
-          const enabled = e.target.checked;
-          maybeBlock.dataset.enabled = enabled ? 'true' : 'false';
-          this.updateRenderedOutput();
-        }
+        if( maybeBlock )
+          this.setMaybeState(maybeBlock.dataset.maybe, e.target.checked);
       });
     });
+  }
+
+  // Sync state across every occurrence of a MAYBE area
+  // The same name can appear in multiple inline blocks; all must stay in lockstep
+  // with each other and with the renderUsage table row.
+  setMaybeState( name, enabled )
+  {
+    const flag = enabled ? 'true' : 'false';
+
+    document.querySelectorAll('#inlineSnippet .maybe-block').forEach(block => {
+      if( block.dataset.maybe !== name ) return;
+      block.dataset.enabled = flag;
+      const cb = block.querySelector('.maybe-checkbox');
+      if( cb && cb.checked !== enabled ) cb.checked = enabled;
+    });
+
+    document.querySelectorAll('#renderUsage .maybe-table-cb').forEach(tableCb => {
+      if( tableCb.dataset.maybeName === name && tableCb.checked !== enabled )
+        tableCb.checked = enabled;
+    });
+
+    this.updateRenderedOutput();
+    this.updateVarRowVisibility();
   }
 
   openChoiceMenu(el)
@@ -680,37 +700,11 @@ class RenderController
       });
     });
 
-    // Table maybe checkboxes → sync inline snippet block
-    const maybeCbs = document.querySelectorAll('#renderUsage .maybe-table-cb');
-    maybeCbs.forEach(cb => {
+    // Table maybe checkboxes → sync all matching inline blocks (incl. duplicates) and table cbs
+    // The inline→table direction is handled by the inline cb listener in bindInlinePlaceholderEvents.
+    document.querySelectorAll('#renderUsage .maybe-table-cb').forEach(cb => {
       cb.addEventListener('change', (e) => {
-        const name = e.target.dataset.maybeName;
-        const enabled = e.target.checked;
-        let block = null;
-        document.querySelectorAll('#inlineSnippet .maybe-block').forEach(b => {
-          if( b.dataset.maybe === name ) block = b;
-        });
-        if( block ) {
-          block.dataset.enabled = enabled ? 'true' : 'false';
-          const inlineCb = block.querySelector('.maybe-checkbox');
-          if( inlineCb ) inlineCb.checked = enabled;
-          this.updateRenderedOutput();
-          this.updateVarRowVisibility();
-        }
-      });
-    });
-
-    // Inline maybe checkboxes → sync back to table checkboxes (two-way)
-    const inlineCbs = document.querySelectorAll('#inlineSnippet .maybe-checkbox');
-    inlineCbs.forEach(inlineCb => {
-      inlineCb.addEventListener('change', (e) => {
-        const block = e.target.closest('.maybe-block');
-        if( ! block ) return;
-        const name = block.dataset.maybe;
-        maybeCbs.forEach(tableCb => {
-          if( tableCb.dataset.maybeName === name ) tableCb.checked = e.target.checked;
-        });
-        this.updateVarRowVisibility();
+        this.setMaybeState(e.target.dataset.maybeName, e.target.checked);
       });
     });
 
