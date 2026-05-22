@@ -444,16 +444,60 @@ class RenderController
     return parts.length ? `<div class="usage-meta">${parts.join('')}</div>` : '';
   }
 
+  _getCurrentContent()
+  {
+    const ta = document.getElementById('snippetContent');
+    if( ta && typeof ta.value === 'string' ) return ta.value;
+    return this.app.currentSnippet?.content || '';
+  }
+
+  _extractContentMaybes(content)
+  {
+    const set = new Set();
+    const re = /\{\{\s*MAYBE:\s*([^}]+?)\s*\}\}/g;
+    let m;
+    while( (m = re.exec(content)) ) set.add(m[1].trim());
+    return set;
+  }
+
+  _extractContentVars(content)
+  {
+    const set = new Set();
+    const re = /\{\{\s*([^}]*)\s*\}\}/g;
+    let m;
+    while( (m = re.exec(content)) ) {
+      const token = m[1].trim();
+      if( /^include:/i.test(token) ) continue;
+      const vm = token.match(/^([A-Za-z0-9_.-]+)(?:=.+)?$/);
+      if( vm ) set.add(vm[1]);
+    }
+    return set;
+  }
+
+  _buildMissingIndicator(missing, kind)
+  {
+    if( ! missing.length ) return '';
+    const title = `Missing in usage.${kind}: ${missing.join(', ')}`;
+    return `<span class="usage-missing-indicator float-end text-warning" title="${escapeHtml(title)}"><i class="bi bi-exclamation-triangle-fill"></i></span>`;
+  }
+
   _buildUsageHtml(withInputs = false)
   {
     const s = this.app.currentSnippet;
     const usage = s?.usage ?? null;
     let html = this._buildUsageMetaHtml();
 
+    const content       = this._getCurrentContent();
+    const contentMaybes = this._extractContentMaybes(content);
+    const contentVars   = this._extractContentVars(content);
+
     if( usage && typeof usage === 'object' ) {
       if( usage.head )      html += `<div class="usage-head">${parseMd(usage.head)}</div>`;
       if( usage.maybe && typeof usage.maybe === 'object' ) {
         const cbTh = withInputs ? '<th class="maybe-cb-th"></th>' : '';
+        const defined = new Set(Object.keys(usage.maybe));
+        const missing = [...contentMaybes].filter(n => ! defined.has(n));
+        const indicator = this._buildMissingIndicator(missing, 'maybe');
         const rows = Object.entries(usage.maybe)
           .map(([k, v]) => {
             const cbTd = withInputs
@@ -462,10 +506,14 @@ class RenderController
             return `<tr>${cbTd}<td><code>${k}</code></td><td>${v ?? ''}</td></tr>`;
           })
           .join('');
-        html += `<div class="usage-meta usage-meta-vars"><table class="usage-vars-table"><thead><tr>${cbTh}<th>Maybe</th><th>Description</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+        html += `<div class="usage-meta usage-meta-vars"><table class="usage-vars-table"><thead><tr>${cbTh}<th>Maybe</th><th>Description${indicator}</th></tr></thead><tbody>${rows}</tbody></table></div>`;
       }
       if( usage.vars && typeof usage.vars === 'object' ) {
-        const thExtra = withInputs ? '<th class="var-input-th">Value</th>' : '';
+        const defined = new Set(Object.keys(usage.vars));
+        const missing = [...contentVars].filter(n => ! defined.has(n));
+        const indicator = this._buildMissingIndicator(missing, 'vars');
+        const descTh = withInputs ? '<th>Description</th>' : `<th>Description${indicator}</th>`;
+        const valTh  = withInputs ? `<th class="var-input-th">Value${indicator}</th>` : '';
         const rows = Object.entries(usage.vars)
           .map(([k, v]) => {
             const inputTd = withInputs
@@ -474,7 +522,7 @@ class RenderController
             return `<tr><td class="var-name-td"><code>${k}</code></td><td class="var-desc-td">${v ?? ''}</td>${inputTd}</tr>`;
           })
           .join('');
-        html += `<div class="usage-meta usage-meta-vars"><table class="usage-vars-table"><thead><tr><th>Var</th><th>Description</th>${thExtra}</tr></thead><tbody>${rows}</tbody></table></div>`;
+        html += `<div class="usage-meta usage-meta-vars"><table class="usage-vars-table"><thead><tr><th>Var</th>${descTh}${valTh}</tr></thead><tbody>${rows}</tbody></table></div>`;
       }
       if( usage.text )
         html += this._buildUsageTextHtml(usage.text);
