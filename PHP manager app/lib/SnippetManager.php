@@ -13,9 +13,14 @@ class SnippetManager
   private string $currentDataLabel;
   private bool $foldersFirst = true;
   private array $config = [];
+  private string $appRoot = '';
 
-  public function __construct( array $dataPaths = ['data'], array $config = [] )
+  public function __construct( array $dataPaths = ['data'], array $config = [], string $appRoot = '' )
   {
+    $this->appRoot = $appRoot !== ''
+      ? rtrim(str_replace('\\', '/', $appRoot), '/')
+      : '';
+
     $normalized = [];
 
     foreach( $dataPaths as $key => $value )
@@ -28,7 +33,7 @@ class SnippetManager
         if( is_string($value) )
         {
           // label => path  (old single-folder shorthand)
-          $folders[] = ['path' => str_replace('\\', '/', $value), 'color' => null, 'subLabel' => null];
+          $folders[] = ['path' => $this->resolvePath($value), 'color' => null, 'subLabel' => null];
         }
         elseif( is_array($value) )
         {
@@ -37,12 +42,12 @@ class SnippetManager
             if( is_string($v) && strpos($v, '#') !== 0 )
             {
               // New format: subLabel => path
-              $folders[] = ['path' => str_replace('\\', '/', $v), 'color' => null, 'subLabel' => (string)$k];
+              $folders[] = ['path' => $this->resolvePath($v), 'color' => null, 'subLabel' => (string)$k];
             }
             else
             {
               // Old format: path => color|null
-              $folders[] = ['path' => str_replace('\\', '/', (string)$k), 'color' => $v, 'subLabel' => null];
+              $folders[] = ['path' => $this->resolvePath((string)$k), 'color' => $v, 'subLabel' => null];
             }
           }
         }
@@ -53,14 +58,14 @@ class SnippetManager
       else
       {
         // Numeric key fallback: use path as label
-        $path = is_string($value) ? str_replace('\\', '/', $value) : '';
+        $path = is_string($value) ? $this->resolvePath($value) : '';
         if( $path !== '' )
           $normalized[$path] = [['path' => $path, 'color' => null, 'subLabel' => null]];
       }
     }
 
     if( empty($normalized) )
-      $normalized = ['data' => [['path' => 'data', 'color' => null, 'subLabel' => null]]];
+      $normalized = ['data' => [['path' => $this->resolvePath('data'), 'color' => null, 'subLabel' => null]]];
 
     $this->dataPaths = $normalized;
     $this->config    = $config;
@@ -79,6 +84,32 @@ class SnippetManager
       fn($f) => array_merge($f, ['label' => $label]),
       $this->dataPaths[$label]
     );
+  }
+
+  // Normalizes slashes; resolves relative paths against appRoot so the result
+  // does not depend on the process's current working directory
+  private function resolvePath( string $path ) : string
+  {
+    $path = str_replace('\\', '/', $path);
+
+    if( $path === '' || $this->appRoot === '' || $this->isAbsolutePath($path) )
+      return $path;
+
+    return $this->appRoot . '/' . ltrim($path, '/');
+  }
+
+  private function isAbsolutePath( string $path ) : bool
+  {
+    if( $path === '' )
+      return false;
+
+    if( $path[0] === '/' )                          // unix abs or UNC
+      return true;
+
+    if( preg_match('#^[A-Za-z]:/#', $path) )        // windows drive (e.g. C:/)
+      return true;
+
+    return false;
   }
 
   // Returns path => displayLabel map; prefers subLabel over main label

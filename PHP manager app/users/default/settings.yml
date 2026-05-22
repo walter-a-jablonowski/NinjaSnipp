@@ -1,21 +1,21 @@
 theme: dark  # light | dark | system
 dataPaths:
-  # 'Demo 1':
-  #   Common:'data/cmn'
-  #   Demo1:'data/demo_data_1'
-  # 'Demo 2':
-  #   Common:'data/cmn'
-  #   Demo2:'data/demo_data_2'
-  # 'Prompt demo':
-  #   Demo: 'data/Prompt_demo'
-  Common:
-    Common: "G:/Meine Ablage/50 Activity tree/11 Common/Dools/AI (#ai-usage)"
-  Dev:
-    Common: "G:/Meine Ablage/50 Activity tree/11 Common/Dools/AI (#ai-usage)"
-    Dev: "G:/Meine Ablage/50 Activity tree/11 Common/Dev/prompts"
-  Biz:
-    Common: "G:/Meine Ablage/50 Activity tree/11 Common/Dools/AI (#ai-usage)"
-    Biz: "G:/Meine Ablage/50 Activity tree/15 VISION  Become superh/11 VISION  Independence (#Indep)/VISION  Fin Unabh (#Biz)/Common/Prompts"
+  'Demo 1':
+    Common: 'data/cmn'
+    Demo1:  'data/demo_data_1'
+  'Demo 2':
+    Common: 'data/cmn'
+    Demo2:  'data/demo_data_2'
+  'Prompt demo':
+    Demo:   'data/Prompt_demo'
+  # Common:
+  #   Common: "G:/Meine Ablage/50 Activity tree/11 Common/Dools/AI (#ai-usage)"
+  # Dev:
+  #   Common: "G:/Meine Ablage/50 Activity tree/11 Common/Dools/AI (#ai-usage)"
+  #   Dev:    "G:/Meine Ablage/50 Activity tree/11 Common/Dev/prompts"
+  # Biz:
+  #   Common: "G:/Meine Ablage/50 Activity tree/11 Common/Dools/AI (#ai-usage)"
+  #   Biz:    "G:/Meine Ablage/50 Activity tree/15 VISION  Become superh/11 VISION  Independence (#Indep)/VISION  Fin Unabh (#Biz)/Common/Prompts"
 folderColors:
   red: '#fde8e8'
   orange: '#fef3e2'

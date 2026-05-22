@@ -13,7 +13,7 @@ $input  = json_decode( file_get_contents('php://input'), true);
 $action = $input['action'] ?? '';
 
 $config  = Yaml::parseFile('users/default/settings.yml');
-$manager = new SnippetManager( $config['dataPaths'] ?? ['data'], $config);
+$manager = new SnippetManager( $config['dataPaths'] ?? ['data'], $config, __DIR__);
 if( isset($config['nav']['foldersFirst']) )
   $manager->setFoldersFirst( (bool)$config['nav']['foldersFirst'] );
 

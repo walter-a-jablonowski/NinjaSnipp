@@ -12,7 +12,7 @@ $allBtns   = (bool) $appConfig['debug']['showAllFileBtns'];
 
 $config  = Yaml::parseFile('users/default/settings.yml');
 $initialTheme = $config['theme'] ?? 'light';
-$manager = new SnippetManager( $config['dataPaths'] ?? ['data'], $config);
+$manager = new SnippetManager( $config['dataPaths'] ?? ['data'], $config, __DIR__);
 if( isset($config['nav']['foldersFirst']) )
   $manager->setFoldersFirst( (bool)$config['nav']['foldersFirst'] );
 
