@@ -5,18 +5,18 @@ short:   "Demo for all placeholder features"
 usage:
   head: |
     Demo snippet — shows every placeholder type available in the app.
-    Generates a LinkedIn article about a software project.
+    Generates a code review request for a given file or module.
 
     Token usage: low
   maybe:
-    Tone:
-    TechStack:
-    CallToAction:
-    Hashtags:
+    Focus:
+    Context:
+    OutputFormat:
+    Checklist:
   vars:
-    PROJECT: My Project
-    AUDIENCE: developers
-    LANGUAGE: English
+    FILE: MyClass.php
+    LANGUAGE: PHP
+    REVIEWER_ROLE: senior developer
   text: |
 
     ### Usage
@@ -35,12 +35,12 @@ usage:
 
     | Feature | Syntax |
     |---|---|
-    | Simple placeholder | `{{PROJECT}}` |
-    | Default value | `{{AUDIENCE=developers}}` |
-    | Option list | `{{LANGUAGE=English|German|French}}` |
-    | Optional block | `{{ MAYBE: TechStack }}` / `{{ END-MAYBE }}` |
+    | Simple placeholder | `{{FILE}}` |
+    | Default value | `{{REVIEWER_ROLE=senior developer}}` |
+    | Option list | `{{LANGUAGE=PHP|TypeScript|Python}}` |
+    | Optional block | `{{ MAYBE: Context }}` / `{{ END-MAYBE }}` |
     | Inline optional | same syntax, text merged into one line |
-    | Include | `{{include: "LinkedIn Style Guide"}}` |
+    | Include | `{{include: "Code Review Guidelines"}}` |
 
     <secondary>
 
@@ -54,7 +54,7 @@ usage:
 
     ### How it works
 
-    A practical demo that generates a LinkedIn article.
+    A practical demo that requests a code review.
     Every placeholder type appears at least once in the template.
 
     ### Made with
@@ -66,34 +66,35 @@ usage:
     ### Changelog
 
     - V1: Initial demo for LinkedIn article
+    - V2: Replaced LinkedIn topic with code review prompt
 content: |
-  Write a LinkedIn article in {{LANGUAGE=English|German|French}} about my project "{{PROJECT}}".
+  You are a {{REVIEWER_ROLE=senior developer|architect|security expert}} reviewing {{LANGUAGE=PHP|TypeScript|Python}} code.
 
-  Target audience: {{AUDIENCE=developers}}
+  Please review the following file: {{FILE}}
 
-  {{ MAYBE: Tone }}
-  Tone of voice: {{TONE=professional|casual|enthusiastic}}
+  {{ MAYBE: Focus }}
+  Focus especially on: {{FOCUS=performance|security|readability|maintainability}}
   {{ END-MAYBE }}
 
-  Cover the following points:
-  - What the project does and what problem it solves
-  {{ MAYBE: TechStack }}
-  - Technologies used: {{FRONTEND=React|Vue|Angular}} frontend, {{BACKEND=PHP|Node|Python}} backend
+  Cover the following in your review:
+  - Overall code quality and structure
+  {{ MAYBE: Context }}
+  - Consider the broader context: {{PROJECT_CONTEXT=this is a REST API|this runs in a CLI tool|this is a web frontend}}
   {{ END-MAYBE }}
-  - Why I built it with AI assistance and what that experience was like
+  - Bugs, edge cases, or error handling gaps
 
-  Write the article in
-  {{ MAYBE: Tone }}
-  a {{TONE}} style,
+  Write your review in
+  {{ MAYBE: Focus }}
+  with particular attention to {{FOCUS}},
   {{ END-MAYBE }}
-  keeping it concise and authentic.
+  keeping feedback constructive and actionable.
 
-  {{ MAYBE: CallToAction }}
-  End with a call to action: {{CTA=ask readers for feedback|invite them to try it|ask about their experience with AI tools}}
-  {{ END-MAYBE }}
-
-  {{ MAYBE: Hashtags }}
-  Finish with 3–5 relevant hashtags.
+  {{ MAYBE: OutputFormat }}
+  Format the output as: {{FORMAT=a numbered list|inline comments|a summary paragraph}}
   {{ END-MAYBE }}
 
-  {{include: "LinkedIn Style Guide"}}
+  {{ MAYBE: Checklist }}
+  End with a short checklist of the most important things to fix.
+  {{ END-MAYBE }}
+
+  {{include: "Code Review Guidelines"}}
