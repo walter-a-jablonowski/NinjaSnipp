@@ -97,4 +97,4 @@ content: |
   End with a short checklist of the most important things to fix.
   {{ END-MAYBE }}
 
-  {{include: "Code Review Guidelines"}}
+  {{include: "LinkedIn Style Guide"}}
