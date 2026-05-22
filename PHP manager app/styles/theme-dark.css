@@ -5,6 +5,9 @@
   --bs-border-color: #2a3642;
   --bs-secondary-color: #a9b7c6;
   --bs-emphasis-color: #f7fbff;
+  /* Muted primary orange for dark mode (used by .tree-item.active, form-switch:checked, ai bubble, focus rings, ...) */
+  --bs-primary: #b85e10;
+  --bs-primary-rgb: 184, 94, 16;
   --scrollbar-track: rgba(255, 255, 255, 0.08);
   --scrollbar-thumb: rgba(255, 255, 255, 0.28);
   --scrollbar-thumb-hover: rgba(255, 255, 255, 0.4);
@@ -249,6 +252,24 @@
 [data-theme="dark"] .btn-outline-primary {
   --bs-btn-disabled-color: #fd7e14;
   --bs-btn-disabled-border-color: #fd7e14;
+}
+
+/* Form switch checked: lighter than the muted --bs-primary so it stands out */
+[data-theme="dark"] .form-switch .form-check-input:checked {
+  background-color: #e26e10;
+  border-color: #e26e10;
+}
+
+/* btn-primary (e.g. saveSnippetBtn): same orange as the switch in dark mode */
+[data-theme="dark"] .btn-primary {
+  --bs-btn-bg: #e26e10;
+  --bs-btn-border-color: #e26e10;
+  --bs-btn-hover-bg: #fd7e14;
+  --bs-btn-hover-border-color: #fd7e14;
+  --bs-btn-active-bg: #c65f0e;
+  --bs-btn-active-border-color: #c65f0e;
+  --bs-btn-disabled-bg: #e26e10;
+  --bs-btn-disabled-border-color: #e26e10;
 }
 
 /* Soften usagePreviewBtn border (hardcoded light grey in app.css) */
