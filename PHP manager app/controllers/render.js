@@ -293,7 +293,9 @@ class RenderController
       if( el.classList.contains('ph-choice') ) {
         e.stopPropagation();
         e.preventDefault();
-        el.focus();
+        // After picking, focus stays on the element, so onFocus won't re-fire on the
+        // next click. Open the menu explicitly so repeat clicks always work.
+        this.openChoiceMenu(el);
       }
     };
 
@@ -415,6 +417,11 @@ class RenderController
         group.forEach(node => {
           node.textContent = val;
           node.dataset.edited = '1';
+        });
+        // Setting textContent doesn't fire an input event, so the renderUsage
+        // table input never sees the change. Sync it explicitly.
+        document.querySelectorAll('#renderUsage .var-input').forEach(input => {
+          if( input.dataset.varName === name ) input.value = val;
         });
         this.updateRenderedOutput();
         this.closeChoiceMenu();
