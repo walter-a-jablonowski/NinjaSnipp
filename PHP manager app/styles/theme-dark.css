@@ -246,6 +246,12 @@
   color: #ffd29a;
 }
 
+/* Keep btn-outline-primary orange when disabled (Bootstrap default falls back to blue) */
+[data-theme="dark"] .btn-outline-primary {
+  --bs-btn-disabled-color: #fd7e14;
+  --bs-btn-disabled-border-color: #fd7e14;
+}
+
 [data-theme="dark"] .btn-close {
   filter: invert(1) grayscale(100%) brightness(180%);
 }
