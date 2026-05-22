@@ -125,7 +125,13 @@
     el.style.overflowX = this._lineWrapOff ? 'auto' : 'hidden';
     // Keep usage preview the same height so both columns align
     const renderUsage = document.getElementById('renderUsage');
-    if( renderUsage ) renderUsage.style.height = available + 'px';
+    if( renderUsage ) {
+      renderUsage.style.height = available + 'px';
+      // overflow-y must be set explicitly: without it, vertical scroll only works as
+      // a side-effect of overflow-x:auto (set by applyLineWrap when wrap is off).
+      // Toggling wrap on would otherwise clip long content inside renderContent.
+      renderUsage.style.overflowY = 'auto';
+    }
   }
 
   async init()
