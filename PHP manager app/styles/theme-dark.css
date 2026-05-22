@@ -234,6 +234,18 @@
   color: #f7fbff;
 }
 
+[data-theme="dark"] .dropdown-item.active,
+[data-theme="dark"] .dropdown-item:active {
+  background-color: #2c3d52;
+  color: #ffb15a;
+}
+
+[data-theme="dark"] .dropdown-item.active:hover,
+[data-theme="dark"] .dropdown-item.active:focus {
+  background-color: #34465c;
+  color: #ffd29a;
+}
+
 [data-theme="dark"] .btn-close {
   filter: invert(1) grayscale(100%) brightness(180%);
 }
