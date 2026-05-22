@@ -55,7 +55,6 @@
 [data-theme="dark"] #renderedOutput,
 [data-theme="dark"] .inline-snippet,
 [data-theme="dark"] #renderUsage,
-[data-theme="dark"] #fieldUsage,
 [data-theme="dark"] #markdownPreview,
 [data-theme="dark"] .form-control,
 [data-theme="dark"] .form-select {
@@ -250,6 +249,18 @@
 [data-theme="dark"] .btn-outline-primary {
   --bs-btn-disabled-color: #fd7e14;
   --bs-btn-disabled-border-color: #fd7e14;
+}
+
+/* Soften usagePreviewBtn border (hardcoded light grey in app.css) */
+[data-theme="dark"] #usagePreviewBtn {
+  border-color: #2a3642 !important;
+}
+
+[data-theme="dark"] #usagePreviewBtn:hover,
+[data-theme="dark"] #usagePreviewBtn:focus {
+  background-color: #202a35;
+  border-color: #3a4d63 !important;
+  color: #f7fbff;
 }
 
 [data-theme="dark"] .btn-close {
