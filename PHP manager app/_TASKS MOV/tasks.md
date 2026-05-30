@@ -13,7 +13,6 @@
 
     Most likely we also need to be able to add a link on the base level of the file viewer via the dropdown menu right of the Files/Recent tabs.
 
+- [x] Files and folders have a Delete entry in the file/folder menu. Links nee a "Remove link" entry that can be used to delete the empty link file-
 
- - [x] Files and folders have a Delete entry in the file/folder menu. Links nee a "Remove link" entry that can be used to delete the empty link file-
-
-- [ ] Can we add missing file viewer features to the readme?
+- [x] Can we add missing file viewer features to the readme?
