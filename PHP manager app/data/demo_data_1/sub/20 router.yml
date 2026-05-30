@@ -1,0 +1,24 @@
+id: router v1
+version: 1
+sc: route--
+short: Simple route registration
+usage:
+  head: |
+    Register a single HTTP route to a handler.
+
+    - Token usage: minimal
+  vars:
+    method: HTTP method
+    path: Route path
+    handler: Handler callable
+  text: |
+    ### Usage
+
+    - Set `method` and `path` for the endpoint
+    - Point `handler` at your controller action
+
+    ### Changelog
+
+    - 1.0: initial
+content: |
+  $router->add( '{{ method=GET|POST|PUT|DELETE }}', '{{ path=/ }}', {{ handler=HomeController::index }} );

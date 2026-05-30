@@ -1,0 +1,25 @@
+id: cache v1
+version: 1
+sc: cache--
+short: Remember-style cache helper
+usage:
+  head: |
+    Get-or-compute a cached value.
+
+    - Token usage: minimal
+  vars:
+    key: Cache key
+    ttl: Time to live in seconds
+  text: |
+    ### Usage
+
+    - Set `key` to a stable identifier
+    - Tune `ttl` for freshness
+
+    ### Changelog
+
+    - 1.0: initial
+content: |
+  $value = $cache->remember( '{{ key=user.profile }}', {{ ttl=3600 }}, function() {
+    return computeExpensiveValue();
+  });

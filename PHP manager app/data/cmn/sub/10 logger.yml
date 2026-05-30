@@ -1,0 +1,24 @@
+id: logger v1
+version: 1
+sc: log--
+short: Minimal PSR-style logger wrapper
+usage:
+  head: |
+    Tiny logger wrapper around a PSR-3 logger.
+
+    - Token usage: minimal
+  vars:
+    channel: Log channel name
+    level: Default log level
+  text: |
+    ### Usage
+
+    - Set `channel` to your subsystem name
+    - Adjust `level` per environment
+
+    ### Changelog
+
+    - 1.0: initial
+content: |
+  $logger = new Logger( '{{ channel=app }}' );
+  $logger->log( '{{ level=info|debug|error }}', $message );

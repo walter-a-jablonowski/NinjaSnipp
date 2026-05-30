@@ -1,0 +1,24 @@
+id: validator v1
+version: 1
+sc: valid--
+short: Guard-clause field validator
+usage:
+  head: |
+    Validate a required field with a guard clause.
+
+    - Token usage: minimal
+  vars:
+    field: Field name to validate
+    message: Error message when missing
+  text: |
+    ### Usage
+
+    - Set `field` to the input key
+    - Customize `message` for the user
+
+    ### Changelog
+
+    - 1.0: initial
+content: |
+  if( empty( $input['{{ field=email }}'] ) )
+    throw new InvalidArgumentException( '{{ message=Field is required }}' );

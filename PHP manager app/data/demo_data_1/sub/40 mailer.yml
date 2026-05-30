@@ -1,0 +1,28 @@
+id: mailer v1
+version: 1
+sc: mail--
+short: Send a plain-text email
+usage:
+  head: |
+    Send a simple plain-text email.
+
+    - Token usage: minimal
+  vars:
+    to: Recipient address
+    subject: Email subject
+    body: Email body
+  text: |
+    ### Usage
+
+    - Set `to`, `subject` and `body`
+    - Swap the transport for your mailer of choice
+
+    ### Changelog
+
+    - 1.0: initial
+content: |
+  $mailer->send([
+    'to'      => '{{ to=user@example.com }}',
+    'subject' => '{{ subject=Hello }}',
+    'body'    => '{{ body=Welcome! }}',
+  ]);
