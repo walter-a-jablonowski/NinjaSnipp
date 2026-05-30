@@ -247,6 +247,7 @@ class FileTreeController
 
     return `<div class="tree-item${isFolder ? ' tree-folder' : ' tree-file'}${isIncluded ? ' tree-included' : ''}${isMerged ? ' tree-merged' : ''}" ` +
       `data-path="${path}" data-fspath="${realFsPath}" data-type="${type}" data-extension="${extension || ''}"${mergedBasesAttr} ` +
+      `draggable="${isIncluded ? 'false' : 'true'}" ` +
       `tabindex="0" title="${displayName}" style="${styleVal}">` +
       `<div class="d-flex align-items-center">` +
         toggleEl +
@@ -503,5 +504,188 @@ class FileTreeController
       e.preventDefault();
       liveItem.click();
     }
+  }
+
+  // --- Drag & drop reordering (same level only) ---
+
+  _parentPathOf(path)
+  {
+    const parts = path.split('/');
+    parts.pop();
+    return parts.join('/');
+  }
+
+  // Returns the sibling node array for a given parent path ('' = root level)
+  _siblingsOf(parentPath)
+  {
+    if( ! parentPath ) return this.app.fileTree;
+    const parent = this.findNodeInTree(this.app.fileTree, parentPath);
+    return parent && parent.children ? parent.children : null;
+  }
+
+  _clearDropMarkers()
+  {
+    document.querySelectorAll('.tree-item.drag-over-top, .tree-item.drag-over-bottom')
+      .forEach(el => el.classList.remove('drag-over-top', 'drag-over-bottom'));
+  }
+
+  handleDragStart(e)
+  {
+    const item = e.target.closest('.tree-item');
+    if( ! item || item.getAttribute('draggable') !== 'true' ) return;
+    this._dragPath = item.dataset.path;
+    item.classList.add('dragging');
+    if( e.dataTransfer ) {
+      e.dataTransfer.effectAllowed = 'move';
+      try { e.dataTransfer.setData('text/plain', this._dragPath); } catch(_) {}
+    }
+  }
+
+  handleDragOver(e)
+  {
+    if( ! this._dragPath ) return;
+    const item = e.target.closest('.tree-item');
+    if( ! item || item.dataset.path === this._dragPath ) return;
+
+    // Only allow reordering within the same parent level
+    if( this._parentPathOf(item.dataset.path) !== this._parentPathOf(this._dragPath) ) {
+      if( e.dataTransfer ) e.dataTransfer.dropEffect = 'none';
+      this._clearDropMarkers();
+      this._dropTarget = null;
+      return;
+    }
+
+    e.preventDefault();
+    if( e.dataTransfer ) e.dataTransfer.dropEffect = 'move';
+
+    const rect   = item.getBoundingClientRect();
+    const after  = e.clientY > rect.top + rect.height / 2;
+    this._clearDropMarkers();
+    item.classList.add(after ? 'drag-over-bottom' : 'drag-over-top');
+    this._dropTarget = { path: item.dataset.path, position: after ? 'after' : 'before' };
+  }
+
+  handleDragLeave(e)
+  {
+    const item = e.target.closest('.tree-item');
+    if( item ) item.classList.remove('drag-over-top', 'drag-over-bottom');
+  }
+
+  handleDragEnd()
+  {
+    this._clearDropMarkers();
+    document.querySelectorAll('.tree-item.dragging').forEach(el => el.classList.remove('dragging'));
+    this._dragPath   = null;
+    this._dropTarget = null;
+  }
+
+  async handleDrop(e)
+  {
+    const dragPath = this._dragPath;
+    const target   = this._dropTarget;
+    this._clearDropMarkers();
+    if( ! dragPath || ! target || dragPath === target.path ) { this.handleDragEnd(); return; }
+
+    const parentPath = this._parentPathOf(dragPath);
+    if( parentPath !== this._parentPathOf(target.path) ) { this.handleDragEnd(); return; }
+    e.preventDefault();
+
+    await this._applyReorder(parentPath, dragPath, target.path, target.position);
+    this.handleDragEnd();
+  }
+
+  // Computes the new sibling order, renumbers ordinal prefixes, and persists via batchRename.
+  // Only items that already have a 2-digit prefix (or the dragged item) get renamed; unprefixed
+  // bystanders are left untouched (they sort after the numbered ones).
+  async _applyReorder(parentPath, draggedPath, targetPath, position)
+  {
+    const siblings = this._siblingsOf(parentPath);
+    if( ! siblings ) return;
+
+    const dragged = siblings.find(n => n.path === draggedPath);
+    if( ! dragged || dragged.isIncluded ) return;
+
+    const order = siblings.filter(n => n.path !== draggedPath);
+    const ti    = order.findIndex(n => n.path === targetPath);
+    const insertAt = ti < 0 ? order.length : (position === 'after' ? ti + 1 : ti);
+    order.splice(insertAt, 0, dragged);
+
+    const prefixRe   = /^\d{2}[ _.\-]/;
+    const stripRe    = /^\d{2}[ _.\-]+/;
+    const fsNameOf   = n => n.type === 'folder' ? n.name : `${n.name}.${n.extension}`;
+
+    const ops            = [];
+    const folderRenames  = {};   // oldVirtual -> newVirtual (for expanded-folder/current-path remap)
+    let   draggedNewPath = null;
+
+    order.forEach((node, i) => {
+      if( node.isIncluded ) return;
+      const fsName = fsNameOf(node);
+      if( ! prefixRe.test(fsName) && node !== dragged ) return;   // leave unprefixed bystanders
+
+      const prefix    = String(i + 1).padStart(2, '0');
+      const baseName  = fsName.replace(stripRe, '');
+      const newFsName = `${prefix} ${baseName}`;
+
+      // newFsName is the on-disk name and also the last segment of the virtual path
+      // (file paths include the extension, folder paths don't)
+      const newVirtual = (parentPath ? parentPath + '/' : '') + newFsName;
+      if( node === dragged ) draggedNewPath = newVirtual;
+
+      if( newFsName === fsName ) return;
+
+      const bases = (node.type === 'folder' && node.mergedBases && node.mergedBases.length)
+        ? node.mergedBases
+        : [node.basePath];
+
+      bases.forEach(b => { if( b ) ops.push({ base: b, oldName: fsName, newName: newFsName, type: node.type }); });
+
+      if( node.type === 'folder' ) {
+        const oldVirtual = (parentPath ? parentPath + '/' : '') + node.name;
+        folderRenames[oldVirtual] = (parentPath ? parentPath + '/' : '') + newFsName;
+      }
+    });
+
+    if( ! ops.length ) return;
+
+    const res = await apiCall(this.app.currentDataPath, 'batchRename', { subPath: parentPath, ops });
+    if( ! (res && res.success) ) {
+      showError('Failed to reorder: ' + (res?.message || 'Unknown error'));
+      return;
+    }
+
+    // Keep expansion + selection sensible after on-disk names changed
+    this._remapPaths(folderRenames);
+    if( parentPath ) this.app.expandedFolders.add(parentPath);
+    await this.app.loadFiles();
+
+    if( dragged.type === 'file' && draggedNewPath ) {
+      const el = document.querySelector(`.tree-item[data-path="${draggedNewPath}"]`);
+      if( el ) {
+        document.querySelectorAll('.tree-item.active, .file-item.active').forEach(n => n.classList.remove('active'));
+        el.classList.add('active');
+      }
+    }
+  }
+
+  // Rewrites stored virtual paths (expanded folders + current path) after folders were renumbered
+  _remapPaths(folderRenames)
+  {
+    const keys = Object.keys(folderRenames);
+    if( ! keys.length ) return;
+
+    const remap = (p) => {
+      for( const oldV of keys ) {
+        if( p === oldV ) return folderRenames[oldV];
+        if( p.startsWith(oldV + '/') ) return folderRenames[oldV] + p.slice(oldV.length);
+      }
+      return p;
+    };
+
+    const next = new Set();
+    this.app.expandedFolders.forEach(p => next.add(remap(p)));
+    this.app.expandedFolders = next;
+
+    if( this.app.currentPath ) this.app.currentPath = remap(this.app.currentPath);
   }
 }

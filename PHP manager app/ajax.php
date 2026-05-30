@@ -131,6 +131,12 @@ try {
         $response = ['success' => false, 'message' => 'Failed to rename'];
       break;
 
+    case 'batchRename':
+      $subPath = $input['subPath'] ?? '';
+      $ops     = $input['ops'] ?? [];
+      $response = $manager->batchRename($subPath, is_array($ops) ? $ops : []);
+      break;
+
     case 'searchSnippets':
       $query = $input['query'] ?? '';
       $results = $manager->searchSnippets($query);

@@ -344,6 +344,12 @@
         const item = e.target.closest('.tree-item');
         if( item ) this._focusedTreeItem = item;
       });
+      // Drag & drop reordering (same level only; updates ordinal prefixes on disk)
+      fileList.addEventListener('dragstart', (e) => this.tree.handleDragStart(e));
+      fileList.addEventListener('dragover',  (e) => this.tree.handleDragOver(e));
+      fileList.addEventListener('dragleave', (e) => this.tree.handleDragLeave(e));
+      fileList.addEventListener('drop',      (e) => this.tree.handleDrop(e));
+      fileList.addEventListener('dragend',   (e) => this.tree.handleDragEnd(e));
     }
     document.addEventListener('keydown', (e) => this.tree.fileListKeyDown(e));
 

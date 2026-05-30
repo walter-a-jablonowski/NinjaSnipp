@@ -216,6 +216,19 @@ body {
   color: white;
 }
 
+/* Drag & drop reordering */
+.tree-item.dragging {
+  opacity: 0.45;
+}
+
+.tree-item.drag-over-top {
+  box-shadow: inset 0 2px 0 0 var(--bs-primary);
+}
+
+.tree-item.drag-over-bottom {
+  box-shadow: inset 0 -2px 0 0 var(--bs-primary);
+}
+
 .tree-item.active .tree-toggle,
 .tree-item.active .file-icon {
   color: rgba(255, 255, 255, 0.85);

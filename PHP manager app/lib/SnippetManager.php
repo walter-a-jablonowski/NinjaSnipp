@@ -483,6 +483,101 @@ class SnippetManager
     return file_put_contents($file, json_encode($current, JSON_PRETTY_PRINT)) !== false;
   }
 
+  // Validates that a base path is one of the configured source folders (guards client-supplied paths)
+  private function isKnownBase( string $base ) : bool
+  {
+    $base = rtrim(str_replace('\\', '/', $base), '/');
+    foreach( $this->currentFolders as $folder )
+      if( rtrim($folder['path'], '/') === $base )
+        return true;
+    return false;
+  }
+
+  // Atomically renumbers/renames a batch of sibling items, possibly across multiple source folders.
+  // $subPath is the (virtual = on-disk) parent level; '' for the root.
+  // $ops: [ ['base'=>absSource, 'oldName'=>name, 'newName'=>name, 'type'=>'file'|'folder'], ... ]
+  // Per base it renames in two phases (old -> temp -> new) so permutations can't clobber each other,
+  // and migrates each renamed file's color entry in the parent folder's .sys/ninja.json.
+  public function batchRename( string $subPath, array $ops ) : array
+  {
+    $subPath = trim(str_replace('\\', '/', $subPath), '/');
+
+    $clean = [];
+    foreach( $ops as $op )
+    {
+      $base = isset($op['base']) ? rtrim(str_replace('\\', '/', (string)$op['base']), '/') : '';
+      $old  = (string)($op['oldName'] ?? '');
+      $new  = (string)($op['newName'] ?? '');
+      $type = ($op['type'] ?? 'file') === 'folder' ? 'folder' : 'file';
+
+      if( $base === '' || $old === '' || $new === '' || $old === $new )
+        continue;
+      if( ! $this->isKnownBase($base) )
+        return ['success' => false, 'message' => 'Invalid base path'];
+      if( strpbrk($old, "/\\") !== false || strpbrk($new, "/\\") !== false )
+        return ['success' => false, 'message' => 'Invalid name'];
+
+      $clean[] = ['base' => $base, 'old' => $old, 'new' => $new, 'type' => $type];
+    }
+
+    if( empty($clean) )
+      return ['success' => true, 'message' => 'Nothing to reorder'];
+
+    $byBase = [];
+    foreach( $clean as $op )
+      $byBase[$op['base']][] = $op;
+
+    foreach( $byBase as $base => $list )
+    {
+      $dir = $base . ($subPath !== '' ? "/$subPath" : '');
+      if( ! is_dir($dir) )
+        return ['success' => false, 'message' => "Folder missing: $subPath"];
+
+      foreach( $list as $op )
+        if( ! file_exists("$dir/{$op['old']}") )
+          return ['success' => false, 'message' => "Source missing: {$op['old']}"];
+
+      // Phase 1: move every source to a unique temp name
+      $temps = [];
+      foreach( $list as $i => $op )
+      {
+        $tmp = "$dir/.reorder_tmp_{$i}_" . bin2hex(random_bytes(3));
+        if( ! @rename("$dir/{$op['old']}", $tmp) )
+          return ['success' => false, 'message' => "Failed to stage {$op['old']}"];
+        $temps[$i] = $tmp;
+      }
+
+      // Phase 2: move temps to their final names (target must be free)
+      foreach( $list as $i => $op )
+      {
+        $target = "$dir/{$op['new']}";
+        if( file_exists($target) )
+          return ['success' => false, 'message' => "Target exists: {$op['new']}"];
+        if( ! @rename($temps[$i], $target) )
+          return ['success' => false, 'message' => "Failed to rename to {$op['new']}"];
+
+        if( $op['type'] === 'file' )
+          $this->migrateFileColorKey($dir, $op['old'], $op['new']);
+      }
+    }
+
+    return ['success' => true, 'message' => 'Reordered'];
+  }
+
+  // Moves a file's color entry in the parent folder's .sys/ninja.json when the file is renamed
+  private function migrateFileColorKey( string $folderDir, string $oldName, string $newName ) : void
+  {
+    $jsonFile = "$folderDir/.sys/ninja.json";
+    if( ! is_file($jsonFile) )
+      return;
+    $data = json_decode(file_get_contents($jsonFile), true);
+    if( ! is_array($data) || ! isset($data['fileColors'][$oldName]) )
+      return;
+    $data['fileColors'][$newName] = $data['fileColors'][$oldName];
+    unset($data['fileColors'][$oldName]);
+    file_put_contents($jsonFile, json_encode($data, JSON_PRETTY_PRINT));
+  }
+
   private function getDirectoryContentsRecursively( string $dirPath, string $basePath ) : array
   {
     $items    = [];
