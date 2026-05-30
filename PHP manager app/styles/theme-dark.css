@@ -164,6 +164,33 @@
   color: inherit !important;
 }
 
+[data-theme="dark"] .markdown-preview code {
+  background: #253142 !important;
+  color: #ffd08a !important;
+  border: 1px solid #3a4a5d !important;
+}
+
+[data-theme="dark"] .markdown-preview pre {
+  background: #121a24 !important;
+  color: #dfe7ef !important;
+  border: 1px solid #31404f !important;
+}
+
+[data-theme="dark"] .markdown-preview pre code {
+  background: transparent !important;
+  border: none !important;
+  color: inherit !important;
+}
+
+[data-theme="dark"] .markdown-preview blockquote {
+  border-left-color: #3a4d63;
+  color: #9eb0c2;
+}
+
+[data-theme="dark"] .markdown-preview hr {
+  border-color: #31404f;
+}
+
 [data-theme="dark"] .usage-tab-btn {
   color: #9eb0c2;
 }
