@@ -127,6 +127,11 @@ if( isset($_GET['data']) )
                           <i class="bi bi-folder-plus me-2"></i>New Folder
                         </button>
                       </li>
+                      <li>
+                        <button class="dropdown-item small" id="newLinkDropBtn">
+                          <i class="bi bi-link-45deg me-2"></i>New Link
+                        </button>
+                      </li>
                     </ul>
                   </li>
                 </ul>
@@ -394,6 +399,35 @@ if( isset($_GET['data']) )
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
           <button type="button" class="btn btn-primary" id="createFolderBtn">Create</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Link Modal -->
+  <div class="modal fade" id="newLinkModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">New Link</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="newLinkForm">
+            <div class="mb-3">
+              <label for="linkTarget" class="form-label">Snippet or folder to link</label>
+              <input type="text" class="form-control" id="linkTarget" required placeholder="e.g. error-handling">
+              <div class="form-text">Name of an existing snippet or folder (at the data root). It is shown here as a link to the same element.</div>
+            </div>
+            <div class="mb-3" id="linkBaseFolderRow">
+              <label for="linkBaseFolder" class="form-label">Source Folder</label>
+              <select class="form-select" id="linkBaseFolder"></select>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="createLinkBtn">Create</button>
         </div>
       </div>
     </div>

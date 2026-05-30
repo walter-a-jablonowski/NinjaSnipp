@@ -221,6 +221,7 @@ class FileTreeController
       menuItems = isFolder
         ? `<li><a class="dropdown-item small" href="#" data-action="new-snippet">New Snippet</a></li>
            <li><a class="dropdown-item small" href="#" data-action="new-folder">New Folder</a></li>
+           <li><a class="dropdown-item small" href="#" data-action="new-link">New Link</a></li>
            ${explorerItem ? explorerItem : ''}`
         : `<li><span class="dropdown-item small text-muted disabled">Included file</span></li>
            ${explorerItem}`;
@@ -230,6 +231,7 @@ class FileTreeController
         ? `${sourceLabelHtml}
            <li><a class="dropdown-item small" href="#" data-action="new-snippet">New Snippet</a></li>
            <li><a class="dropdown-item small" href="#" data-action="new-folder">New Folder</a></li>
+           <li><a class="dropdown-item small" href="#" data-action="new-link">New Link</a></li>
            <li><hr class="dropdown-divider"></li>
            ${colorSwatches}
            <li><hr class="dropdown-divider"></li>
@@ -357,6 +359,12 @@ class FileTreeController
       this.app.currentMergedBases = mergedBases || null;
       if( fsPath ) this.app.expandedFolders.add(path);
       showModal('newFolderModal');
+    }
+    else if( action === 'new-link' ) {
+      this.app.currentPath        = fsPath;
+      this.app.currentMergedBases = mergedBases || null;
+      if( fsPath ) this.app.expandedFolders.add(path);
+      showModal('newLinkModal');
     }
     else if( action === 'delete' ) {
       const nameParts = path.split('/');

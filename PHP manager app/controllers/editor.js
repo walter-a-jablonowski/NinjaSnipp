@@ -510,6 +510,53 @@ class EditorController
     }
   }
 
+  async createLink()
+  {
+    const raw = document.getElementById('linkTarget').value.trim();
+    if( ! raw ) {
+      showError('Link target is required');
+      return;
+    }
+
+    // Accept either a bare name or a pasted marker; reduce to just the target name
+    const target = raw.replace(/^(\d{2}[ _.\-]+)?INCLUDE\s+/i, '').trim();
+    if( ! target ) {
+      showError('Link target is required');
+      return;
+    }
+    if( /[\\/]/.test(target) ) {
+      showError('Use a snippet or folder name, not a path');
+      return;
+    }
+
+    // A link is an empty marker file named "INCLUDE <target>"
+    const fileName = 'INCLUDE ' + target;
+    const linkPath = (this.app.currentPath ? this.app.currentPath + '/' : '') + fileName;
+
+    const baseFolderSel  = document.getElementById('linkBaseFolder');
+    const needTarget     = ! this.app.currentPath || (this.app.currentMergedBases && this.app.currentMergedBases.length > 1);
+    const targetBasePath = (needTarget && baseFolderSel && baseFolderSel.options.length > 0)
+      ? baseFolderSel.value
+      : null;
+
+    const payload = { linkPath };
+    if( targetBasePath ) payload.targetBasePath = targetBasePath;
+
+    const result = await apiCall(this.app.currentDataPath, 'createLink', payload);
+
+    if( result.success ) {
+      if( this.app.currentPath ) this.app.expandedFolders.add(this.app.currentPath);
+      await this.app.loadFiles();
+      const modal = bootstrap.Modal.getInstance(document.getElementById('newLinkModal'));
+      if( modal ) modal.hide();
+      document.getElementById('newLinkForm').reset();
+      showSuccess('Link created');
+    }
+    else {
+      showError('Failed to create link: ' + result.message);
+    }
+  }
+
   // Serialize usage object to editable YAML text for the textarea
   _serializeUsage(u)
   {

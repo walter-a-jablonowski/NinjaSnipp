@@ -175,6 +175,35 @@ try {
         $response = ['success' => false, 'message' => 'Failed to create folder or folder already exists'];
       break;
 
+    case 'createLink':
+      $linkPath       = $input['linkPath'] ?? '';
+      $targetBasePath = $input['targetBasePath'] ?? null;
+      $base           = $targetBasePath ?? $manager->getCurrentDataPath();
+
+      if( $linkPath === '' ) {
+        $response = ['success' => false, 'message' => 'Missing link path'];
+        break;
+      }
+
+      $fullPath = rtrim($base, '/') . '/' . ltrim($linkPath, '/');
+      $dir      = dirname($fullPath);
+
+      if( ! is_dir($dir) && ! mkdir($dir, 0755, true) ) {
+        $response = ['success' => false, 'message' => 'Failed to prepare target directory'];
+        break;
+      }
+      if( file_exists($fullPath) ) {
+        $response = ['success' => false, 'message' => 'Link already exists'];
+        break;
+      }
+
+      // A link is an empty marker file named "INCLUDE <target>"; the resolver renders the target in its place
+      if( file_put_contents($fullPath, '') !== false )
+        $response = ['success' => true, 'message' => 'Link created successfully'];
+      else
+        $response = ['success' => false, 'message' => 'Failed to create link'];
+      break;
+
     case 'setFolderColor':
       $folderPath = $input['folderPath'] ?? '';
       $color      = isset($input['color']) ? (string)$input['color'] : null;

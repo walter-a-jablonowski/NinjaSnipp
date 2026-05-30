@@ -184,9 +184,11 @@
       ['newFolderBtn',       'click', () => { this.currentPath = ''; this.currentMergedBases = null; showModal('newFolderModal'); }],
       ['newSnippetDropBtn',  'click', () => { this.currentPath = ''; this.currentMergedBases = null; showModal('newSnippetModal'); }],
       ['newFolderDropBtn',   'click', () => { this.currentPath = ''; this.currentMergedBases = null; showModal('newFolderModal'); }],
+      ['newLinkDropBtn',     'click', () => { this.currentPath = ''; this.currentMergedBases = null; showModal('newLinkModal'); }],
       ['backBtn',            'click', () => this.goBack()],
       ['createSnippetBtn',   'click', () => this.editor.createSnippet()],
       ['createFolderBtn',    'click', () => this.editor.createFolder()],
+      ['createLinkBtn',      'click', () => this.editor.createLink()],
       ['render-tab',         'click', () => this.render.composeAndRenderInline()],
       ['copyRenderedBtn',    'click', () => this.render.copyRenderedContent()],
       ['saveSnippetBtn',     'click', () => this.editor.saveCurrentSnippet()],
@@ -254,6 +256,24 @@
       });
     }
 
+    // New link modal: show/hide source folder select
+    const newLinkModalEl = document.getElementById('newLinkModal');
+    if( newLinkModalEl ) {
+      newLinkModalEl.addEventListener('show.bs.modal', () => {
+        const row     = document.getElementById('linkBaseFolderRow');
+        const sel     = document.getElementById('linkBaseFolder');
+        const atRoot  = ! this.currentPath;
+        const merged  = this.currentMergedBases;
+        this._populateBaseFolderSelect(sel, merged);
+        const show = (atRoot || (merged && merged.length > 1)) && sel && sel.options.length > 1;
+        if( row ) row.style.display = show ? '' : 'none';
+      });
+      newLinkModalEl.addEventListener('shown.bs.modal', () => {
+        const input = document.getElementById('linkTarget');
+        if( input ) input.focus();
+      });
+    }
+
     // Duplicate modal: prefill and focus
     const dupModalEl = document.getElementById('duplicateSnippetModal');
     if( dupModalEl ) {
@@ -289,6 +309,7 @@
     // Form Enter-key submit handlers
     this._bindFormSubmit('newSnippetForm', () => this.editor.createSnippet());
     this._bindFormSubmit('newFolderForm',  () => this.editor.createFolder());
+    this._bindFormSubmit('newLinkForm',    () => this.editor.createLink());
     this._bindFormSubmit('duplicateSnippetForm', () => this.editor.performDuplicate());
     this._bindFormSubmit('renameItemForm', () => this.editor.performRename());
 
