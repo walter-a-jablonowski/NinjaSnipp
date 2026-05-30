@@ -508,6 +508,14 @@ class RenderController
     return `<span class="usage-missing-indicator float-end text-warning" title="${escapeHtml(title)}"><i class="bi bi-exclamation-triangle-fill"></i></span>`;
   }
 
+  // Indicator for an identifier defined in the usage table but never referenced in the snippet content
+  _buildUnusedIndicator(used)
+  {
+    if( used ) return '';
+    const title = 'Not used in snippet content';
+    return `<span class="usage-unused-indicator text-warning" title="${escapeHtml(title)}"><i class="bi bi-exclamation-triangle-fill"></i></span>`;
+  }
+
   _buildUsageHtml(withInputs = false)
   {
     const s = this.app.currentSnippet;
@@ -530,7 +538,8 @@ class RenderController
             const cbTd = withInputs
               ? `<td><input type="checkbox" class="maybe-table-cb" data-maybe-name="${escapeHtml(k)}" checked></td>`
               : '';
-            return `<tr>${cbTd}<td><code>${k}</code></td><td>${v ?? ''}</td></tr>`;
+            const unused = this._buildUnusedIndicator(contentMaybes.has(k));
+            return `<tr>${cbTd}<td><code>${k}</code>${unused}</td><td>${v ?? ''}</td></tr>`;
           })
           .join('');
         html += `<div class="usage-meta usage-meta-vars"><table class="usage-vars-table"><thead><tr>${cbTh}<th>Maybe</th><th>Description${indicator}</th></tr></thead><tbody>${rows}</tbody></table></div>`;
@@ -546,7 +555,8 @@ class RenderController
             const inputTd = withInputs
               ? `<td><input type="text" class="form-control form-control-sm var-input" data-var-name="${escapeHtml(k)}" placeholder="…"></td>`
               : '';
-            return `<tr><td class="var-name-td"><code>${k}</code></td><td class="var-desc-td">${v ?? ''}</td>${inputTd}</tr>`;
+            const unused = this._buildUnusedIndicator(contentVars.has(k));
+            return `<tr><td class="var-name-td"><code>${k}</code>${unused}</td><td class="var-desc-td">${v ?? ''}</td>${inputTd}</tr>`;
           })
           .join('');
         html += `<div class="usage-meta usage-meta-vars"><table class="usage-vars-table"><thead><tr><th>Var</th>${descTh}${valTh}</tr></thead><tbody>${rows}</tbody></table></div>`;

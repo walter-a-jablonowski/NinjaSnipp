@@ -723,6 +723,11 @@ body {
   margin-left: 0.5rem;
 }
 
+.usage-unused-indicator {
+  cursor: help;
+  margin-left: 0.35rem;
+}
+
 .var-name-td { width: 18%; white-space: nowrap; }
 .var-desc-td { width: 52%; word-break: break-word; white-space: normal; }
 .var-input-th { width: 30%; }

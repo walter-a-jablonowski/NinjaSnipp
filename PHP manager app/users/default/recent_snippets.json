@@ -1,14 +1,14 @@
 {
     "Demo 1": [
         {
+            "path": "env-config.yml",
+            "name": "env-config",
+            "timestamp": 1780152780444
+        },
+        {
             "path": "html-form.yml",
             "name": "html-form",
             "timestamp": 1778420007038
-        },
-        {
-            "path": "env-config.yml",
-            "name": "env-config",
-            "timestamp": 1778419996286
         },
         {
             "path": "example-array.yml",
@@ -110,6 +110,162 @@
             "path": "LinkedIn Style Guide.yml",
             "name": "LinkedIn Style Guide",
             "timestamp": 1778419971258
+        }
+    ],
+    "Common": [
+        {
+            "path": "11 Idea dev (more INTELLIGENCE)/AI engineers.yml",
+            "name": "AI engineers",
+            "timestamp": 1780162520758
+        },
+        {
+            "path": "- DESC.md",
+            "name": "- DESC",
+            "timestamp": 1780162517157
+        },
+        {
+            "path": "11 BLANK_SNIPP.yml",
+            "name": "11 BLANK_SNIPP",
+            "timestamp": 1780162056644
+        },
+        {
+            "path": "11 MIGR_RECIPE.md",
+            "name": "11 MIGR_RECIPE",
+            "timestamp": 1780162041646
+        },
+        {
+            "path": "Make prompts.yml",
+            "name": "Make prompts",
+            "timestamp": 1780162039316
+        },
+        {
+            "path": "Demo.yml",
+            "name": "Demo",
+            "timestamp": 1780161985703
+        },
+        {
+            "path": "08 Add Context/Collec ideas (context).yml",
+            "name": "Collec ideas (context)",
+            "timestamp": 1780159711829
+        },
+        {
+            "path": "_PROMPTS.md",
+            "name": "_PROMPTS",
+            "timestamp": 1780159577535
+        },
+        {
+            "path": "Settings.md",
+            "name": "Settings",
+            "timestamp": 1780155888119
+        },
+        {
+            "path": "SNIPPET_MIGRATION_RECIPE.md",
+            "name": "SNIPPET_MIGRATION_RECIPE",
+            "timestamp": 1780155879080
+        }
+    ],
+    "Dev": [
+        {
+            "path": "Dev (AI does all work)/08 From known App/11 Make idea.yml",
+            "name": "11 Make idea",
+            "timestamp": 1780161330549
+        },
+        {
+            "path": "v_ai rules.md",
+            "name": "v_ai rules",
+            "timestamp": 1780160442494
+        },
+        {
+            "path": "Settings.md",
+            "name": "Settings",
+            "timestamp": 1780160434279
+        },
+        {
+            "path": "Make prompts.yml",
+            "name": "Make prompts",
+            "timestamp": 1780160426904
+        },
+        {
+            "path": "Demo.yml",
+            "name": "Demo",
+            "timestamp": 1780160423047
+        },
+        {
+            "path": "15 Goals (common)/Hermes 2605.yml",
+            "name": "Hermes 2605",
+            "timestamp": 1780160413841
+        },
+        {
+            "path": "11 MIGR_RECIPE.md",
+            "name": "11 MIGR_RECIPE",
+            "timestamp": 1780160407275
+        },
+        {
+            "path": "11 Idea dev (more INTELLIGENCE)/Research sth online.yml",
+            "name": "Research sth online",
+            "timestamp": 1780160396238
+        },
+        {
+            "path": "11 Idea dev (more INTELLIGENCE)/Improve a rough idea.yml",
+            "name": "Improve a rough idea",
+            "timestamp": 1780160395253
+        },
+        {
+            "path": "11 Idea dev (more INTELLIGENCE)/Idea dev.yml",
+            "name": "Idea dev",
+            "timestamp": 1780160393619
+        }
+    ],
+    "Biz": [
+        {
+            "path": "11 BLANK_SNIPP.yml",
+            "name": "11 BLANK_SNIPP",
+            "timestamp": 1780160748647
+        },
+        {
+            "path": "Biz/X.md",
+            "name": "X",
+            "timestamp": 1780160529616
+        },
+        {
+            "path": "Biz/Sales/Jobs - Deep find gigi companies.yml",
+            "name": "Jobs - Deep find gigi companies",
+            "timestamp": 1780160523255
+        },
+        {
+            "path": "Biz/Sales/Cowork LinkedIn Bew.md",
+            "name": "Cowork LinkedIn Bew",
+            "timestamp": 1780160520823
+        },
+        {
+            "path": "Biz/LinkedIn/LinkedIn Betrag via AI - In.md",
+            "name": "LinkedIn Betrag via AI - In",
+            "timestamp": 1780160506024
+        },
+        {
+            "path": "Biz/LinkedIn/LinkedIn Betrag via AI.md",
+            "name": "LinkedIn Betrag via AI",
+            "timestamp": 1780160504943
+        },
+        {
+            "path": "Biz/LinkedIn/Cowork- LinkedIn Con.md",
+            "name": "Cowork- LinkedIn Con",
+            "timestamp": 1780160491459
+        },
+        {
+            "path": "Biz/LinkedIn/Article.yml",
+            "name": "Article",
+            "timestamp": 1780160488557
+        },
+        {
+            "path": "Biz/Find Biz ideas/Look for easy markeing (search).yml",
+            "name": "Look for easy markeing (search)",
+            "timestamp": 1780160485193
+        },
+        {
+            "path": "Biz/Find Biz ideas/Find passive income - Kopie.yml",
+            "name": "Find passive income - Kopie",
+            "timestamp": 1780160459037
         }
     ]
 }
