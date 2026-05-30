@@ -137,6 +137,17 @@ try {
       $response = $manager->batchRename($subPath, is_array($ops) ? $ops : []);
       break;
 
+    case 'removeLink':
+      $subPath = $input['subPath'] ?? '';
+      $target  = $input['target'] ?? '';
+      $bases   = $input['bases'] ?? null;
+
+      if( $manager->removeLink($subPath, $target, is_array($bases) ? $bases : null) )
+        $response = ['success' => true, 'message' => 'Link removed successfully'];
+      else
+        $response = ['success' => false, 'message' => 'Link not found'];
+      break;
+
     case 'searchSnippets':
       $query = $input['query'] ?? '';
       $results = $manager->searchSnippets($query);

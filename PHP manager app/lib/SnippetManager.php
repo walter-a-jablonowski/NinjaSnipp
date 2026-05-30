@@ -564,6 +564,43 @@ class SnippetManager
     return ['success' => true, 'message' => 'Reordered'];
   }
 
+  // Deletes the empty "INCLUDE <target>" marker file(s) that produce a link, without touching the target.
+  // Matches by target name so any ordinal prefix on the marker is irrelevant.
+  public function removeLink( string $subPath, string $target, ?array $bases = null ) : bool
+  {
+    $target  = trim($target);
+    if( $target === '' )
+      return false;
+    $subPath = trim(str_replace('\\', '/', $subPath), '/');
+
+    $searchBases = [];
+    if( $bases ) {
+      foreach( $bases as $b )
+        if( $this->isKnownBase((string)$b) )
+          $searchBases[] = rtrim(str_replace('\\', '/', (string)$b), '/');
+    }
+    if( empty($searchBases) )
+      foreach( $this->currentFolders as $f )
+        $searchBases[] = rtrim($f['path'], '/');
+
+    $removed = false;
+    foreach( $searchBases as $base ) {
+      $dir = $base . ($subPath !== '' ? "/$subPath" : '');
+      if( ! is_dir($dir) )
+        continue;
+      foreach( scandir($dir) as $file ) {
+        if( $file === '.' || $file === '..' )
+          continue;
+        $pos = strpos($file, 'INCLUDE');
+        if( $pos === false )
+          continue;
+        if( trim(substr($file, $pos + 7)) === $target && @unlink("$dir/$file") )
+          $removed = true;
+      }
+    }
+    return $removed;
+  }
+
   // Moves a file's color entry in the parent folder's .sys/ninja.json when the file is renamed
   private function migrateFileColorKey( string $folderDir, string $oldName, string $newName ) : void
   {

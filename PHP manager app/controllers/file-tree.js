@@ -222,9 +222,13 @@ class FileTreeController
         ? `<li><a class="dropdown-item small" href="#" data-action="new-snippet">New Snippet</a></li>
            <li><a class="dropdown-item small" href="#" data-action="new-folder">New Folder</a></li>
            <li><a class="dropdown-item small" href="#" data-action="new-link">New Link</a></li>
-           ${explorerItem ? explorerItem : ''}`
+           ${explorerItem ? explorerItem : ''}
+           <li><hr class="dropdown-divider"></li>
+           <li><a class="dropdown-item small text-danger" href="#" data-action="remove-link">Remove link</a></li>`
         : `<li><span class="dropdown-item small text-muted disabled">Included file</span></li>
-           ${explorerItem}`;
+           ${explorerItem}
+           <li><hr class="dropdown-divider"></li>
+           <li><a class="dropdown-item small text-danger" href="#" data-action="remove-link">Remove link</a></li>`;
     }
     else {
       menuItems = isFolder
@@ -375,6 +379,12 @@ class FileTreeController
       if( nameEl ) nameEl.textContent = baseName;
       showModal('deleteSnippetModal');
     }
+    else if( action === 'remove-link' ) {
+      const node = this.findNodeInTree(this.app.fileTree, path);
+      if( ! node ) return;
+      const bases = (node.mergedBases && node.mergedBases.length) ? node.mergedBases : [node.basePath];
+      this._removeLink(this._parentPathOf(path), node.name, bases);
+    }
     else if( action === 'open-in-explorer' ) {
       const basePath = actionEl.getAttribute('data-base-path');
       const payload  = { path: fsPath, itemType: type };
@@ -414,6 +424,19 @@ class FileTreeController
       node.color     = colorName ? (palette[colorName] || null) : null;
     }
     this.renderTree();
+  }
+
+  // Removes the empty INCLUDE marker file(s) for a link; the target itself is untouched
+  async _removeLink(subPath, target, bases)
+  {
+    const res = await apiCall(this.app.currentDataPath, 'removeLink', { subPath, target, bases });
+    if( res && res.success ) {
+      await this.app.loadFiles();
+      showSuccess('Link removed');
+    }
+    else {
+      showError('Failed to remove link: ' + (res?.message || 'Unknown error'));
+    }
   }
 
   handleFileClick(e)
