@@ -43,6 +43,16 @@
   background-color: #233040 !important;
 }
 
+[data-theme="dark"] .tree-item.active,
+[data-theme="dark"] .tree-item.active:hover,
+[data-theme="dark"] .tree-item.active:focus,
+[data-theme="dark"] .file-item.active,
+[data-theme="dark"] .file-item.active:hover,
+[data-theme="dark"] .file-item.active:focus {
+  background-color: var(--bs-primary) !important;
+  color: #fff !important;
+}
+
 [data-theme="dark"] .tree-toggle,
 [data-theme="dark"] .tree-menu-btn {
   color: #93a6ba !important;
