@@ -191,6 +191,20 @@
   border-color: #31404f;
 }
 
+[data-theme="dark"] #sidebarTabs .nav-link {
+  color: #ffb15a;
+}
+
+[data-theme="dark"] #sidebarTabs .nav-link:hover,
+[data-theme="dark"] #sidebarTabs .nav-link:focus {
+  color: #ffd29a;
+}
+
+[data-theme="dark"] #sidebarTabs .nav-link.active {
+  background-color: transparent;
+  color: #ffd29a;
+}
+
 [data-theme="dark"] .usage-tab-btn {
   color: #9eb0c2;
 }
