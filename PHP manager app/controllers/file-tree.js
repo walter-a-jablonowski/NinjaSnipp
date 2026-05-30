@@ -144,6 +144,13 @@ class FileTreeController
     return labels[basePath] || null;
   }
 
+  // Strips a leading two-digit ordinal prefix (e.g. "11 Common" -> "Common") for display only.
+  // The real name (with prefix) is kept in path/fsPath so server-side sorting is unaffected.
+  _displayName(name)
+  {
+    return name.replace(/^\d{2}[ _.\-]+/, '');
+  }
+
   renderTreeNode(node)
   {
     const { type, _depth, path, fsPath, name, isOpen, extension, isIncluded, color, colorName, basePath, mergedBases } = node;
@@ -151,6 +158,7 @@ class FileTreeController
     const isMerged   = isFolder && mergedBases && mergedBases.length > 1;
     const indentPx   = 6 + _depth * 14;
     const realFsPath = fsPath || path;
+    const displayName = this._displayName(name);
 
     const icon = isFolder
       ? (isMerged ? (isOpen ? 'bi-folder-symlink' : 'bi-folder-symlink') : (isOpen ? 'bi-folder2-open' : 'bi-folder'))
@@ -239,11 +247,11 @@ class FileTreeController
 
     return `<div class="tree-item${isFolder ? ' tree-folder' : ' tree-file'}${isIncluded ? ' tree-included' : ''}${isMerged ? ' tree-merged' : ''}" ` +
       `data-path="${path}" data-fspath="${realFsPath}" data-type="${type}" data-extension="${extension || ''}"${mergedBasesAttr} ` +
-      `tabindex="0" title="${name}" style="${styleVal}">` +
+      `tabindex="0" title="${displayName}" style="${styleVal}">` +
       `<div class="d-flex align-items-center">` +
         toggleEl +
         `<i class="bi ${icon} file-icon"></i>` +
-        `<span class="tree-name flex-grow-1">${name}${includedIcon}</span>` +
+        `<span class="tree-name flex-grow-1">${displayName}${includedIcon}</span>` +
         `<div class="dropdown">` +
           `<button class="btn btn-sm btn-link text-muted p-0 tree-menu-btn" type="button" ` +
             `data-bs-toggle="dropdown" aria-expanded="false" aria-label="More actions">` +
