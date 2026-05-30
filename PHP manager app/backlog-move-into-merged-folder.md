@@ -3,6 +3,9 @@ Debug files:
 - PHP manager app\data\cmn\sub
 - PHP manager app\data\demo_data_1\sub
 
+What happends if links are moved, will that work?
+
+
 # Backlog: Move a file/folder into a (merged) sub-folder via drag & drop
 
 **Status:** Deferred / backlog
