@@ -16,4 +16,4 @@
 
  - [x] Files and folders have a Delete entry in the file/folder menu. Links nee a "Remove link" entry that can be used to delete the empty link file-
 
-- [ ] Can we add missing file viewer features to the readme
+- [ ] Can we add missing file viewer features to the readme?

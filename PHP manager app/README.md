@@ -10,6 +10,21 @@ A snippet manager app that has some special features
 
 - initially load data folder `index.php?data=Demo%202` (key from config)
 
+### File viewer
+
+The sidebar file tree shows snippets and folders from all source folders of the current data set.
+
+- **Files / Recent tabs** plus search
+- **Ordinal prefixes**: a leading two-digit prefix on a name (e.g. `11 Common`, `20 router.yml`) is hidden in the UI but kept on disk. Sorting is by the real (prefixed) name, so the prefixes define the order.
+- **Drag & drop reorder**: drag an item above/below a sibling to reorder it *within the same level*. The ordinal prefixes are rewritten on disk to match (across all merged source folders at once); file colors are preserved. Reordering only — items can't be dragged into another folder. Included items (links) can't be dragged.
+- **Item menu** (⋮ right of each name):
+  - Folder: New Snippet, New Folder, New Link, color swatches, Rename, Open in Explorer, Delete
+  - File: color swatches, Rename, Open in Explorer, Delete
+  - Link (included item): New Snippet/Folder/Link (for included folders) and **Remove link** (deletes only the empty `INCLUDE` marker, never the target)
+- **Top "New…" dropdown** (right of the Files/Recent tabs): New Snippet, New Folder, New Link at the root level
+- **Color tagging**: pick a swatch in the menu to tag a file/folder; stored in `.sys/ninja.json` (palette per theme in settings)
+- When a name exists in several merged sources, create/color/rename actions ask for / apply to the relevant source(s) — see `foldersMerged` below
+
 ### `foldersMerged` modes (`nav.foldersMerged` in settings)
 
 | Aspect | `false` (default) | `true` |
@@ -31,6 +46,8 @@ Combined base folders: cmn plus detail (see settings)
 - File: `11 INCLUDE error-handling`
 - Folder: `11 INCLUDE common`
 - current data folder only
+- the target is resolved by name at a source root (any ordinal prefix on the marker is ignored)
+- create/remove via the file viewer menus (**New Link** / **Remove link**), or by adding/deleting the marker file directly
 
 ### File format
 
