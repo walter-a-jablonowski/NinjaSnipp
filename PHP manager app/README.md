@@ -73,7 +73,7 @@ usage:                  # Full text or yml keys
     - Example output
     - How to use...
 
-    -- Tasks (color: red) --------   # Things that eed to be worked on in this prompt
+    -- Tasks (color: red) --------   # Things that need to be worked on in this prompt
 
     -- Dev --------
 
@@ -94,6 +94,23 @@ usage:                  # Full text or yml keys
 
 content: |    # Snippet
 ```
+
+#### Required vs. optional fields
+
+Only `content` is enforced. The editor blocks saving when `content` is empty (`Content is required`). All other fields are optional: the loader (`SnippetManager::loadSnippet`) and saver (`SnippetManager::saveSnippet`) do no field validation, and the preview renders every field conditionally (missing fields are simply skipped or default to empty).
+
+| Field | Required | Coemmnts |
+|---|---|---|
+| `content` | **Yes** | Save is rejected if empty (`md` and `yml`) |
+| `id` | No | Rendered only if present |
+| `version` | No | Not validated or enforced |
+| `sc` | No | Saved as empty string when blank |
+| `short` | No | Rendered only if present |
+| `usage` | No | Whole block optional; saved as empty string when blank |
+| `usage.head` | No | Rendered only if present |
+| `usage.maybe` | No | Rendered only if present |
+| `usage.vars` | No | Rendered only if present |
+| `usage.text` | No | Rendered only if present |
 
 ### Placeholders
 
