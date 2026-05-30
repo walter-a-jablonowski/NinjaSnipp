@@ -495,6 +495,8 @@ class RenderController
     while( (m = re.exec(content)) ) {
       const token = m[1].trim();
       if( /^include:/i.test(token) ) continue;
+      if( /^MAYBE:/i.test(token) ) continue;       // MAYBE block opener, not a var
+      if( /^END-MAYBE$/i.test(token) ) continue;   // MAYBE block closer, not a var
       const vm = token.match(/^([A-Za-z0-9_.-]+)(?:=.+)?$/);
       if( vm ) set.add(vm[1]);
     }
