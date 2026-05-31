@@ -476,6 +476,13 @@ class FileTreeController
     if( ! ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Enter',' '].includes(e.key) ) return;
 
     const active = document.activeElement;
+
+    // Don't hijack keys while the user is typing in an input / contenteditable
+    // (e.g. the var-value inputs or inline placeholders in the preview)
+    if( active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA'
+                   || active.tagName === 'SELECT' || active.isContentEditable) )
+      return;
+
     const current = active?.classList?.contains('tree-item')
       ? active
       : this.app._focusedTreeItem || null;
