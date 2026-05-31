@@ -118,6 +118,12 @@ body {
   overflow-y: auto;
 }
 
+/* Gap between list items and the scrollbar */
+#fileList,
+#recentList {
+  padding-right: 0.35rem;
+}
+
 /* Recent file list */
 .recent-file-item {
   padding-right: 0.5rem;
