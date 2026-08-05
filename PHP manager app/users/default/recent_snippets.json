@@ -3,32 +3,32 @@
         {
             "path": "env-config.yml",
             "name": "env-config",
-            "timestamp": 1780152780444
+            "timestamp": 1780481687784
         },
         {
             "path": "html-form.yml",
             "name": "html-form",
-            "timestamp": 1778420007038
+            "timestamp": 1780167502940
+        },
+        {
+            "path": "README.md",
+            "name": "README",
+            "timestamp": 1780167502136
         },
         {
             "path": "example-array.yml",
             "name": "example-array",
-            "timestamp": 1778419987762
+            "timestamp": 1780167497868
+        },
+        {
+            "path": "cmn-sub/license-header.yml",
+            "name": "license-header",
+            "timestamp": 1780164582733
         },
         {
             "path": "common/error-handling.yml",
             "name": "error-handling",
             "timestamp": 1776198033799
-        },
-        {
-            "path": "README.md",
-            "name": "README",
-            "timestamp": 1776197992597
-        },
-        {
-            "path": "cmn-sub/license-header.yml",
-            "name": "license-header",
-            "timestamp": 1776006107132
         },
         {
             "path": "common/function-template.yml",
@@ -102,6 +102,11 @@
     ],
     "Prompt demo": [
         {
+            "path": "Conn list of people LinkedIn (Cowork).yml",
+            "name": "Conn list of people LinkedIn (Cowork)",
+            "timestamp": 1780481691586
+        },
+        {
             "path": "DEMO LinkedIn.yml",
             "name": "DEMO LinkedIn",
             "timestamp": 1778419973263
@@ -114,158 +119,158 @@
     ],
     "Common": [
         {
-            "path": "11 Idea dev (more INTELLIGENCE)/AI engineers.yml",
-            "name": "AI engineers",
-            "timestamp": 1780162520758
+            "path": "01 AI/Find MS google products/20 Filter relevant.yml",
+            "name": "20 Filter relevant",
+            "timestamp": 1785940480686
+        },
+        {
+            "path": "Wohn/11 First.yml",
+            "name": "11 First",
+            "timestamp": 1785940405079
         },
         {
             "path": "- DESC.md",
             "name": "- DESC",
-            "timestamp": 1780162517157
+            "timestamp": 1785940401281
         },
         {
-            "path": "11 BLANK_SNIPP.yml",
-            "name": "11 BLANK_SNIPP",
-            "timestamp": 1780162056644
+            "path": "01 AI/Find MS google products/11 Find.yml",
+            "name": "11 Find",
+            "timestamp": 1785862864886
         },
         {
-            "path": "11 MIGR_RECIPE.md",
-            "name": "11 MIGR_RECIPE",
-            "timestamp": 1780162041646
+            "path": "01 AI/Find MS google products/Comparrison.yml",
+            "name": "Comparrison",
+            "timestamp": 1785794047764
         },
         {
-            "path": "Make prompts.yml",
-            "name": "Make prompts",
-            "timestamp": 1780162039316
+            "path": "01 AI/Find MS google products.yml",
+            "name": "Find MS google products",
+            "timestamp": 1785793393488
         },
         {
-            "path": "Demo.yml",
-            "name": "Demo",
-            "timestamp": 1780161985703
+            "path": "01 AI/(rg) Get latest AI features.yml",
+            "name": "(rg) Get latest AI features",
+            "timestamp": 1785768707911
         },
         {
-            "path": "08 Add Context/Collec ideas (context).yml",
-            "name": "Collec ideas (context)",
-            "timestamp": 1780159711829
+            "path": "01 Usage (common)/40 Agent teams & swarms.md",
+            "name": "40 Agent teams & swarms",
+            "timestamp": 1785768644036
         },
         {
-            "path": "_PROMPTS.md",
-            "name": "_PROMPTS",
-            "timestamp": 1780159577535
+            "path": "01 Usage (common)/20 Development workflow.md",
+            "name": "20 Development workflow",
+            "timestamp": 1785768642324
         },
         {
-            "path": "Settings.md",
-            "name": "Settings",
-            "timestamp": 1780155888119
-        },
-        {
-            "path": "SNIPPET_MIGRATION_RECIPE.md",
-            "name": "SNIPPET_MIGRATION_RECIPE",
-            "timestamp": 1780155879080
+            "path": "01 Usage (common)/10 Prompting techniques.md",
+            "name": "10 Prompting techniques",
+            "timestamp": 1785768641041
         }
     ],
     "Dev": [
         {
             "path": "Dev (AI does all work)/08 From known App/11 Make idea.yml",
             "name": "11 Make idea",
-            "timestamp": 1780161330549
+            "timestamp": 1785768934710
         },
         {
-            "path": "v_ai rules.md",
-            "name": "v_ai rules",
-            "timestamp": 1780160442494
+            "path": "Dev (AI does all work)/50 Coding/Extract and copy theme.yml",
+            "name": "Extract and copy theme",
+            "timestamp": 1785768931498
         },
         {
-            "path": "Settings.md",
-            "name": "Settings",
-            "timestamp": 1780160434279
+            "path": "Dev (AI does all work)/50 Coding/Look for low hanging fruits.yml",
+            "name": "Look for low hanging fruits",
+            "timestamp": 1785768930519
         },
         {
-            "path": "Make prompts.yml",
-            "name": "Make prompts",
-            "timestamp": 1780160426904
+            "path": "Dev (AI does all work)/50 Coding/28 Keep design.yml",
+            "name": "28 Keep design",
+            "timestamp": 1785768928958
         },
         {
-            "path": "Demo.yml",
-            "name": "Demo",
-            "timestamp": 1780160423047
+            "path": "Dev (AI does all work)/11 Impr prompt/30 Find errors with sub agents.yml",
+            "name": "30 Find errors with sub agents",
+            "timestamp": 1785768925145
+        },
+        {
+            "path": "Dev (AI does all work)/11 Impr prompt/Check prompt.yml",
+            "name": "Check prompt",
+            "timestamp": 1785768774607
         },
         {
             "path": "15 Goals (common)/Hermes 2605.yml",
             "name": "Hermes 2605",
-            "timestamp": 1780160413841
+            "timestamp": 1785768758801
         },
         {
-            "path": "11 MIGR_RECIPE.md",
-            "name": "11 MIGR_RECIPE",
-            "timestamp": 1780160407275
+            "path": "- DESC.md",
+            "name": "- DESC",
+            "timestamp": 1784820650103
         },
         {
-            "path": "11 Idea dev (more INTELLIGENCE)/Research sth online.yml",
-            "name": "Research sth online",
-            "timestamp": 1780160396238
+            "path": "Dev (AI does all work)/45 Add Framework/50 Add login.yml",
+            "name": "50 Add login",
+            "timestamp": 1783275299600
         },
         {
-            "path": "11 Idea dev (more INTELLIGENCE)/Improve a rough idea.yml",
-            "name": "Improve a rough idea",
-            "timestamp": 1780160395253
-        },
-        {
-            "path": "11 Idea dev (more INTELLIGENCE)/Idea dev.yml",
-            "name": "Idea dev",
-            "timestamp": 1780160393619
+            "path": "Dev (AI does all work)/45 Add Framework/60 Add debug login and mail.yml",
+            "name": "60 Add debug login and mail",
+            "timestamp": 1783275297026
         }
     ],
     "Biz": [
         {
-            "path": "11 BLANK_SNIPP.yml",
-            "name": "11 BLANK_SNIPP",
-            "timestamp": 1780160748647
-        },
-        {
-            "path": "Biz/X.md",
-            "name": "X",
-            "timestamp": 1780160529616
-        },
-        {
-            "path": "Biz/Sales/Jobs - Deep find gigi companies.yml",
-            "name": "Jobs - Deep find gigi companies",
-            "timestamp": 1780160523255
-        },
-        {
-            "path": "Biz/Sales/Cowork LinkedIn Bew.md",
-            "name": "Cowork LinkedIn Bew",
-            "timestamp": 1780160520823
-        },
-        {
-            "path": "Biz/LinkedIn/LinkedIn Betrag via AI - In.md",
-            "name": "LinkedIn Betrag via AI - In",
-            "timestamp": 1780160506024
-        },
-        {
-            "path": "Biz/LinkedIn/LinkedIn Betrag via AI.md",
-            "name": "LinkedIn Betrag via AI",
-            "timestamp": 1780160504943
-        },
-        {
-            "path": "Biz/LinkedIn/Cowork- LinkedIn Con.md",
-            "name": "Cowork- LinkedIn Con",
-            "timestamp": 1780160491459
-        },
-        {
             "path": "Biz/LinkedIn/Article.yml",
             "name": "Article",
-            "timestamp": 1780160488557
+            "timestamp": 1784241219061
+        },
+        {
+            "path": "- DESC.md",
+            "name": "- DESC",
+            "timestamp": 1784241210189
+        },
+        {
+            "path": "Biz/Find Biz ideas/Find passive income 2.yml",
+            "name": "Find passive income 2",
+            "timestamp": 1783864743186
+        },
+        {
+            "path": "Biz/Find Biz ideas/Find passive income.yml",
+            "name": "Find passive income",
+            "timestamp": 1783864727169
+        },
+        {
+            "path": "Biz/LinkedIn/Cowork- LinkedIn Con.yml",
+            "name": "Cowork- LinkedIn Con",
+            "timestamp": 1783105721725
         },
         {
             "path": "Biz/Find Biz ideas/Look for easy markeing (search).yml",
             "name": "Look for easy markeing (search)",
-            "timestamp": 1780160485193
+            "timestamp": 1782482719010
         },
         {
-            "path": "Biz/Find Biz ideas/Find passive income - Kopie.yml",
-            "name": "Find passive income - Kopie",
-            "timestamp": 1780160459037
+            "path": "Biz/Find Biz ideas/Best Biz idea (online).yml",
+            "name": "Best Biz idea (online)",
+            "timestamp": 1782481617763
+        },
+        {
+            "path": "Biz/Find Biz ideas/Deep find pain points (trends).yml",
+            "name": "Deep find pain points (trends)",
+            "timestamp": 1782481615343
+        },
+        {
+            "path": "Biz/Find Biz ideas/Best Biz idea in (overview).yml",
+            "name": "Best Biz idea in (overview)",
+            "timestamp": 1782481605477
+        },
+        {
+            "path": "Biz/LinkedIn/Article (EN).yml",
+            "name": "Article (EN)",
+            "timestamp": 1781632215566
         }
     ]
 }

@@ -846,12 +846,38 @@ class RenderController
     const rawText = parts.join('');
     this.app.renderedText = rawText
       .split(/\n{2,}/)
-      .map(block => block.replace(/\n/g, ' ').replace(/ {2,}/g, ' ').trim())
+      .map(block => this.unwrapBlock(block))
       .filter(block => block.length > 0)
       .join('\n\n');
 
     const copyRenderedBtn = document.getElementById('copyRenderedBtn');
     if( copyRenderedBtn ) copyRenderedBtn.disabled = this.app.renderedText.length === 0;
+  }
+
+  // Joins soft wrapped lines of a text block, but keeps the line breaks of
+  // structured lines (list items, headings, quotes, tables, code, indented lines)
+  unwrapBlock( block )
+  {
+    const structuredRe = /^(?:[ \t]*(?:[-*+•]|\d+[.)])[ \t]|[ \t]*(?:#{1,6}[ \t]|>|\||```)|[ \t]+\S)/;
+
+    // Squeeze inner runs of blanks, keep the indent (nested lists)
+    const squeeze = (line) => {
+      const indent = line.match(/^[ \t]*/)[0];
+      return indent + line.slice(indent.length).replace(/[ \t]{2,}/g, ' ').trim();
+    };
+
+    const lines = block.split('\n').map(squeeze).filter(line => line !== '');
+    const out = [];
+
+    lines.forEach(line => {
+      const last = out.length > 0 ? out[out.length - 1] : null;
+      if( last !== null && ! structuredRe.test(line) && ! structuredRe.test(last) )
+        out[out.length - 1] = `${last} ${line}`;
+      else
+        out.push(line);
+    });
+
+    return out.join('\n');
   }
 
   async copyRenderedContent()
