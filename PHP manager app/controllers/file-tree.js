@@ -132,8 +132,8 @@ class FileTreeController
     if( ! this.app.currentSnippet ) return;
     const ext = this.app.currentSnippet._type === 'yml' ? 'yml' : 'md';
     const activePath = (this.app.currentPath ? this.app.currentPath + '/' : '') + this.app.currentSnippet._name + '.' + ext;
-    const item = document.querySelector(`.tree-item[data-path="${activePath}"]`)
-               || document.querySelector(`.tree-item[data-fspath="${activePath}"]`);
+    const item = treeItemByPath(activePath)
+               || treeItemByPath(activePath, 'data-fspath');
     if( item ) item.classList.add('active');
   }
 
@@ -187,7 +187,7 @@ class FileTreeController
       if( isMerged ) {
         const labels = mergedBases.map(base => {
           const label = (this.app.baseFolderLabels || {})[base] || base.split('/').pop();
-          return `<i class="bi bi-folder2 me-1"></i>${label}`;
+          return `<i class="bi bi-folder2 me-1"></i>${escapeHtml(label)}`;
         }).join('&nbsp;&amp;&nbsp;');
         sourceLabelHtml = `<li><span class="dropdown-item small text-muted pe-none source-label">${labels}</span></li>
            <li><hr class="dropdown-divider"></li>`;
@@ -195,7 +195,7 @@ class FileTreeController
       else {
         const sourceLabel = this._getSourceLabel(basePath);
         if( sourceLabel )
-          sourceLabelHtml = `<li><span class="dropdown-item small text-muted pe-none source-label"><i class="bi bi-folder2 me-1"></i>${sourceLabel}</span></li>
+          sourceLabelHtml = `<li><span class="dropdown-item small text-muted pe-none source-label"><i class="bi bi-folder2 me-1"></i>${escapeHtml(sourceLabel)}</span></li>
              <li><hr class="dropdown-divider"></li>`;
       }
     }
@@ -206,7 +206,7 @@ class FileTreeController
         explorerItem = `<li><span class="dropdown-item small text-muted pe-none">Open in Explorer</span></li>` +
           mergedBases.map(base => {
             const label = (this.app.baseFolderLabels || {})[base] || base.split('/').pop();
-            return `<li><a class="dropdown-item small ps-4" href="#" data-action="open-in-explorer" data-base-path="${base}">${label}</a></li>`;
+            return `<li><a class="dropdown-item small ps-4" href="#" data-action="open-in-explorer" data-base-path="${escapeHtml(base)}">${escapeHtml(label)}</a></li>`;
           }).join('');
       }
       else {
@@ -214,7 +214,8 @@ class FileTreeController
       }
     }
 
-    const mergedBasesAttr = isMerged ? ` data-merged-bases='${JSON.stringify(mergedBases)}'` : '';
+    // Double-quoted and escaped: a source path may legitimately contain an apostrophe
+    const mergedBasesAttr = isMerged ? ` data-merged-bases="${escapeHtml(JSON.stringify(mergedBases))}"` : '';
 
     let menuItems;
     if( isIncluded ) {
@@ -252,13 +253,13 @@ class FileTreeController
     }
 
     return `<div class="tree-item${isFolder ? ' tree-folder' : ' tree-file'}${isIncluded ? ' tree-included' : ''}${isMerged ? ' tree-merged' : ''}" ` +
-      `data-path="${path}" data-fspath="${realFsPath}" data-type="${type}" data-extension="${extension || ''}"${mergedBasesAttr} ` +
+      `data-path="${escapeHtml(path)}" data-fspath="${escapeHtml(realFsPath)}" data-type="${type}" data-extension="${escapeHtml(extension || '')}"${mergedBasesAttr} ` +
       `draggable="${isIncluded ? 'false' : 'true'}" ` +
-      `tabindex="0" title="${displayName}" style="${styleVal}">` +
+      `tabindex="0" title="${escapeHtml(displayName)}" style="${styleVal}">` +
       `<div class="d-flex align-items-center">` +
         toggleEl +
         `<i class="bi ${icon} file-icon"></i>` +
-        `<span class="tree-name flex-grow-1">${displayName}${includedIcon}</span>` +
+        `<span class="tree-name flex-grow-1">${escapeHtml(displayName)}${includedIcon}</span>` +
         `<div class="dropdown">` +
           `<button class="btn btn-sm btn-link text-muted p-0 tree-menu-btn" type="button" ` +
             `data-bs-toggle="dropdown" aria-expanded="false" aria-label="More actions">` +
@@ -278,7 +279,7 @@ class FileTreeController
 
     const swatches = entries.map(([name, hex]) => {
       const active = name === currentColorName ? ' swatch-active' : '';
-      return `<span class="folder-color-swatch${active}" data-action="set-color" data-color="${name}" style="background:${hex}" title="${name}"></span>`;
+      return `<span class="folder-color-swatch${active}" data-action="set-color" data-color="${escapeHtml(name)}" style="background:${escapeHtml(hex)}" title="${escapeHtml(name)}"></span>`;
     }).join('');
 
     const clearBtn = currentColorName
@@ -386,9 +387,10 @@ class FileTreeController
       this._removeLink(this._parentPathOf(path), node.name, bases);
     }
     else if( action === 'open-in-explorer' ) {
+      // Only the source folder is sent; the server joins and validates it
       const basePath = actionEl.getAttribute('data-base-path');
       const payload  = { path: fsPath, itemType: type };
-      if( basePath ) payload.fullPath = basePath + '/' + fsPath;
+      if( basePath ) payload.basePath = basePath;
       apiCall(this.app.currentDataPath, 'openInExplorer', payload);
     }
   }
@@ -514,7 +516,7 @@ class FileTreeController
       if( liveItem.dataset.type === 'folder' ) {
         const node = this.findNodeInTree(this.app.fileTree, trackedPath);
         if( node && ! node.isOpen ) this.toggleFolder(trackedPath).then(() => {
-          const el = document.querySelector(`.tree-item[data-path="${trackedPath}"]`);
+          const el = treeItemByPath(trackedPath);
           if( el ) { this.app._focusedTreeItem = el; el.focus(); }
         });
       }
@@ -524,7 +526,7 @@ class FileTreeController
       if( liveItem.dataset.type === 'folder' ) {
         const node = this.findNodeInTree(this.app.fileTree, trackedPath);
         if( node && node.isOpen ) this.toggleFolder(trackedPath).then(() => {
-          const el = document.querySelector(`.tree-item[data-path="${trackedPath}"]`);
+          const el = treeItemByPath(trackedPath);
           if( el ) { this.app._focusedTreeItem = el; el.focus(); }
         });
       }
@@ -533,7 +535,7 @@ class FileTreeController
         parts.pop();
         const parentPath = parts.join('/');
         if( parentPath ) {
-          const parent = document.querySelector(`.tree-item[data-path="${parentPath}"]`);
+          const parent = treeItemByPath(parentPath);
           if( parent ) { this.app._focusedTreeItem = parent; parent.focus(); }
         }
       }
@@ -698,7 +700,7 @@ class FileTreeController
     await this.app.loadFiles();
 
     if( dragged.type === 'file' && draggedNewPath ) {
-      const el = document.querySelector(`.tree-item[data-path="${draggedNewPath}"]`);
+      const el = treeItemByPath(draggedNewPath);
       if( el ) {
         document.querySelectorAll('.tree-item.active, .file-item.active').forEach(n => n.classList.remove('active'));
         el.classList.add('active');

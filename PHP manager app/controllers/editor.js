@@ -166,10 +166,13 @@ class EditorController
       // Adopt the server's normalized copy so `usage` stays a parsed object; keeping the
       // raw textarea text would make the usage preview fall back to rendering plain YAML
       this.app.currentSnippet = result.snippet || data;
-      this.app.loadFiles();
 
-      if( this.app.currentSnippet._type === 'yml' ) {
-        this.app.render.composeAndRenderInline();
+      // Autosave changes neither the file list nor a visible preview (it only fires from
+      // the edit tab), so skip both round trips - the render tab recomposes on activation
+      if( ! silent ) {
+        this.app.loadFiles();
+        if( this.app.currentSnippet._type === 'yml' )
+          this.app.render.composeAndRenderInline();
       }
     }
     else if( silent ) {
@@ -347,7 +350,7 @@ class EditorController
       if( modal ) modal.hide();
       if( ctx.parent ) this.app.expandedFolders.add(ctx.parent);
       await this.app.loadFiles();
-      const newItem = document.querySelector(`.tree-item[data-path="${newPath}"]`);
+      const newItem = treeItemByPath(newPath);
       if( newItem ) {
         document.querySelectorAll('.tree-item.active, .file-item.active').forEach(n => n.classList.remove('active'));
         newItem.classList.add('active');
@@ -471,7 +474,7 @@ class EditorController
       await this.app.loadFiles();
 
       document.querySelectorAll('.tree-item.active, .file-item.active').forEach(item => item.classList.remove('active'));
-      const newItem = document.querySelector(`.tree-item[data-path="${path}"]`);
+      const newItem = treeItemByPath(path);
       if( newItem ) newItem.classList.add('active');
       await this.loadSnippet(path);
       activateTab('edit-tab');

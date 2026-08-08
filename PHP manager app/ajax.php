@@ -12,6 +12,9 @@ header('Content-Type: application/json');
 $input  = json_decode( file_get_contents('php://input'), true);
 $action = $input['action'] ?? '';
 
+$appConfig = is_file('config.yml') ? Yaml::parseFile('config.yml') : [];
+$special   = (bool)($appConfig['special'] ?? false);
+
 $config  = Yaml::parseFile('users/default/settings.yml');
 $manager = new SnippetManager( $config['dataPaths'] ?? ['data'], $config, __DIR__);
 if( isset($config['nav']['foldersFirst']) )
@@ -99,19 +102,27 @@ try {
     case 'renameItem':
       $oldPath = $input['oldPath'] ?? '';
       $newPath = $input['newPath'] ?? '';
-      $base    = isset($input['basePath']) && $input['basePath'] !== ''
-        ? rtrim($input['basePath'], '/')
-        : rtrim($manager->getCurrentDataPath(), '/');
-
-      // Build absolute paths
-      $oldFull = $base . '/' . ltrim($oldPath, '/');
-      $newFull = $base . '/' . ltrim($newPath, '/');
 
       // Basic validation
       if( $oldPath === '' || $newPath === '' ) {
         $response = ['success' => false, 'message' => 'Invalid parameters'];
         break;
       }
+      if( ! $manager->isSafeRelativePath($oldPath) || ! $manager->isSafeRelativePath($newPath) ) {
+        $response = ['success' => false, 'message' => 'Invalid path'];
+        break;
+      }
+
+      $base = $manager->resolveBasePath($input['basePath'] ?? null);
+      if( $base === null ) {
+        $response = ['success' => false, 'message' => 'Invalid source folder'];
+        break;
+      }
+      $base = rtrim($base, '/');
+
+      // Build absolute paths
+      $oldFull = $base . '/' . ltrim($oldPath, '/');
+      $newFull = $base . '/' . ltrim($newPath, '/');
 
       // Ensure old exists and new doesn't
       if( ! file_exists($oldFull) ) {
@@ -182,10 +193,15 @@ try {
       break;
 
     case 'createFolder':
-      $folderPath     = $input['folderPath'] ?? '';
-      $targetBasePath = $input['targetBasePath'] ?? null;
-      $base           = $targetBasePath ?? $manager->getCurrentDataPath();
-      $fullPath       = rtrim($base, '/') . '/' . ltrim($folderPath, '/');
+      $folderPath = $input['folderPath'] ?? '';
+      $base       = $manager->resolveBasePath($input['targetBasePath'] ?? null);
+
+      if( $folderPath === '' || ! $manager->isSafeRelativePath($folderPath) || $base === null ) {
+        $response = ['success' => false, 'message' => 'Invalid folder path'];
+        break;
+      }
+
+      $fullPath = rtrim($base, '/') . '/' . ltrim($folderPath, '/');
 
       if( ! is_dir($fullPath) && mkdir($fullPath, 0755, true) )
         $response = ['success' => true, 'message' => 'Folder created successfully'];
@@ -194,12 +210,15 @@ try {
       break;
 
     case 'createLink':
-      $linkPath       = $input['linkPath'] ?? '';
-      $targetBasePath = $input['targetBasePath'] ?? null;
-      $base           = $targetBasePath ?? $manager->getCurrentDataPath();
+      $linkPath = $input['linkPath'] ?? '';
+      $base     = $manager->resolveBasePath($input['targetBasePath'] ?? null);
 
       if( $linkPath === '' ) {
         $response = ['success' => false, 'message' => 'Missing link path'];
+        break;
+      }
+      if( ! $manager->isSafeRelativePath($linkPath) || $base === null ) {
+        $response = ['success' => false, 'message' => 'Invalid link path'];
         break;
       }
 
@@ -331,22 +350,29 @@ try {
       break;
 
     case 'openInExplorer':
+      // Local-only convenience feature; the UI hides it unless config.yml sets special
+      if( ! $special ) {
+        $response = ['success' => false, 'message' => 'Not available'];
+        break;
+      }
+
       $relPath  = $input['path']     ?? '';
-      $itemType = $input['itemType'] ?? 'file';
-      $fullPath = isset($input['fullPath']) && $input['fullPath'] !== ''
-        ? $input['fullPath']
-        : $manager->resolvePhysicalPath($relPath, $itemType);
+      $itemType = $input['itemType'] === 'folder' ? 'folder' : 'file';
+
+      // The base is resolved server-side and must be a configured source. Taking a full
+      // path from the client would put arbitrary text into the command line below.
+      $fullPath = $manager->resolvePhysicalPath($relPath, $itemType, $input['basePath'] ?? null);
 
       if( $fullPath === null ) {
         $response = ['success' => false, 'message' => 'Path not found'];
         break;
       }
 
-      $winPath = str_replace('/', '\\', $fullPath);
+      $winPath = escapeshellarg(str_replace('/', '\\', $fullPath));
       if( $itemType === 'folder' )
-        pclose(popen("start \"\" explorer.exe \"{$winPath}\"", 'r'));
+        pclose(popen("start \"\" explorer.exe $winPath", 'r'));
       else
-        pclose(popen("start \"\" explorer.exe /select,\"{$winPath}\"", 'r'));
+        pclose(popen("start \"\" explorer.exe /select,$winPath", 'r'));
 
       $response = ['success' => true];
       break;

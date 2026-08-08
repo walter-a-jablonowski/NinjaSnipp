@@ -681,7 +681,7 @@
       if( this._initialLoad ) {
         const firstFile = result.files.find(f => f.type === 'file' && (f.extension === 'yml' || f.extension === 'md'));
         if( firstFile ) {
-          const fileItem = document.querySelector(`.tree-item[data-path="${firstFile.path}"]`);
+          const fileItem = treeItemByPath(firstFile.path);
           if( fileItem ) fileItem.classList.add('active');
           this.currentPath = '';
           this.editor.loadSnippet(firstFile.path);

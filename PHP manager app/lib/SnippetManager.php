@@ -15,6 +15,12 @@ class SnippetManager
   private bool $foldersFirst = true;
   private array $config = [];
   private string $appRoot = '';
+  // Per-request caches, keyed by absolute .sys/ninja.json path and by snippet name
+  private array $sysDataCache = [];
+  private array $snippetByNameCache = [];
+  // Cycle guards: links can point at an ancestor, and a snippet can include itself
+  private array $searchVisited = [];
+  private array $includeStack = [];
 
   public function __construct( array $dataPaths = ['data'], array $config = [], string $appRoot = '' )
   {
@@ -122,12 +128,71 @@ class SnippetManager
     return $map;
   }
 
+  // Only for the data set in use: a typo in another set's config should not litter the
+  // disk, and an unreachable drive should not emit a warning into a JSON response
   private function ensureDataDirectories() : void
   {
-    foreach( $this->dataPaths as $folders )
-      foreach( $folders as $folder )
-        if( ! is_dir($folder['path']) )
-          mkdir($folder['path'], 0755, true);
+    foreach( $this->currentFolders as $folder )
+      if( ! is_dir($folder['path']) )
+        @mkdir($folder['path'], 0755, true);
+  }
+
+  // Traversal guard for every client-supplied relative path. An empty path is safe - it
+  // just refers to the source folder itself; callers that need a name check separately.
+  public function isSafeRelativePath( string $path ) : bool
+  {
+    $path = str_replace('\\', '/', $path);
+
+    if( strpos($path, "\0") !== false )
+      return false;
+
+    if( $this->isAbsolutePath($path) )
+      return false;
+
+    return ! preg_match('#(^|/)\.\.(/|$)#', $path);
+  }
+
+  // Validates a client-supplied source folder. Returns the normalized path, the current
+  // data path when none was given, or null when it is not a configured source.
+  public function resolveBasePath( ?string $base ) : ?string
+  {
+    if( $base === null || $base === '' )
+      return $this->getCurrentDataPath();
+
+    $base = rtrim(str_replace('\\', '/', $base), '/');
+    return $this->isKnownBase($base) ? $base : null;
+  }
+
+  // A link marker is a file named "INCLUDE <target>", optionally carrying an ordinal
+  // prefix ("11 INCLUDE common"). Returns the target name, or null if it is not a marker.
+  // Matching by shape keeps a snippet called "INCLUDEs and notes.yml" a normal file.
+  private function includeTarget( string $fileName ) : ?string
+  {
+    if( ! preg_match('/^(?:\d{2}[ _.\-]+)?INCLUDE\s+(.+)$/', $fileName, $m) )
+      return null;
+
+    $target = trim($m[1]);
+    return $target === '' ? null : $target;
+  }
+
+  // Contents of a folder's .sys/ninja.json, read and decoded once per request instead of
+  // once per file in the folder
+  private function sysData( string $folderPath ) : array
+  {
+    $file = "$folderPath/.sys/ninja.json";
+
+    if( ! array_key_exists($file, $this->sysDataCache) )
+    {
+      $data = is_file($file) ? json_decode(file_get_contents($file), true) : null;
+      $this->sysDataCache[$file] = is_array($data) ? $data : [];
+    }
+
+    return $this->sysDataCache[$file];
+  }
+
+  private function forgetSysData( string $folderPath ) : void
+  {
+    unset($this->sysDataCache["$folderPath/.sys/ninja.json"]);
   }
 
   public function getDataPaths() : array
@@ -145,8 +210,10 @@ class SnippetManager
     if( ! isset($this->dataPaths[$label]) )
       return false;
 
-    $this->currentDataLabel = $label;
-    $this->currentFolders   = $this->buildFolders($label);
+    $this->currentDataLabel  = $label;
+    $this->currentFolders    = $this->buildFolders($label);
+    $this->snippetByNameCache = [];   // include lookups are per data set
+    $this->ensureDataDirectories();
     return true;
   }
 
@@ -156,9 +223,24 @@ class SnippetManager
     return $this->currentFolders[0]['path'] ?? '';
   }
 
-  // Returns the full OS path for a relative path (last-wins across merged folders), or null if not found
-  public function resolvePhysicalPath( string $relativePath, string $type = 'file' ) : ?string
+  // Returns the full OS path for a relative path (last-wins across merged folders), or
+  // null if not found. With $base given, resolves only inside that source folder - which
+  // must be a configured one, so a client cannot name an arbitrary directory.
+  public function resolvePhysicalPath( string $relativePath, string $type = 'file', ?string $base = null ) : ?string
   {
+    if( ! $this->isSafeRelativePath($relativePath) )
+      return null;
+
+    if( $base !== null && $base !== '' )
+    {
+      if( ! $this->isKnownBase($base) )
+        return null;
+
+      $abs = rtrim(str_replace('\\', '/', $base), '/') . '/' . ltrim($relativePath, '/');
+      $found = $type === 'folder' ? is_dir($abs) : is_file($abs);
+      return $found ? $abs : null;
+    }
+
     return $type === 'folder'
       ? $this->resolveExistingFolderPath($relativePath)
       : $this->resolveExistingFilePath($relativePath);
@@ -184,6 +266,9 @@ class SnippetManager
 
   public function listFiles( string $subPath = '' ) : array
   {
+    if( ! $this->isSafeRelativePath($subPath) )
+      return [];
+
     $foldersMerged = (bool)($this->config['nav']['foldersMerged'] ?? false);
     $byPath        = [];
 
@@ -284,9 +369,9 @@ class SnippetManager
           'colorName' => $colorName,
         ];
       }
-      elseif( strpos($file, 'INCLUDE') !== false )
+      elseif( ($includeName = $this->includeTarget($file)) !== null )
       {
-        $includeItems = $this->resolveIncludeFile($file, $relativePath, $subPath, $basePath, $color);
+        $includeItems = $this->resolveIncludeFile($includeName, $subPath, $basePath, $color);
         $items = array_merge($items, $includeItems);
       }
       elseif( pathinfo($file, PATHINFO_EXTENSION) === 'yml' || pathinfo($file, PATHINFO_EXTENSION) === 'md' )
@@ -308,16 +393,8 @@ class SnippetManager
     return $items;
   }
 
-  private function resolveIncludeFile( string $includeFileName, string $includeRelativePath, string $currentSubPath, string $basePath, ?string $color ) : array
+  private function resolveIncludeFile( string $targetName, string $currentSubPath, string $basePath, ?string $color ) : array
   {
-    $includePos = strpos($includeFileName, 'INCLUDE');
-    if( $includePos === false )
-      return [];
-
-    $targetName = trim(substr($includeFileName, $includePos + 7)); // 7 = length of "INCLUDE"
-    if( empty($targetName) )
-      return [];
-
     // Virtual tree path: the position this item appears at in the tree (unique per location)
     $virtualPrefix = $currentSubPath ? "$currentSubPath/" : '';
 
@@ -375,19 +452,13 @@ class SnippetManager
 
   private function readFolderColorName( string $folderPath ) : ?string
   {
-    $file = "$folderPath/.sys/ninja.json";
-    if( ! is_file($file) )
-      return null;
-    $data = json_decode(file_get_contents($file), true);
+    $data = $this->sysData($folderPath);
     return isset($data['color']) && is_string($data['color']) ? $data['color'] : null;
   }
 
   private function readFileColorName( string $folderPath, string $fileName ) : ?string
   {
-    $file = "$folderPath/.sys/ninja.json";
-    if( ! is_file($file) )
-      return null;
-    $data = json_decode(file_get_contents($file), true);
+    $data = $this->sysData($folderPath);
     return isset($data['fileColors'][$fileName]) && is_string($data['fileColors'][$fileName])
       ? $data['fileColors'][$fileName]
       : null;
@@ -395,11 +466,15 @@ class SnippetManager
 
   public function writeFileColor( string $relativePath, ?string $color ) : bool
   {
+    if( ! $this->isSafeRelativePath($relativePath) )
+      return false;
+
     $absPath = $this->resolveExistingFilePath($relativePath);
     if( $absPath === null )
       return false;
 
     $folderPath = dirname($absPath);
+    $this->forgetSysData($folderPath);
     $fileName   = basename($absPath);
     $sysDir     = "$folderPath/.sys";
 
@@ -464,10 +539,22 @@ class SnippetManager
 
   public function writeFolderColor( string $relativePath, ?string $color, ?string $targetBase = null ) : bool
   {
-    $folderPath = $targetBase
-      ? rtrim($targetBase, '/') . '/' . ltrim($relativePath, '/')
-      : $this->resolveExistingFolderPath($relativePath);
+    if( ! $this->isSafeRelativePath($relativePath) )
+      return false;
+
+    if( $targetBase !== null && $targetBase !== '' )
+    {
+      $base = $this->resolveBasePath($targetBase);
+      if( $base === null ) return false;
+      $folderPath = rtrim($base, '/') . '/' . ltrim($relativePath, '/');
+      if( ! is_dir($folderPath) ) return false;
+    }
+    else
+      $folderPath = $this->resolveExistingFolderPath($relativePath);
+
     if( $folderPath === null ) return false;
+
+    $this->forgetSysData($folderPath);
 
     $sysDir = "$folderPath/.sys";
     if( ! is_dir($sysDir) )
@@ -501,6 +588,9 @@ class SnippetManager
   // and migrates each renamed file's color entry in the parent folder's .sys/ninja.json.
   public function batchRename( string $subPath, array $ops ) : array
   {
+    if( ! $this->isSafeRelativePath($subPath) )
+      return ['success' => false, 'message' => 'Invalid path'];
+
     $subPath = trim(str_replace('\\', '/', $subPath), '/');
 
     $clean = [];
@@ -572,6 +662,8 @@ class SnippetManager
     $target  = trim($target);
     if( $target === '' )
       return false;
+    if( ! $this->isSafeRelativePath($subPath) )
+      return false;
     $subPath = trim(str_replace('\\', '/', $subPath), '/');
 
     $searchBases = [];
@@ -592,10 +684,7 @@ class SnippetManager
       foreach( scandir($dir) as $file ) {
         if( $file === '.' || $file === '..' )
           continue;
-        $pos = strpos($file, 'INCLUDE');
-        if( $pos === false )
-          continue;
-        if( trim(substr($file, $pos + 7)) === $target && @unlink("$dir/$file") )
+        if( $this->includeTarget($file) === $target && @unlink("$dir/$file") )
           $removed = true;
       }
     }
@@ -613,6 +702,7 @@ class SnippetManager
       return;
     $data['fileColors'][$newName] = $data['fileColors'][$oldName];
     unset($data['fileColors'][$oldName]);
+    $this->forgetSysData($folderDir);
     file_put_contents($jsonFile, json_encode($data, JSON_PRETTY_PRINT));
   }
 
@@ -663,6 +753,9 @@ class SnippetManager
 
   public function loadSnippet( string $path ) : ?array
   {
+    if( ! $this->isSafeRelativePath($path) )
+      return null;
+
     // Mirror listFiles: later folders overwrite earlier ones (last folder wins)
     $result    = null;
     $extension = pathinfo($path, PATHINFO_EXTENSION);
@@ -754,13 +847,26 @@ class SnippetManager
     if( $type !== 'yml' && $type !== 'md' )
       return null;
 
+    if( ! $this->isSafeRelativePath($path) || trim($path, '/') === '' )
+      return null;
+
+    // An explicit target must be a configured source; otherwise write where the file
+    // already lives (last source wins), falling back to the first source for new files
+    if( $targetBasePath !== null && $targetBasePath !== '' )
+    {
+      $base = $this->resolveBasePath($targetBasePath);
+      if( $base === null )
+        return null;
+    }
+    else
+      $base = $this->resolveWritePath($path);
+
     $name = $data['_name'] ?? pathinfo($path, PATHINFO_FILENAME);
 
     // Parse before touching the disk so a broken usage block cannot damage a good file
     if( $type === 'yml' )
       $data['usage'] = $this->parseUsageText($data['usage'] ?? null);
 
-    $base     = $targetBasePath ?? $this->resolveWritePath($path);
     $fullPath = rtrim($base, '/') . '/' . ltrim($path, '/');
     $dir = dirname($fullPath);
 
@@ -807,9 +913,12 @@ class SnippetManager
 
   public function deleteSnippet( string $path ) : bool
   {
+    if( ! $this->isSafeRelativePath($path) || trim($path, '/') === '' )
+      return false;
+
     $fullPath = $this->resolveWritePath($path) . "/$path";
 
-    if( file_exists($fullPath) )
+    if( is_file($fullPath) )
       return unlink($fullPath);
 
     return false;
@@ -817,9 +926,19 @@ class SnippetManager
 
   public function deleteFolder( string $path, ?string $targetBase = null ) : bool
   {
-    $fullPath = $targetBase
-      ? rtrim($targetBase, '/') . '/' . ltrim($path, '/')
-      : $this->resolveExistingFolderPath($path);
+    // An empty path would resolve to a source folder itself
+    if( ! $this->isSafeRelativePath($path) || trim($path, '/') === '' )
+      return false;
+
+    if( $targetBase !== null && $targetBase !== '' )
+    {
+      $base = $this->resolveBasePath($targetBase);
+      if( $base === null ) return false;
+      $fullPath = rtrim($base, '/') . '/' . ltrim($path, '/');
+    }
+    else
+      $fullPath = $this->resolveExistingFolderPath($path);
+
     if( $fullPath === null ) return false;
     return $this->deleteFolderRecursive($fullPath);
   }
@@ -852,6 +971,7 @@ class SnippetManager
   public function searchSnippets( string $query ) : array
   {
     $results = [];
+    $this->searchVisited = [];
     $this->searchInDirectory('', $query, $results);
 
     usort($results, function($a, $b) use ($query) {
@@ -865,31 +985,42 @@ class SnippetManager
 
   private function searchInDirectory( string $subPath, string $query, array &$results ) : void
   {
+    // A folder reachable through several links is scanned once - and a link pointing at
+    // an ancestor would otherwise recurse forever
+    $visitKey = trim($subPath, '/');
+    if( isset($this->searchVisited[$visitKey]) )
+      return;
+    $this->searchVisited[$visitKey] = true;
+
     $items = $this->listFiles($subPath);
 
     foreach( $items as $item )
     {
+      // A link's `path` is its position in the tree, which is not a real directory.
+      // Search works on the physical path so results stay loadable.
+      $fsPath = $item['fsPath'] ?? $item['path'];
+
       if( $item['type'] === 'folder' )
       {
         if( $this->matchesFolderQuery($item, $query) )
         {
           $results[] = [
-            'path'    => $item['path'],
+            'path'    => $fsPath,
             'name'    => $item['name'],
             'type'    => 'folder',
             'snippet' => null
           ];
         }
-        $this->searchInDirectory($item['path'], $query, $results);
+        $this->searchInDirectory($fsPath, $query, $results);
       }
       else
       {
-        $snippet = $this->loadSnippet($item['path']);
+        $snippet = $this->loadSnippet($fsPath);
 
         if( $snippet && $this->matchesQuery($snippet, $query) )
         {
           $results[] = [
-            'path'    => $item['path'],
+            'path'    => $fsPath,
             'name'    => $item['name'],
             'type'    => $snippet['_type'],
             'snippet' => $snippet
@@ -995,6 +1126,7 @@ class SnippetManager
     if( ! isset($snippet['content']) )
       return '';
 
+    $this->includeStack = [];
     $content = $snippet['content'];
     $content = $this->processIncludes($content, false);
     $content = $this->processPlaceholders($content, $placeholders);
@@ -1007,6 +1139,7 @@ class SnippetManager
     if( ! isset($snippet['content']) )
       return '';
 
+    $this->includeStack = [];
     $content = $snippet['content'];
     $content = $this->processIncludes($content, true);
 
@@ -1022,8 +1155,12 @@ class SnippetManager
       $includeName = $matches[2];
       $includeSnippet = $this->findSnippetByName($includeName);
 
-      if( $includeSnippet ) {
+      // A snippet including itself (directly or through a chain) would recurse forever;
+      // leave the marker in place instead so the cycle is visible in the output
+      if( $includeSnippet && ! in_array($includeName, $this->includeStack, true) ) {
+        $this->includeStack[] = $includeName;
         $includedContent = $this->processIncludes($includeSnippet['content'] ?? '', $forInline);
+        array_pop($this->includeStack);
 
         if( isset($this->config['render']['includedSameIndent']) && $this->config['render']['includedSameIndent'] ) {
           $lines = explode("\n", $includedContent);
@@ -1071,22 +1208,37 @@ class SnippetManager
     }, $content);
   }
 
+  // Resolving one include walks the whole tree, and a snippet is usually included many
+  // times over, so the lookup is memoized for the request
   private function findSnippetByName( string $name ) : ?array
   {
-    return $this->searchSnippetRecursively($name, '');
+    if( ! array_key_exists($name, $this->snippetByNameCache) )
+    {
+      $visited = [];
+      $this->snippetByNameCache[$name] = $this->searchSnippetRecursively($name, '', $visited);
+    }
+
+    return $this->snippetByNameCache[$name];
   }
 
-  private function searchSnippetRecursively( string $name, string $subPath ) : ?array
+  private function searchSnippetRecursively( string $name, string $subPath, array &$visited ) : ?array
   {
+    $visitKey = trim($subPath, '/');
+    if( isset($visited[$visitKey]) )
+      return null;
+    $visited[$visitKey] = true;
+
     $items = $this->listFiles($subPath);
 
     foreach( $items as $item )
     {
+      $fsPath = $item['fsPath'] ?? $item['path'];
+
       if( $item['type'] === 'file' && $item['name'] === $name )
-        return $this->loadSnippet($item['path']);
+        return $this->loadSnippet($fsPath);
       elseif( $item['type'] === 'folder' )
       {
-        $result = $this->searchSnippetRecursively($name, $item['path']);
+        $result = $this->searchSnippetRecursively($name, $fsPath, $visited);
         if( $result )
           return $result;
       }
