@@ -37,6 +37,18 @@
   --bs-btn-active-border-color: #fd7e14;
 }
 
+/* Outline button recolored to the primary orange while keeping the warning base
+   (used by the snippet actions dropdown) */
+.btn-outline-accent {
+  --bs-btn-color: #fd7e14;
+  --bs-btn-border-color: #fd7e14;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #fd7e14;
+  --bs-btn-hover-border-color: #fd7e14;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #fd7e14;
+}
+
 /* Links using the primary hue */
 .link-primary { color: #fd7e14 !important; }
 

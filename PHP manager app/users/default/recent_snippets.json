@@ -119,57 +119,62 @@
     ],
     "Common": [
         {
-            "path": "01 AI/Find MS google products/20 Filter relevant.yml",
-            "name": "20 Filter relevant",
-            "timestamp": 1785940480686
-        },
-        {
             "path": "Wohn/11 First.yml",
             "name": "11 First",
-            "timestamp": 1785940405079
+            "timestamp": 1786202873288
         },
         {
             "path": "- DESC.md",
             "name": "- DESC",
-            "timestamp": 1785940401281
+            "timestamp": 1786202871298
         },
         {
-            "path": "01 AI/Find MS google products/11 Find.yml",
-            "name": "11 Find",
-            "timestamp": 1785862864886
+            "path": "manual_11.md",
+            "name": "manual_11",
+            "timestamp": 1786202733067
+        },
+        {
+            "path": "11 BLANK_SNIPP.yml",
+            "name": "11 BLANK_SNIPP",
+            "timestamp": 1786202019453
+        },
+        {
+            "path": "01 AI/Get latest AI features.yml",
+            "name": "Get latest AI features",
+            "timestamp": 1786193542649
+        },
+        {
+            "path": "_PROMPTS.md",
+            "name": "_PROMPTS",
+            "timestamp": 1786193534652
+        },
+        {
+            "path": "Make prompts.yml",
+            "name": "Make prompts",
+            "timestamp": 1786193530628
+        },
+        {
+            "path": "Demo.yml",
+            "name": "Demo",
+            "timestamp": 1786193350944
+        },
+        {
+            "path": "01 AI/Find MS google products/20 Filter relevant.yml",
+            "name": "20 Filter relevant",
+            "timestamp": 1786116115797
         },
         {
             "path": "01 AI/Find MS google products/Comparrison.yml",
             "name": "Comparrison",
-            "timestamp": 1785794047764
-        },
-        {
-            "path": "01 AI/Find MS google products.yml",
-            "name": "Find MS google products",
-            "timestamp": 1785793393488
-        },
-        {
-            "path": "01 AI/(rg) Get latest AI features.yml",
-            "name": "(rg) Get latest AI features",
-            "timestamp": 1785768707911
-        },
-        {
-            "path": "01 Usage (common)/40 Agent teams & swarms.md",
-            "name": "40 Agent teams & swarms",
-            "timestamp": 1785768644036
-        },
-        {
-            "path": "01 Usage (common)/20 Development workflow.md",
-            "name": "20 Development workflow",
-            "timestamp": 1785768642324
-        },
-        {
-            "path": "01 Usage (common)/10 Prompting techniques.md",
-            "name": "10 Prompting techniques",
-            "timestamp": 1785768641041
+            "timestamp": 1786116108296
         }
     ],
     "Dev": [
+        {
+            "path": "Dev (AI does all work)/05 Common/Design.yml",
+            "name": "Design",
+            "timestamp": 1786140241934
+        },
         {
             "path": "Dev (AI does all work)/08 From known App/11 Make idea.yml",
             "name": "11 Make idea",
@@ -214,18 +219,13 @@
             "path": "Dev (AI does all work)/45 Add Framework/50 Add login.yml",
             "name": "50 Add login",
             "timestamp": 1783275299600
-        },
-        {
-            "path": "Dev (AI does all work)/45 Add Framework/60 Add debug login and mail.yml",
-            "name": "60 Add debug login and mail",
-            "timestamp": 1783275297026
         }
     ],
     "Biz": [
         {
             "path": "Biz/LinkedIn/Article.yml",
             "name": "Article",
-            "timestamp": 1784241219061
+            "timestamp": 1786139125131
         },
         {
             "path": "- DESC.md",

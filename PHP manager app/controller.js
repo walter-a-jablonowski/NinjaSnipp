@@ -39,8 +39,6 @@
     this.init();
   }
 
-  handleFileListDropdownClick(e) { this.tree.handleFileListDropdownClick(e); }
-
   enableMdTextareaAutoHeight()
   {
     this._mdAutoHeight = true;
@@ -63,15 +61,6 @@
         }
       };
       window.addEventListener('resize', this._onResizeHandler);
-    }
-  }
-
-  disableMdTextareaAutoHeight()
-  {
-    this._mdAutoHeight = false;
-    const ta = document.getElementById('snippetContent');
-    if( ta ) {
-      ta.style.height = '';
     }
   }
 
@@ -485,25 +474,6 @@
     });
   }
 
-  async performRename() { return this.editor.performRename(); }
-
-  // --- Delegates to sub-controllers ---
-  // (implementations live in controllers/file-tree.js, editor.js, render.js, search.js)
-
-  buildTreeNodes(files)          { return this.tree.buildTreeNodes(files); }
-  findNodeInTree(nodes, path)    { return this.tree.findNodeInTree(nodes, path); }
-  flattenTree(nodes, depth = 0)  { return this.tree.flattenTree(nodes, depth); }
-
-  async restoreExpandedFolders(nodes) { return this.tree.restoreExpandedFolders(nodes); }
-
-  async toggleFolder(path)        { return this.tree.toggleFolder(path); }
-  renderTree()                    { return this.tree.renderTree(); }
-  restoreActiveHighlight()        { return this.tree.restoreActiveHighlight(); }
-
-  renderTreeNode(node)           { return this.tree.renderTreeNode(node); }
-
-  fileListKeyDown(e)              { return this.tree.fileListKeyDown(e); }
-
   goBack()
   {
     if( this.isSearchMode ) {
@@ -513,27 +483,6 @@
       this.loadFiles();
     }
   }
-
-  handleFileClick(e)              { return this.tree.handleFileClick(e); }
-
-  async loadSnippet(path)         { return this.editor.loadSnippet(path); }
-
-  renderEditForm(snippet)         { return this.editor.renderEditForm(snippet); }
-  configureRenderTab(enabled)     { return this.editor.configureRenderTab(enabled); }
-
-  async saveCurrentSnippet()      { return this.editor.saveCurrentSnippet(); }
-  bindAutosaveHandlers()          { return this.editor.bindAutosaveHandlers(); }
-  onEditFieldChanged()            { return this.editor.onEditFieldChanged(); }
-  getAutosaveEnabled()            { return this.editor.getAutosaveEnabled(); }
-  scheduleAutosave()              { return this.editor.scheduleAutosave(); }
-  clearAutosaveTimer()            { return this.editor.clearAutosaveTimer(); }
-  async autosaveIfEnabled()       { return this.editor.autosaveIfEnabled(); }
-  async duplicateCurrentSnippet() { return this.editor.duplicateCurrentSnippet(); }
-  async performDuplicate()        { return this.editor.performDuplicate(); }
-  async deleteCurrentSnippet()    { return this.editor.deleteCurrentSnippet(); }
-  async performDelete()           { return this.editor.performDelete(); }
-  clearEditForm()                 { return this.editor.clearEditForm(); }
-  updateActionButtonsVisibility() { return this.editor.updateActionButtonsVisibility(); }
 
   async loadUserSettings()
   {
@@ -566,8 +515,6 @@
     const res = await apiCall(this.currentDataPath, 'setUserSettings', payload);
     if( ! (res && res.success) ) showError('Failed to save settings');
   }
-
-  setActionButtonsEnabled(enabled) { return this.editor.setActionButtonsEnabled(enabled); }
 
   toggleAiSidebar(open)
   {
@@ -663,42 +610,7 @@
     });
   }
 
-  toggleLineWrap()               { return this.render.toggleLineWrap(); }
-  applyLineWrap()                { return this.render.applyLineWrap(); }
-
-  async composeAndRenderInline()  { return this.render.composeAndRenderInline(); }
-  renderMarkdownPreview()         { return this.render.renderMarkdownPreview(); }
-  renderInlineSnippet(t)          { return this.render.renderInlineSnippet(t); }
-
-  buildInlineHtmlFromComposed(t)  { return this.render.buildInlineHtmlFromComposed(t); }
-  bindInlinePlaceholderEvents()   { return this.render.bindInlinePlaceholderEvents(); }
-  openChoiceMenu(el)              { return this.render.openChoiceMenu(el); }
-  closeChoiceMenu()               { return this.render.closeChoiceMenu(); }
-  _buildUsageMetaHtml()           { return this.render._buildUsageMetaHtml(); }
-  _buildUsageHtml()               { return this.render._buildUsageHtml(); }
-  toggleUsagePreview()            { return this.render.toggleUsagePreview(); }
-  resetUsagePreview()             { return this.render.resetUsagePreview(); }
-  showUsagePreview()              { return this.render.showUsagePreview(); }
-  _setUsagePreviewIcon(c)         { return this.render._setUsagePreviewIcon(c); }
-  renderUsageInPreview()          { return this.render.renderUsageInPreview(); }
-  toggleRenderView()              { return this.render.toggleRenderView(); }
-  getCurrentPlaceholderValues()   { return this.render.getCurrentPlaceholderValues(); }
-  async updateRenderedOutput()    { return this.render.updateRenderedOutput(); }
-  async copyRenderedContent()     { return this.render.copyRenderedContent(); }
-
-  async performSearch()           { return this.search.performSearch(); }
-  renderSearchResults(r)          { return this.search.renderSearchResults(r); }
-  handleSearch(q)                 { return this.search.handleSearch(q); }
-  showSearchHistory()             { return this.search.showSearchHistory(); }
-  hideSearchHistory()             { return this.search.hideSearchHistory(); }
-  setupSearchHistory()            { return this.search.setupSearchHistory(); }
-  showContextMenu(e)              { return this.search.showContextMenu(e); }
-  hideContextMenu()               { return this.search.hideContextMenu(); }
-  loadRecentSnippets()            { return this.search.loadRecentSnippets(); }
-  async createSnippet()           { return this.editor.createSnippet(); }
-  async createFolder()            { return this.editor.createFolder(); }
-
-  // --- Kept in main: data-folder switching and top-level file loading ---
+  // --- Data-folder switching and top-level file loading ---
 
   async changeDataFolder(dataPath)
   {
@@ -711,7 +623,7 @@
       this.fileTree = [];
       this.expandedFolders.clear();
       this.currentSnippet = null;
-      this.clearEditForm();
+      this.editor.clearEditForm();
       const recentResult = await apiCall(this.currentDataPath, 'getRecentSnippets');
       if( recentResult.success ) this.recentSnippets = recentResult.data;
       this.loadFiles();
@@ -761,9 +673,9 @@
     if( result.success ) {
       this.isSearchMode = false;
       this.baseFolderLabels = result.baseFolderLabels || {};
-      this.fileTree = this.buildTreeNodes(result.files);
-      await this.restoreExpandedFolders(this.fileTree);
-      this.renderTree();
+      this.fileTree = this.tree.buildTreeNodes(result.files);
+      await this.tree.restoreExpandedFolders(this.fileTree);
+      this.tree.renderTree();
 
       // Auto-load first yml/md file on initial page load
       if( this._initialLoad ) {
@@ -772,7 +684,7 @@
           const fileItem = document.querySelector(`.tree-item[data-path="${firstFile.path}"]`);
           if( fileItem ) fileItem.classList.add('active');
           this.currentPath = '';
-          this.loadSnippet(firstFile.path);
+          this.editor.loadSnippet(firstFile.path);
         }
         this._initialLoad = false;
       }

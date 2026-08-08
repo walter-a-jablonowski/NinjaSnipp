@@ -1,5 +1,12 @@
 <?php
 
+// Asset URL stamped with the file's mtime, so browsers cache it until it really changes
+function asset_url( string $file ) : string
+{
+  $path = __DIR__ . "/../$file";
+  return is_file($path) ? "$file?v=" . filemtime($path) : $file;
+}
+
 function read_json_file( string $file, $default )
 {
   if( ! file_exists($file) ) return $default;

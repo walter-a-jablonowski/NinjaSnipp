@@ -4,11 +4,12 @@ use SnippetManager\SnippetManager;
 use Symfony\Component\Yaml\Yaml;
 
 require_once 'vendor/autoload.php';
+require_once 'lib/functions.php';
 
 
 $appConfig = Yaml::parseFile('config.yml');
-$debug     = (bool) $appConfig['debug']['on'];
-$allBtns   = (bool) $appConfig['debug']['showAllFileBtns'];
+$debug     = (bool)($appConfig['debug']['on'] ?? false);
+$allBtns   = (bool)($appConfig['debug']['showAllFileBtns'] ?? false);
 
 $config  = Yaml::parseFile('users/default/settings.yml');
 $initialTheme = $config['theme'] ?? 'light';
@@ -29,9 +30,9 @@ if( isset($_GET['data']) )
   <title>Ninja</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-  <link href="styles/theme.css?v=<?= time() ?>" rel="stylesheet">
-  <link href="styles/theme-dark.css?v=<?= time() ?>" rel="stylesheet">
-  <link href="styles/app.css?v=<?= time() ?>" rel="stylesheet">
+  <link href="<?= asset_url('styles/theme.css') ?>" rel="stylesheet">
+  <link href="<?= asset_url('styles/theme-dark.css') ?>" rel="stylesheet">
+  <link href="<?= asset_url('styles/app.css') ?>" rel="stylesheet">
 </head>
 <body>
   <!-- Header -->
@@ -210,7 +211,7 @@ if( isset($_GET['data']) )
                   <i class="bi bi-save"></i>
                 </button>
                 <div class="dropdown" id="snippetActionsDropdown" style="display: none;">
-                  <button type="button" class="btn btn-sm btn-outline-warning dropdown-toggle-split" id="snippetActionsBtn" data-bs-toggle="dropdown" aria-expanded="false" title="More actions" style="--bs-btn-color: #fd7e14; --bs-btn-border-color: #fd7e14; --bs-btn-hover-bg: #fd7e14; --bs-btn-hover-color: #fff; --bs-btn-hover-border-color: #fd7e14; --bs-btn-active-bg: #fd7e14; --bs-btn-active-color: #fff;">
+                  <button type="button" class="btn btn-sm btn-outline-warning btn-outline-accent dropdown-toggle-split" id="snippetActionsBtn" data-bs-toggle="dropdown" aria-expanded="false" title="More actions">
                     <i class="bi bi-three-dots-vertical"></i>
                   </button>
                   <ul class="dropdown-menu dropdown-menu-end">
@@ -503,12 +504,12 @@ if( isset($_GET['data']) )
   <script>const APP_DEBUG = <?= json_encode($debug) ?>; const APP_SPECIAL = <?= json_encode((bool)($appConfig['special'] ?? false)) ?>; const APP_INITIAL_THEME = <?= json_encode($initialTheme) ?>;</script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <script src="lib/functions.js?v=<?= time() ?>"></script>
-  <script src="controllers/file-tree.js?v=<?= time() ?>"></script>
-  <script src="controllers/editor.js?v=<?= time() ?>"></script>
-  <script src="controllers/render.js?v=<?= time() ?>"></script>
-  <script src="controllers/search.js?v=<?= time() ?>"></script>
-  <script src="controller.js?v=<?= time() ?>"></script>
+  <script src="<?= asset_url('lib/functions.js') ?>"></script>
+  <script src="<?= asset_url('controllers/file-tree.js') ?>"></script>
+  <script src="<?= asset_url('controllers/editor.js') ?>"></script>
+  <script src="<?= asset_url('controllers/render.js') ?>"></script>
+  <script src="<?= asset_url('controllers/search.js') ?>"></script>
+  <script src="<?= asset_url('controller.js') ?>"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       new SnippetManager({ initialTheme: APP_INITIAL_THEME });
