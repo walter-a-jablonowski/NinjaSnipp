@@ -989,6 +989,26 @@ body {
   box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
 }
 
+/* Standing marker while the open snippet could not be autosaved */
+
+.autosave-status {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.8rem;
+  line-height: 1;
+  white-space: nowrap;
+  color: #d97706;
+  cursor: help;
+}
+
+[data-theme="dark"] .autosave-status {
+  color: #f0a24a;
+}
+
+@media (max-width: 575.98px) {
+  .autosave-status-text { display: none; }   /* icon only on narrow screens */
+}
+
 /* Context menu */
 .context-menu {
   position: absolute;

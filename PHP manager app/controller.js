@@ -27,6 +27,7 @@
     this._autosaveTimer = null; // debounce timer id
     this._autosaveDelayMs = 800; // debounce delay for autosave
     this._autosaveBound = false; // ensure we bind handlers once
+    this._autosaveFailed = false; // last autosave was refused (drives the "Not saved" badge)
     this._lineWrapOff = true; // global line-wrap toggle state
     this._themeMediaBound = false;
     this.currentTheme = 'light';

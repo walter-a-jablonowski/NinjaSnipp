@@ -13,6 +13,7 @@ class EditorController
 
     if( result.success ) {
       this.app.currentSnippet = result.snippet;
+      this.setAutosaveStatus(null);   // a fresh snippet starts in sync
       this.renderEditForm(result.snippet);
       // Add to recent snippets and persist
       const item = { path, name: result.snippet._name, timestamp: Date.now() };
@@ -167,6 +168,7 @@ class EditorController
 
     if( result.success ) {
       if( ! silent ) showSuccess('Snippet saved successfully');
+      this.setAutosaveStatus(null);
       // Adopt the server's normalized copy so `usage` stays a parsed object; keeping the
       // raw textarea text would make the usage preview fall back to rendering plain YAML
       this.app.currentSnippet = result.snippet || data;
@@ -180,13 +182,31 @@ class EditorController
       }
     }
     else if( silent ) {
-      // Autosave: leave the file as it was and stay quiet. Toasting on every debounce
-      // would fire constantly while a usage block is mid-edit and briefly unparsable.
-      console.warn('Autosave skipped:', result.message);
+      // Autosave: the file keeps its last good content. Toast once when saving starts
+      // failing - repeating it every debounce would spam while a usage block is mid-edit
+      // and briefly unparsable - and leave a standing badge until a save succeeds.
+      if( ! this.app._autosaveFailed )
+        showError('Autosave paused: ' + result.message);
+
+      this.setAutosaveStatus(result.message);
     }
     else {
       showError('Failed to save snippet: ' + result.message);
+      this.setAutosaveStatus(result.message);
     }
+  }
+
+  // Standing "Not saved" badge next to the autosave switch. Kept out of the toast flow so
+  // it can stay visible for as long as the snippet really is unsaved.
+  setAutosaveStatus(message)
+  {
+    this.app._autosaveFailed = !!message;
+
+    const el = document.getElementById('autosaveStatus');
+    if( ! el ) return;
+
+    el.style.display = message ? '' : 'none';
+    el.title = message ? `Not saved: ${message}` : '';
   }
 
   bindAutosaveHandlers()
@@ -379,6 +399,7 @@ class EditorController
   {
     this.app.currentBasePath = null;
     this.app.currentTreePath = null;
+    this.setAutosaveStatus(null);
 
     const editEmptyState = document.getElementById('editEmptyState');
     const editForm = document.getElementById('editForm');

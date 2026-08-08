@@ -28,8 +28,8 @@ if( isset($_GET['data']) )
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ninja</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="<?= asset_url('lib/ext/bootstrap.min.css') ?>" rel="stylesheet">
+  <link href="<?= asset_url('lib/ext/bootstrap-icons.css') ?>" rel="stylesheet">
   <link href="<?= asset_url('styles/theme.css') ?>" rel="stylesheet">
   <link href="<?= asset_url('styles/theme-dark.css') ?>" rel="stylesheet">
   <link href="<?= asset_url('styles/app.css') ?>" rel="stylesheet">
@@ -198,6 +198,10 @@ if( isset($_GET['data']) )
             </li>
             <li class="nav-item ms-auto" role="presentation">
               <div class="d-flex gap-2 align-items-center">
+                <!-- Shown while the last autosave was refused; the reason is in the tooltip -->
+                <span id="autosaveStatus" class="autosave-status" style="display: none;" role="status">
+                  <i class="bi bi-exclamation-triangle-fill"></i><span class="autosave-status-text ms-1">Not saved</span>
+                </span>
                 <div id="autosaveSwitchWrapper" class="form-check form-switch" title="autosave" style="display: none;">
                   <input class="form-check-input" type="checkbox" id="autosaveSwitch">
                 </div>
@@ -502,8 +506,8 @@ if( isset($_GET['data']) )
   </div>
 
   <script>const APP_DEBUG = <?= json_encode($debug) ?>; const APP_SPECIAL = <?= json_encode((bool)($appConfig['special'] ?? false)) ?>; const APP_INITIAL_THEME = <?= json_encode($initialTheme) ?>;</script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="<?= asset_url('lib/ext/bootstrap.bundle.min.js') ?>"></script>
+  <script src="<?= asset_url('lib/ext/marked.min.js') ?>"></script>
   <script src="<?= asset_url('lib/functions.js') ?>"></script>
   <script src="<?= asset_url('controllers/file-tree.js') ?>"></script>
   <script src="<?= asset_url('controllers/editor.js') ?>"></script>
