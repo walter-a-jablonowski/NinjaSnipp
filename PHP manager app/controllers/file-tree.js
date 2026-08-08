@@ -130,10 +130,17 @@ class FileTreeController
   restoreActiveHighlight()
   {
     if( ! this.app.currentSnippet ) return;
-    const ext = this.app.currentSnippet._type === 'yml' ? 'yml' : 'md';
-    const activePath = (this.app.currentPath ? this.app.currentPath + '/' : '') + this.app.currentSnippet._name + '.' + ext;
-    const item = treeItemByPath(activePath)
-               || treeItemByPath(activePath, 'data-fspath');
+
+    // The tree path of the row that was opened is exact; two merged copies of one file
+    // share an fsPath, so rebuilding the path from the name would highlight the wrong row
+    let item = this.app.currentTreePath ? treeItemByPath(this.app.currentTreePath) : null;
+
+    if( ! item ) {
+      const ext = this.app.currentSnippet._type === 'yml' ? 'yml' : 'md';
+      const activePath = (this.app.currentPath ? this.app.currentPath + '/' : '') + this.app.currentSnippet._name + '.' + ext;
+      item = treeItemByPath(activePath) || treeItemByPath(activePath, 'data-fspath');
+    }
+
     if( item ) item.classList.add('active');
   }
 
@@ -253,7 +260,8 @@ class FileTreeController
     }
 
     return `<div class="tree-item${isFolder ? ' tree-folder' : ' tree-file'}${isIncluded ? ' tree-included' : ''}${isMerged ? ' tree-merged' : ''}" ` +
-      `data-path="${escapeHtml(path)}" data-fspath="${escapeHtml(realFsPath)}" data-type="${type}" data-extension="${escapeHtml(extension || '')}"${mergedBasesAttr} ` +
+      `data-path="${escapeHtml(path)}" data-fspath="${escapeHtml(realFsPath)}" data-type="${type}" data-extension="${escapeHtml(extension || '')}" ` +
+      `data-base-path="${escapeHtml(basePath || '')}"${mergedBasesAttr} ` +
       `draggable="${isIncluded ? 'false' : 'true'}" ` +
       `tabindex="0" title="${escapeHtml(displayName)}" style="${styleVal}">` +
       `<div class="d-flex align-items-center">` +
@@ -307,10 +315,12 @@ class FileTreeController
     const fsPath      = item.getAttribute('data-fspath') || path;
     const type        = item.getAttribute('data-type');
     const ext         = item.getAttribute('data-extension') || '';
+    const basePath    = item.getAttribute('data-base-path') || null;
     const mergedBases = this._getMergedBases(item);
 
     if( action === 'rename' ) {
-      const parts    = path.split('/');
+      // fsPath, not the tree path: a duplicate's tree path carries a "#1" suffix
+      const parts    = fsPath.split('/');
       const filename = parts.pop();
       const parent   = parts.join('/');
       let base = filename;
@@ -318,7 +328,7 @@ class FileTreeController
         const dExt = '.' + ext;
         if( base.toLowerCase().endsWith(dExt) ) base = base.slice(0, -dExt.length);
       }
-      this.app._renameContext = { oldPath: path, parent, type, ext, mergedBases };
+      this.app._renameContext = { oldPath: fsPath, parent, type, ext, mergedBases, basePath };
       const input = document.getElementById('renameNameInput');
       if( input ) input.value = base;
       showModal('renameItemModal');
@@ -350,7 +360,7 @@ class FileTreeController
         }
       }
       else {
-        this._applyFileColor(fsPath, path, color || null);
+        this._applyFileColor(fsPath, path, color || null, basePath);
       }
     }
     else if( action === 'new-snippet' ) {
@@ -372,10 +382,10 @@ class FileTreeController
       showModal('newLinkModal');
     }
     else if( action === 'delete' ) {
-      const nameParts = path.split('/');
+      const nameParts = fsPath.split('/');
       const fullName  = nameParts.pop();
       const baseName  = ext ? fullName.replace(new RegExp('\\.' + ext + '$', 'i'), '') : fullName;
-      this.app._deleteContext = { path, name: baseName, type, mergedBases };
+      this.app._deleteContext = { path: fsPath, name: baseName, type, mergedBases, basePath };
       const nameEl = document.getElementById('deleteSnippetName');
       if( nameEl ) nameEl.textContent = baseName;
       showModal('deleteSnippetModal');
@@ -395,9 +405,9 @@ class FileTreeController
     }
   }
 
-  async _applyFileColor(fsPath, treePath, colorName)
+  async _applyFileColor(fsPath, treePath, colorName, basePath = null)
   {
-    const res = await apiCall(this.app.currentDataPath, 'setFileColor', { filePath: fsPath, color: colorName });
+    const res = await apiCall(this.app.currentDataPath, 'setFileColor', { filePath: fsPath, color: colorName, basePath });
     if( ! (res && res.success) ) {
       showError('Failed to set file color');
       return;
@@ -463,7 +473,12 @@ class FileTreeController
     parts.pop();
     this.app.currentPath = parts.join('/');
 
-    this.app.editor.loadSnippet(fsPath);
+    // With foldersMerged, two rows can share one fsPath - the source folder is what
+    // tells them apart, so it is remembered for save / delete / duplicate
+    this.app.currentBasePath = item.dataset.basePath || null;
+    this.app.currentTreePath = path;
+
+    this.app.editor.loadSnippet(fsPath, this.app.currentBasePath);
 
     // Auto-close sidebar on mobile
     if( window.innerWidth < 992 ) {

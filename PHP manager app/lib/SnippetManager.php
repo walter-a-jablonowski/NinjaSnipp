@@ -464,12 +464,23 @@ class SnippetManager
       : null;
   }
 
-  public function writeFileColor( string $relativePath, ?string $color ) : bool
+  public function writeFileColor( string $relativePath, ?string $color, ?string $basePath = null ) : bool
   {
     if( ! $this->isSafeRelativePath($relativePath) )
       return false;
 
-    $absPath = $this->resolveExistingFilePath($relativePath);
+    if( $basePath !== null && $basePath !== '' )
+    {
+      $base = $this->resolveBasePath($basePath);
+      if( $base === null )
+        return false;
+      $absPath = rtrim($base, '/') . '/' . ltrim($relativePath, '/');
+      if( ! is_file($absPath) )
+        return false;
+    }
+    else
+      $absPath = $this->resolveExistingFilePath($relativePath);
+
     if( $absPath === null )
       return false;
 
@@ -751,16 +762,28 @@ class SnippetManager
     return $items;
   }
 
-  public function loadSnippet( string $path ) : ?array
+  // With $basePath given, reads that source only. When several sources hold the same
+  // file name (foldersMerged), that is what tells the two tree entries apart.
+  public function loadSnippet( string $path, ?string $basePath = null ) : ?array
   {
     if( ! $this->isSafeRelativePath($path) )
       return null;
 
-    // Mirror listFiles: later folders overwrite earlier ones (last folder wins)
+    $folders = $this->currentFolders;
+
+    if( $basePath !== null && $basePath !== '' )
+    {
+      $base = $this->resolveBasePath($basePath);
+      if( $base === null )
+        return null;
+      $folders = [['path' => $base]];
+    }
+
+    // Without a base, mirror listFiles: later folders overwrite earlier ones
     $result    = null;
     $extension = pathinfo($path, PATHINFO_EXTENSION);
 
-    foreach( $this->currentFolders as $folder )
+    foreach( $folders as $folder )
     {
       $fullPath = $folder['path'] . "/$path";
 
@@ -911,12 +934,21 @@ class SnippetManager
     }
   }
 
-  public function deleteSnippet( string $path ) : bool
+  public function deleteSnippet( string $path, ?string $basePath = null ) : bool
   {
     if( ! $this->isSafeRelativePath($path) || trim($path, '/') === '' )
       return false;
 
-    $fullPath = $this->resolveWritePath($path) . "/$path";
+    if( $basePath !== null && $basePath !== '' )
+    {
+      $base = $this->resolveBasePath($basePath);
+      if( $base === null )
+        return false;
+    }
+    else
+      $base = $this->resolveWritePath($path);
+
+    $fullPath = rtrim($base, '/') . '/' . ltrim($path, '/');
 
     if( is_file($fullPath) )
       return unlink($fullPath);
@@ -958,12 +990,13 @@ class SnippetManager
     return rmdir($path);
   }
 
-  public function duplicateSnippet( string $sourcePath, string $targetPath ) : bool
+  public function duplicateSnippet( string $sourcePath, string $targetPath, ?string $basePath = null ) : bool
   {
-    $snippet = $this->loadSnippet($sourcePath);
+    $snippet = $this->loadSnippet($sourcePath, $basePath);
 
+    // The copy lands next to its original, in the same source
     if( $snippet )
-      return $this->saveSnippet($targetPath, $snippet) !== null;
+      return $this->saveSnippet($targetPath, $snippet, $basePath) !== null;
 
     return false;
   }

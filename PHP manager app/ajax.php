@@ -44,7 +44,7 @@ try {
 
     case 'loadSnippet':
       $path = $input['path'] ?? '';
-      $snippet = $manager->loadSnippet($path);
+      $snippet = $manager->loadSnippet($path, $input['basePath'] ?? null);
 
       if( $snippet )
         $response = ['success' => true, 'snippet' => $snippet];
@@ -72,8 +72,8 @@ try {
 
     case 'deleteSnippet':
       $path = $input['path'] ?? '';
-      
-      if( $manager->deleteSnippet($path) )
+
+      if( $manager->deleteSnippet($path, $input['basePath'] ?? null) )
         $response = ['success' => true, 'message' => 'Snippet deleted successfully'];
       else
         $response = ['success' => false, 'message' => 'Failed to delete snippet'];
@@ -93,7 +93,7 @@ try {
       $sourcePath = $input['sourcePath'] ?? '';
       $targetPath = $input['targetPath'] ?? '';
       
-      if( $manager->duplicateSnippet($sourcePath, $targetPath) )
+      if( $manager->duplicateSnippet($sourcePath, $targetPath, $input['basePath'] ?? null) )
         $response = ['success' => true, 'message' => 'Snippet duplicated successfully'];
       else
         $response = ['success' => false, 'message' => 'Failed to duplicate snippet'];
@@ -264,7 +264,7 @@ try {
         $response = ['success' => false, 'message' => 'Missing filePath'];
         break;
       }
-      if( $manager->writeFileColor($filePath, $color) )
+      if( $manager->writeFileColor($filePath, $color, $input['basePath'] ?? null) )
         $response = ['success' => true];
       else
         $response = ['success' => false, 'message' => 'Failed to write file color'];

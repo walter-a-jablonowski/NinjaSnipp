@@ -5,6 +5,8 @@
     // Shared state accessed by sub-controllers via this.app
     this.currentPath = '';
     this.currentSnippet = null;
+    this.currentBasePath = null; // source folder of the open snippet (merged duplicates)
+    this.currentTreePath = null; // tree row it was opened from
     this.currentDataPath = '';
     this.searchHistory = [];
     this.recentSnippets = [];
@@ -623,7 +625,7 @@
       this.fileTree = [];
       this.expandedFolders.clear();
       this.currentSnippet = null;
-      this.editor.clearEditForm();
+      this.editor.clearEditForm();   // also resets currentBasePath / currentTreePath
       const recentResult = await apiCall(this.currentDataPath, 'getRecentSnippets');
       if( recentResult.success ) this.recentSnippets = recentResult.data;
       this.loadFiles();
@@ -683,8 +685,10 @@
         if( firstFile ) {
           const fileItem = treeItemByPath(firstFile.path);
           if( fileItem ) fileItem.classList.add('active');
-          this.currentPath = '';
-          this.editor.loadSnippet(firstFile.path);
+          this.currentPath     = '';
+          this.currentBasePath = firstFile.basePath || null;
+          this.currentTreePath = firstFile.path;
+          this.editor.loadSnippet(firstFile.fsPath || firstFile.path, this.currentBasePath);
         }
         this._initialLoad = false;
       }

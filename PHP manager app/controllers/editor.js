@@ -5,11 +5,11 @@ class EditorController
     this.app = app;
   }
 
-  async loadSnippet(path)
+  async loadSnippet(path, basePath = null)
   {
     showLoading('editContent');
 
-    const result = await apiCall(this.app.currentDataPath, 'loadSnippet', { path });
+    const result = await apiCall(this.app.currentDataPath, 'loadSnippet', { path, basePath });
 
     if( result.success ) {
       this.app.currentSnippet = result.snippet;
@@ -159,7 +159,11 @@ class EditorController
     const extension = this.app.currentSnippet._type === 'yml' ? 'yml' : 'md';
     const path = (this.app.currentPath ? this.app.currentPath + '/' : '') + data._name + '.' + extension;
 
-    const result = await apiCall(this.app.currentDataPath, 'saveSnippet', { path, data });
+    // Write back to the source this snippet was opened from, not just the last one
+    const payload = { path, data };
+    if( this.app.currentBasePath ) payload.targetBasePath = this.app.currentBasePath;
+
+    const result = await apiCall(this.app.currentDataPath, 'saveSnippet', payload);
 
     if( result.success ) {
       if( ! silent ) showSuccess('Snippet saved successfully');
@@ -256,7 +260,8 @@ class EditorController
     const sourcePath = (this.app.currentPath ? this.app.currentPath + '/' : '') + this.app.currentSnippet._name + '.' + extension;
     const targetPath = (this.app.currentPath ? this.app.currentPath + '/' : '') + newName + '.' + extension;
 
-    const result = await apiCall(this.app.currentDataPath, 'duplicateSnippet', { sourcePath, targetPath });
+    const result = await apiCall(this.app.currentDataPath, 'duplicateSnippet',
+      { sourcePath, targetPath, basePath: this.app.currentBasePath || null });
     if( result.success ) {
       showSuccess('Snippet duplicated successfully');
       const modal = bootstrap.Modal.getInstance(document.getElementById('duplicateSnippetModal'));
@@ -278,19 +283,23 @@ class EditorController
   async performDelete()
   {
     let path;
+    let basePath = null;
     let clearCurrent = false;
 
     if( this.app._deleteContext ) {
-      path = this.app._deleteContext.path;
+      path     = this.app._deleteContext.path;
+      basePath = this.app._deleteContext.basePath || null;
       if( this.app.currentSnippet ) {
         const ext = this.app.currentSnippet._type === 'yml' ? 'yml' : 'md';
         const curPath = (this.app.currentPath ? this.app.currentPath + '/' : '') + this.app.currentSnippet._name + '.' + ext;
-        if( curPath === path ) clearCurrent = true;
+        // Same file only when it is also the same source
+        if( curPath === path && basePath === (this.app.currentBasePath || null) ) clearCurrent = true;
       }
     }
     else if( this.app.currentSnippet ) {
       const extension = this.app.currentSnippet._type === 'yml' ? 'yml' : 'md';
       path = (this.app.currentPath ? this.app.currentPath + '/' : '') + this.app.currentSnippet._name + '.' + extension;
+      basePath = this.app.currentBasePath || null;
       clearCurrent = true;
     }
     else {
@@ -307,8 +316,11 @@ class EditorController
       );
       result = { success: results.every(r => r && r.success), message: results.find(r => !r?.success)?.message };
     }
+    else if( isFolder ) {
+      result = await apiCall(this.app.currentDataPath, 'deleteFolder', { path, targetBase: basePath });
+    }
     else {
-      result = await apiCall(this.app.currentDataPath, isFolder ? 'deleteFolder' : 'deleteSnippet', { path });
+      result = await apiCall(this.app.currentDataPath, 'deleteSnippet', { path, basePath });
     }
 
     if( result.success ) {
@@ -343,7 +355,8 @@ class EditorController
       result = { success: results.every(r => r && r.success), message: results.find(r => !r?.success)?.message };
     }
     else {
-      result = await apiCall(this.app.currentDataPath, 'renameItem', { oldPath: ctx.oldPath, newPath });
+      result = await apiCall(this.app.currentDataPath, 'renameItem',
+        { oldPath: ctx.oldPath, newPath, basePath: ctx.basePath || null });
     }
     if( result && result.success ) {
       const modal = bootstrap.Modal.getInstance(document.getElementById('renameItemModal')) || new bootstrap.Modal(document.getElementById('renameItemModal'));
@@ -364,6 +377,9 @@ class EditorController
 
   clearEditForm()
   {
+    this.app.currentBasePath = null;
+    this.app.currentTreePath = null;
+
     const editEmptyState = document.getElementById('editEmptyState');
     const editForm = document.getElementById('editForm');
 
@@ -476,7 +492,11 @@ class EditorController
       document.querySelectorAll('.tree-item.active, .file-item.active').forEach(item => item.classList.remove('active'));
       const newItem = treeItemByPath(path);
       if( newItem ) newItem.classList.add('active');
-      await this.loadSnippet(path);
+
+      // Open the copy in the source it was just created in, not whichever source wins last
+      this.app.currentBasePath = targetBasePath || null;
+      this.app.currentTreePath = path;
+      await this.loadSnippet(path, this.app.currentBasePath);
       activateTab('edit-tab');
 
       const modal = bootstrap.Modal.getInstance(document.getElementById('newSnippetModal'));
