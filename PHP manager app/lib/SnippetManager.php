@@ -3,6 +3,7 @@
 namespace SnippetManager;
 
 use Symfony\Component\Yaml\Yaml;
+use Symfony\Component\Yaml\Exception\ParseException;
 
 class SnippetManager
 {
@@ -678,8 +679,14 @@ class SnippetManager
         try {
           $content = file_get_contents($fullPath);
           $data    = Yaml::parse($content);
-          $data['_type'] = 'yml';
-          $data['_name'] = pathinfo($path, PATHINFO_FILENAME);
+
+          // An empty or scalar file would otherwise blow up on the array writes below
+          if( ! is_array($data) )
+            $data = [];
+
+          $data['_type']      = 'yml';
+          $data['_name']      = pathinfo($path, PATHINFO_FILENAME);
+          $data['_usageText'] = $this->usageToText($data['usage'] ?? null);
           $result  = $data;
         }
         catch( \Exception $e ) {
@@ -699,11 +706,59 @@ class SnippetManager
     return $result;
   }
 
-  public function saveSnippet( string $path, array $data, ?string $targetBasePath = null ) : bool
+  // The editable YAML text for the usage block. Dumped with the same library that parses
+  // it back on save, so values that need quoting (a colon, a newline) survive the trip.
+  private function usageToText( $usage ) : string
+  {
+    if( $usage === null || $usage === '' )
+      return '';
+
+    if( ! is_array($usage) )
+      return (string)$usage;
+
+    $yaml = Yaml::dump($usage, 4, 2, Yaml::DUMP_MULTI_LINE_LITERAL_BLOCK);
+
+    // Blank line between top-level blocks, for readability only; ignored when parsed back.
+    // The trailing newline is kept on purpose: trimming it would chop the final newline
+    // off the last `|` block and quietly shorten that value on every save.
+    return preg_replace('/\n(?=\S)/', "\n\n", $yaml);
+  }
+
+  // The editor posts `usage` back as raw textarea text. A scalar result means the user
+  // typed prose, which the renderer supports; a parse error means the text is broken and
+  // must not be written, or the structured block would be flattened into a string.
+  private function parseUsageText( $usage )
+  {
+    if( ! is_string($usage) )
+      return $usage;                  // already structured (e.g. from duplicateSnippet)
+
+    if( trim($usage) === '' )
+      return '';
+
+    try {
+      $parsed = Yaml::parse($usage);
+    }
+    catch( ParseException $e ) {
+      throw new \RuntimeException('Usage is not valid YAML: ' . $e->getMessage());
+    }
+
+    return $parsed === null ? '' : $parsed;
+  }
+
+  // Returns the normalized snippet on success (usage parsed back into an array, so the
+  // caller's in-memory copy stays structured), or null when nothing was written.
+  // Throws RuntimeException if the usage text is unparsable - the file stays untouched.
+  public function saveSnippet( string $path, array $data, ?string $targetBasePath = null ) : ?array
   {
     $type = $data['_type'] ?? null;
     if( $type !== 'yml' && $type !== 'md' )
-      return false;
+      return null;
+
+    $name = $data['_name'] ?? pathinfo($path, PATHINFO_FILENAME);
+
+    // Parse before touching the disk so a broken usage block cannot damage a good file
+    if( $type === 'yml' )
+      $data['usage'] = $this->parseUsageText($data['usage'] ?? null);
 
     $base     = $targetBasePath ?? $this->resolveWritePath($path);
     $fullPath = rtrim($base, '/') . '/' . ltrim($path, '/');
@@ -715,22 +770,11 @@ class SnippetManager
     try {
       if( $type === 'yml' )
       {
-        unset($data['_type'], $data['_name']);
+        unset($data['_type'], $data['_name'], $data['_usageText']);
 
-        // If usage was sent as a YAML string from the textarea, parse it back to an array
-        if( isset($data['usage']) && is_string($data['usage']) && trim($data['usage']) !== '' )
-        {
-          try {
-            $parsed = Yaml::parse($data['usage']);
-            if( is_array($parsed) )
-              $data['usage'] = $parsed;
-          }
-          catch( \Exception $e ) {}
-        }
-
-        // Ensure key order: sc, usage, content come first
+        // Key order as documented in the README file format
         $ordered = [];
-        foreach( ['sc', 'usage', 'content'] as $k )
+        foreach( ['id', 'version', 'sc', 'short', 'usage', 'content'] as $k )
         {
           if( array_key_exists($k, $data) )
           {
@@ -739,19 +783,26 @@ class SnippetManager
           }
         }
         $data = $ordered + $data;
+
         $yamlContent = Yaml::dump($data, 4, 2, Yaml::DUMP_MULTI_LINE_LITERAL_BLOCK);
-        return file_put_contents($fullPath, $yamlContent) !== false;
+        if( file_put_contents($fullPath, $yamlContent) === false )
+          return null;
+
+        $data['_type']      = 'yml';
+        $data['_name']      = $name;
+        $data['_usageText'] = $this->usageToText($data['usage'] ?? null);
+        return $data;
       }
-      elseif( $type === 'md' )
-      {
-        return file_put_contents($fullPath, $data['content'] ?? '') !== false;
-      }
+
+      $content = $data['content'] ?? '';
+      if( file_put_contents($fullPath, $content) === false )
+        return null;
+
+      return ['_type' => 'md', '_name' => $name, 'content' => $content];
     }
     catch( \Exception $e ) {
-      return false;
+      return null;
     }
-
-    return false;
   }
 
   public function deleteSnippet( string $path ) : bool
@@ -793,7 +844,7 @@ class SnippetManager
     $snippet = $this->loadSnippet($sourcePath);
 
     if( $snippet )
-      return $this->saveSnippet($targetPath, $snippet);
+      return $this->saveSnippet($targetPath, $snippet) !== null;
 
     return false;
   }

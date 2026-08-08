@@ -54,10 +54,17 @@ try {
       $data           = $input['data'] ?? [];
       $targetBasePath = $input['targetBasePath'] ?? null;
 
-      if( $manager->saveSnippet($path, $data, $targetBasePath) )
-        $response = ['success' => true, 'message' => 'Snippet saved successfully'];
-      else
-        $response = ['success' => false, 'message' => 'Failed to save snippet'];
+      try {
+        $saved = $manager->saveSnippet($path, $data, $targetBasePath);
+
+        // The normalized snippet goes back so the client's copy keeps its parsed `usage`
+        $response = $saved !== null
+          ? ['success' => true, 'message' => 'Snippet saved successfully', 'snippet' => $saved]
+          : ['success' => false, 'message' => 'Failed to save snippet'];
+      }
+      catch( RuntimeException $e ) {
+        $response = ['success' => false, 'message' => $e->getMessage()];
+      }
       break;
 
     case 'deleteSnippet':

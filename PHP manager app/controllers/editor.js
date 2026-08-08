@@ -60,8 +60,8 @@ class EditorController
     if( isYaml ) {
       if( snippetSc )    snippetSc.value    = snippet.sc    || '';
       if( snippetShort ) snippetShort.value = snippet.short || '';
-      if( snippetUsage )
-        snippetUsage.value = this._serializeUsage(snippet.usage);
+      // The server dumps usage to YAML text with the same library that parses it back
+      if( snippetUsage ) snippetUsage.value = snippet._usageText || '';
     }
 
     if( fieldUsage ) fieldUsage.classList.toggle('force-hide', ! isYaml);
@@ -152,7 +152,8 @@ class EditorController
     if( this.app.currentSnippet._type === 'yml' ) {
       data.sc    = document.getElementById('snippetSc')?.value.trim()    || '';
       data.short = document.getElementById('snippetShort')?.value.trim() || '';
-      data.usage = document.getElementById('snippetUsage')?.value.trim() || '';
+      // Not trimmed: the trailing newline belongs to the last `|` block in the usage YAML
+      data.usage = document.getElementById('snippetUsage')?.value ?? '';
     }
 
     const extension = this.app.currentSnippet._type === 'yml' ? 'yml' : 'md';
@@ -162,12 +163,19 @@ class EditorController
 
     if( result.success ) {
       if( ! silent ) showSuccess('Snippet saved successfully');
-      this.app.currentSnippet = data;
+      // Adopt the server's normalized copy so `usage` stays a parsed object; keeping the
+      // raw textarea text would make the usage preview fall back to rendering plain YAML
+      this.app.currentSnippet = result.snippet || data;
       this.app.loadFiles();
 
       if( this.app.currentSnippet._type === 'yml' ) {
         this.app.render.composeAndRenderInline();
       }
+    }
+    else if( silent ) {
+      // Autosave: leave the file as it was and stay quiet. Toasting on every debounce
+      // would fire constantly while a usage block is mid-edit and briefly unparsable.
+      console.warn('Autosave skipped:', result.message);
     }
     else {
       showError('Failed to save snippet: ' + result.message);
@@ -555,36 +563,5 @@ class EditorController
     else {
       showError('Failed to create link: ' + result.message);
     }
-  }
-
-  // Serialize usage object to editable YAML text for the textarea
-  _serializeUsage(u)
-  {
-    if( ! u ) return '';
-    if( typeof u === 'string' ) return u;
-
-    const parts  = [];
-    const indent = '  ';
-
-    const addBlock = (key, value) => {
-      if( value == null ) return;
-      const indented = String(value).split('\n').map(l => indent + l).join('\n').trimEnd();
-      parts.push(`${key}: |\n${indented}`);
-    };
-
-    const addMapping = (key, obj) => {
-      if( ! obj || typeof obj !== 'object' ) return;
-      const entries = Object.entries(obj);
-      if( ! entries.length ) return;
-      const rows = entries.map(([k, v]) => `${indent}${k}: ${v ?? ''}`).join('\n');
-      parts.push(`${key}:\n${rows}`);
-    };
-
-    addBlock('head', u.head);
-    addMapping('maybe', u.maybe);
-    addMapping('vars', u.vars);
-    addBlock('text', u.text);
-
-    return parts.join('\n\n');
   }
 }
