@@ -1,5 +1,5 @@
 # Common config
-# see also user settings
+# see also --local config-- and user settings
 
 # Folder under users/ holding settings and lists. Override in config.local.yml
 # (not committed) to keep a personal setup out of the repository.
