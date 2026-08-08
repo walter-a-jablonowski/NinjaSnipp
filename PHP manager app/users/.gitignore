@@ -1,0 +1,6 @@
+# Only the demo user's settings are committed. Personal user folders and the lists the
+# app generates (recent snippets, search history) stay local.
+*
+!.gitignore
+!default/
+!default/settings.yml

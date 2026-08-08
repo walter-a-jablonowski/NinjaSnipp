@@ -7,11 +7,11 @@ require_once 'vendor/autoload.php';
 require_once 'lib/functions.php';
 
 
-$appConfig = Yaml::parseFile('config.yml');
+$appConfig = app_config();
 $debug     = (bool)($appConfig['debug']['on'] ?? false);
 $allBtns   = (bool)($appConfig['debug']['showAllFileBtns'] ?? false);
 
-$config  = Yaml::parseFile('users/default/settings.yml');
+$config  = Yaml::parseFile(user_dir() . '/settings.yml');
 $initialTheme = $config['theme'] ?? 'light';
 $manager = new SnippetManager( $config['dataPaths'] ?? ['data'], $config, __DIR__);
 if( isset($config['nav']['foldersFirst']) )

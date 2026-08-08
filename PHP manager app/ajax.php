@@ -12,10 +12,11 @@ header('Content-Type: application/json');
 $input  = json_decode( file_get_contents('php://input'), true);
 $action = $input['action'] ?? '';
 
-$appConfig = is_file('config.yml') ? Yaml::parseFile('config.yml') : [];
+$appConfig = app_config();
 $special   = (bool)($appConfig['special'] ?? false);
 
-$config  = Yaml::parseFile('users/default/settings.yml');
+$userDir = user_dir();
+$config  = Yaml::parseFile("$userDir/settings.yml");
 $manager = new SnippetManager( $config['dataPaths'] ?? ['data'], $config, __DIR__);
 if( isset($config['nav']['foldersFirst']) )
   $manager->setFoldersFirst( (bool)$config['nav']['foldersFirst'] );
@@ -290,14 +291,14 @@ try {
 
     // --- User data: search history ---
     case 'getSearchHistory':
-      $file = 'users/default/search_history.json';
+      $file = "$userDir/search_history.json";
       $history = read_json_file($file, []);
       $response = ['success' => true, 'data' => $history];
       break;
 
     case 'saveSearchHistory':
       $data = $input['data'] ?? [];
-      $file = 'users/default/search_history.json';
+      $file = "$userDir/search_history.json";
       if( write_json_file($file, $data) )
         $response = ['success' => true];
       else
@@ -306,7 +307,7 @@ try {
 
     // --- User data: recent snippets ---
     case 'getRecentSnippets':
-      $file = 'users/default/recent_snippets.json';
+      $file = "$userDir/recent_snippets.json";
       $allRecent = read_json_file($file, []);
       $currentDataLabel = $manager->getCurrentDataLabel();
       $recent = $allRecent[$currentDataLabel] ?? [];
@@ -315,7 +316,7 @@ try {
 
     case 'saveRecentSnippets':
       $data = $input['data'] ?? [];
-      $file = 'users/default/recent_snippets.json';
+      $file = "$userDir/recent_snippets.json";
       $allRecent = read_json_file($file, []);
       $currentDataLabel = $manager->getCurrentDataLabel();
       $allRecent[$currentDataLabel] = $data;
@@ -327,7 +328,7 @@ try {
 
     // --- User settings (YAML) ---
     case 'getUserSettings':
-      $settingsFile = 'users/default/settings.yml';
+      $settingsFile = "$userDir/settings.yml";
       if( is_file($settingsFile) )
         $settings = Yaml::parseFile($settingsFile);
       else
@@ -336,7 +337,7 @@ try {
       break;
 
     case 'setUserSettings':
-      $settingsFile = 'users/default/settings.yml';
+      $settingsFile = "$userDir/settings.yml";
       $current = is_file($settingsFile) ? Yaml::parseFile($settingsFile) : [];
       $incoming = $input['settings'] ?? [];
       if( ! is_array($incoming) ) $incoming = [];

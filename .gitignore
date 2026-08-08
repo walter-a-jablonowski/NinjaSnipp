@@ -6,3 +6,6 @@ snipp_promp.code-workspace
 bin/
 obj/
 NinjaSnipp2.code-workspace
+
+# Machine local app config (selects the users/ folder to run as)
+config.local.yml

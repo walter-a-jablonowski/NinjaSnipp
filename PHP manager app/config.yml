@@ -1,5 +1,9 @@
-# Common config currently empty
+# Common config
 # see also user settings
+
+# Folder under users/ holding settings and lists. Override in config.local.yml
+# (not committed) to keep a personal setup out of the repository.
+user: default
 
 debug:
   on: true
