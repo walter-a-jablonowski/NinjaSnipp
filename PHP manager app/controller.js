@@ -160,7 +160,7 @@
       searchInput.addEventListener('keydown', (e) => {
         if( e.key === 'Enter' ) this.search.performSearch();
         if( e.key === 'ArrowDown' || e.key === 'ArrowUp' ) {
-          this.navigateSearchHistory(e.key);
+          this.search.navigateSearchHistory(e.key);
           e.preventDefault();
         }
       });

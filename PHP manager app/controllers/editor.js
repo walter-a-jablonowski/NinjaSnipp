@@ -134,7 +134,8 @@ class EditorController
     }
   }
 
-  async saveCurrentSnippet()
+  // silent: autosave path, no success toast
+  async saveCurrentSnippet(silent = false)
   {
     if( ! this.app.currentSnippet ) return;
 
@@ -160,7 +161,6 @@ class EditorController
     const result = await apiCall(this.app.currentDataPath, 'saveSnippet', { path, data });
 
     if( result.success ) {
-      const silent = arguments[0] === true || (typeof arguments[0] === 'object' && arguments[0]?.silent === true);
       if( ! silent ) showSuccess('Snippet saved successfully');
       this.app.currentSnippet = data;
       this.app.loadFiles();

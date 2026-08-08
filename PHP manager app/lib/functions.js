@@ -66,32 +66,36 @@ function showError(message)
 
 function showAlert(message, type)
 {
-  const alertHtml = `
-    <div class="alert alert-${type} alert-floating alert-dismissible fade show" role="alert">
-      ${message}
-      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-  `;
-  document.body.insertAdjacentHTML('beforeend', alertHtml);
+  const alertEl = document.createElement('div');
+  alertEl.className = `alert alert-${type} alert-floating alert-dismissible fade show`;
+  alertEl.setAttribute('role', 'alert');
+  alertEl.innerHTML = `${escapeHtml(message)}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+  document.body.appendChild(alertEl);
+
+  // Close this alert. Looking it up by class would close whichever one happens to be
+  // first in the DOM, so dismissing one by hand could leave a later one up forever.
   setTimeout(() => {
-    const alert = document.querySelector('.alert-floating');
-    if( alert ) {
-      try {
-        const bsAlert = new bootstrap.Alert(alert);
-        bsAlert.close();
-      }
-      catch(e) {
-        alert.remove();
-      }
+    if( ! alertEl.isConnected ) return;
+    try {
+      bootstrap.Alert.getOrCreateInstance(alertEl).close();
+    }
+    catch(e) {
+      alertEl.remove();
     }
   }, 5000);
 }
 
+// Escapes text for HTML. Quotes are escaped too, so the result is safe both in a text
+// node and inside a quoted attribute value (the previous DOM-based version left " and '
+// untouched, which broke data-choices='...' on names containing an apostrophe)
 function escapeHtml(text)
 {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
+  return String(text ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 // Wrapper: parse markdown, add .no-indent to <ul>, and unwrap <p> inside <li>

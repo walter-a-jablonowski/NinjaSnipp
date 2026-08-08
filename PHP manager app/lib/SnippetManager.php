@@ -701,6 +701,10 @@ class SnippetManager
 
   public function saveSnippet( string $path, array $data, ?string $targetBasePath = null ) : bool
   {
+    $type = $data['_type'] ?? null;
+    if( $type !== 'yml' && $type !== 'md' )
+      return false;
+
     $base     = $targetBasePath ?? $this->resolveWritePath($path);
     $fullPath = rtrim($base, '/') . '/' . ltrim($path, '/');
     $dir = dirname($fullPath);
@@ -709,7 +713,7 @@ class SnippetManager
       mkdir($dir, 0755, true);
 
     try {
-      if( $data['_type'] === 'yml' )
+      if( $type === 'yml' )
       {
         unset($data['_type'], $data['_name']);
 
@@ -738,9 +742,9 @@ class SnippetManager
         $yamlContent = Yaml::dump($data, 4, 2, Yaml::DUMP_MULTI_LINE_LITERAL_BLOCK);
         return file_put_contents($fullPath, $yamlContent) !== false;
       }
-      elseif( $data['_type'] === 'md' )
+      elseif( $type === 'md' )
       {
-        return file_put_contents($fullPath, $data['content']) !== false;
+        return file_put_contents($fullPath, $data['content'] ?? '') !== false;
       }
     }
     catch( \Exception $e ) {
@@ -844,21 +848,43 @@ class SnippetManager
     }
   }
 
+  // Flattens a snippet field to plain searchable text. `usage` is normally a nested
+  // mapping (head/maybe/vars/text), so keys are included: searching "channel" finds a
+  // var named channel. Guards every search/score call against non-string fields.
+  private function fieldToText( $value ) : string
+  {
+    if( is_string($value) )
+      return $value;
+
+    if( is_scalar($value) )
+      return (string)$value;
+
+    if( is_array($value) )
+    {
+      $parts = [];
+      foreach( $value as $key => $item )
+      {
+        if( ! is_int($key) )
+          $parts[] = (string)$key;
+        $parts[] = $this->fieldToText($item);
+      }
+      return implode(' ', $parts);
+    }
+
+    return '';
+  }
+
   private function matchesQuery( array $snippet, string $query ) : bool
   {
     $query = strtolower($query);
 
-    if( strpos(strtolower($snippet['_name']), $query) !== false )
-      return true;
-
-    if( isset($snippet['sc']) && strpos(strtolower($snippet['sc']), $query) !== false )
-      return true;
-
-    if( isset($snippet['usage']) && strpos(strtolower($snippet['usage']), $query) !== false )
-      return true;
-
-    if( isset($snippet['content']) && strpos(strtolower($snippet['content']), $query) !== false )
-      return true;
+    foreach( ['_name', 'sc', 'usage', 'content'] as $field )
+    {
+      if( ! isset($snippet[$field]) )
+        continue;
+      if( strpos(strtolower($this->fieldToText($snippet[$field])), $query) !== false )
+        return true;
+    }
 
     return false;
   }
@@ -888,21 +914,26 @@ class SnippetManager
     $snippet = $result['snippet'];
     if( ! $snippet ) return 0;
 
-    if( strtolower($snippet['_name']) === $query )
+    $name    = strtolower($this->fieldToText($snippet['_name'] ?? ''));
+    $sc      = strtolower($this->fieldToText($snippet['sc'] ?? ''));
+    $usage   = strtolower($this->fieldToText($snippet['usage'] ?? ''));
+    $content = strtolower($this->fieldToText($snippet['content'] ?? ''));
+
+    if( $name === $query )
       $score += 100;
-    elseif( strpos(strtolower($snippet['_name']), $query) === 0 )
+    elseif( strpos($name, $query) === 0 )
       $score += 50;
-    elseif( strpos(strtolower($snippet['_name']), $query) !== false )
+    elseif( strpos($name, $query) !== false )
       $score += 25;
 
-    if( isset($snippet['sc']) && strtolower($snippet['sc']) === $query )
+    if( $sc === $query )
       $score += 75;
-    elseif( isset($snippet['sc']) && strpos(strtolower($snippet['sc']), $query) !== false )
+    elseif( $sc !== '' && strpos($sc, $query) !== false )
       $score += 20;
 
-    if( isset($snippet['usage']) && strpos(strtolower($snippet['usage']), $query) !== false )
+    if( $usage !== '' && strpos($usage, $query) !== false )
       $score += 10;
-    if( isset($snippet['content']) && strpos(strtolower($snippet['content']), $query) !== false )
+    if( $content !== '' && strpos($content, $query) !== false )
       $score += 5;
 
     return $score;

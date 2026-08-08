@@ -348,7 +348,9 @@ try {
       $response = ['success' => false, 'message' => "Unknown action: $action"];
   }
 }
-catch( Exception $e ) {
+catch( Throwable $e ) {
+  // Throwable, not Exception: a TypeError/Error would otherwise escape as a fatal and
+  // the client would get an HTML error page instead of the JSON it parses
   $response = ['success' => false, 'message' => 'Server error: ' . $e->getMessage()];
 }
 

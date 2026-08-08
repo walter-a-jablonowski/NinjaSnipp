@@ -3,6 +3,7 @@ class SearchController
   constructor(app)
   {
     this.app = app;
+    this._historyIndex = null; // position while walking the history with the arrow keys
   }
 
   async performSearch()
@@ -11,6 +12,7 @@ class SearchController
     const query = searchInput?.value.trim();
     if( ! query ) return;
 
+    this._historyIndex = null;
     this.app.searchHistory = this.app.searchHistory.filter(item => item !== query);
     this.app.searchHistory.unshift(query);
     this.app.searchHistory = this.app.searchHistory.slice(0, 20);
@@ -59,13 +61,13 @@ class SearchController
       }
 
       return `
-        <div class="list-group-item file-item" data-path="${result.path}"
-             data-type="${dataType}" data-extension="${dataExtension}">
+        <div class="list-group-item file-item" data-path="${escapeHtml(result.path)}"
+             data-type="${dataType}" data-extension="${escapeHtml(dataExtension)}">
           <div class="d-flex align-items-center">
             <i class="bi ${icon} file-icon me-2"></i>
             <div class="flex-grow-1">
-              <div class="fw-medium">${result.name}</div>
-              <div class="file-meta">${metaInfo}</div>
+              <div class="fw-medium">${escapeHtml(result.name)}</div>
+              <div class="file-meta">${escapeHtml(metaInfo)}</div>
             </div>
           </div>
         </div>
@@ -75,6 +77,8 @@ class SearchController
 
   handleSearch(query)
   {
+    this._historyIndex = null; // typing leaves the history walk
+
     if( query.length > 0 ) {
       this.showSearchHistory();
     }
@@ -100,15 +104,41 @@ class SearchController
     searchHistory.style.width = rect.width + 'px';
 
     searchHistory.innerHTML = this.app.searchHistory.slice(0, 10).map(item => `
-      <div class="search-history-item" data-query="${item}">
-        <i class="bi bi-clock-history me-2"></i>${item}
+      <div class="search-history-item" data-query="${escapeHtml(item)}">
+        <i class="bi bi-clock-history me-2"></i>${escapeHtml(item)}
       </div>
     `).join('');
   }
 
   hideSearchHistory()
   {
-    document.getElementById('searchHistory').style.display = 'none';
+    const searchHistory = document.getElementById('searchHistory');
+    if( searchHistory ) searchHistory.style.display = 'none';
+  }
+
+  // Arrow-key walk through past queries: Up goes to older entries, Down back toward the
+  // newest and then clears the field. Typing or running a search resets the position.
+  navigateSearchHistory(key)
+  {
+    const searchInput = document.getElementById('searchInput');
+    if( ! searchInput || this.app.searchHistory.length === 0 ) return;
+
+    const oldest = this.app.searchHistory.length - 1;
+
+    if( key === 'ArrowUp' )
+      this._historyIndex = this._historyIndex === null ? 0 : Math.min(this._historyIndex + 1, oldest);
+    else if( this._historyIndex === null )
+      return;                       // Down with nothing recalled yet: leave the field alone
+    else if( this._historyIndex === 0 ) {
+      this._historyIndex = null;    // stepped past the newest entry
+      searchInput.value = '';
+      return;
+    }
+    else
+      this._historyIndex--;
+
+    searchInput.value = this.app.searchHistory[this._historyIndex];
+    searchInput.setSelectionRange(searchInput.value.length, searchInput.value.length);
   }
 
   setupSearchHistory()
