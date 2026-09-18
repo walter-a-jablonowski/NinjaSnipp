@@ -671,9 +671,78 @@ class SnippetManager
     }
 
     foreach( $colorMigrations as $migration )
-      $this->migrateFileColorKey($migration[0], $migration[1], $migration[2]);
+      $this->moveFileColorKey($migration[0], $migration[1], $migration[2]);
 
     return ['success' => true, 'message' => 'Reordered'];
+  }
+
+  // Renames one file or folder in each of $bases. A merged folder lives in several sources
+  // at once and has to move in all of them or in none: renaming source by source and only
+  // reporting the first failure would leave the two halves under different names, split
+  // apart in the tree with nothing saying so. Every base is therefore checked up front and
+  // a failure part way through is walked back. A renamed file keeps its color.
+  // $bases entries must be configured sources; null or '' means the current data path.
+  public function renameItem( string $oldPath, string $newPath, array $bases ) : array
+  {
+    if( trim($oldPath, '/') === '' || trim($newPath, '/') === '' )
+      return ['success' => false, 'message' => 'Invalid parameters'];
+
+    if( ! $this->isSafeRelativePath($oldPath) || ! $this->isSafeRelativePath($newPath) )
+      return ['success' => false, 'message' => 'Invalid path'];
+
+    $resolved = [];
+    foreach( $bases as $base )
+    {
+      $base = $this->resolveBasePath( $base === null ? null : (string)$base );
+      if( $base === null )
+        return ['success' => false, 'message' => 'Invalid source folder'];
+      $resolved[rtrim($base, '/')] = true;      // keyed, so a repeated base is renamed once
+    }
+
+    if( empty($resolved) )
+      return ['success' => false, 'message' => 'Invalid source folder'];
+
+    // Check every source before touching any of them
+    $jobs = [];
+    foreach( array_keys($resolved) as $base )
+    {
+      $old = "$base/" . ltrim($oldPath, '/');
+      $new = "$base/" . ltrim($newPath, '/');
+
+      // A merged folder can be missing from a source that only holds part of the tree
+      if( ! file_exists($old) )
+        continue;
+      if( file_exists($new) )
+        return ['success' => false, 'message' => 'Target already exists'];
+
+      $jobs[] = ['old' => $old, 'new' => $new];
+    }
+
+    if( empty($jobs) )
+      return ['success' => false, 'message' => 'Source missing'];
+
+    $done = [];
+    foreach( $jobs as $job )
+    {
+      // Nested renames may need a parent that does not exist in this source yet
+      $parentDir = dirname($job['new']);
+      if( ! is_dir($parentDir) && ! mkdir($parentDir, 0755, true) )
+        return $this->undoRenames($done, 'Failed to prepare target directory');
+
+      if( ! @rename($job['old'], $job['new']) )
+        return $this->undoRenames($done, 'Failed to rename');
+
+      $done[] = [$job['old'], $job['new']];
+    }
+
+    // Colors are keyed by file name in the parent folder, so they only travel along when
+    // the item stays where it is - which is what the rename dialog does
+    $oldDir = dirname($oldPath);
+    if( $oldDir === dirname($newPath) )
+      foreach( $jobs as $job )
+        $this->moveFileColorKey(dirname($job['old']), basename($oldPath), basename($newPath));
+
+    return ['success' => true, 'message' => 'Renamed successfully'];
   }
 
   // Walks a failed batch back, newest rename first, so every item ends up under its original name
@@ -721,8 +790,10 @@ class SnippetManager
     return $removed;
   }
 
-  // Moves a file's color entry in the parent folder's .sys/ninja.json when the file is renamed
-  private function migrateFileColorKey( string $folderDir, string $oldName, string $newName ) : void
+  // Rewrites a file's color entry in its folder's .sys/ninja.json: a $newName moves the
+  // entry so a renamed file keeps its color, null drops it so a deleted name does not hand
+  // its color to whatever file takes that name next.
+  private function moveFileColorKey( string $folderDir, string $oldName, ?string $newName ) : void
   {
     $jsonFile = "$folderDir/.sys/ninja.json";
     if( ! is_file($jsonFile) )
@@ -730,8 +801,14 @@ class SnippetManager
     $data = json_decode(file_get_contents($jsonFile), true);
     if( ! is_array($data) || ! isset($data['fileColors'][$oldName]) )
       return;
-    $data['fileColors'][$newName] = $data['fileColors'][$oldName];
+
+    if( $newName !== null )
+      $data['fileColors'][$newName] = $data['fileColors'][$oldName];
     unset($data['fileColors'][$oldName]);
+
+    if( empty($data['fileColors']) )
+      unset($data['fileColors']);
+
     $this->forgetSysData($folderDir);
     file_put_contents($jsonFile, json_encode($data, JSON_PRETTY_PRINT));
   }
@@ -974,10 +1051,14 @@ class SnippetManager
 
     $fullPath = rtrim($base, '/') . '/' . ltrim($path, '/');
 
-    if( is_file($fullPath) )
-      return unlink($fullPath);
+    if( ! is_file($fullPath) )
+      return false;
 
-    return false;
+    if( ! unlink($fullPath) )
+      return false;
+
+    $this->moveFileColorKey(dirname($fullPath), basename($fullPath), null);
+    return true;
   }
 
   public function deleteFolder( string $path, ?string $targetBase = null ) : bool

@@ -110,53 +110,13 @@ try {
       break;
 
     case 'renameItem':
-      $oldPath = $input['oldPath'] ?? '';
-      $newPath = $input['newPath'] ?? '';
+      // A merged folder is renamed in all of its sources at once, so the whole set goes in
+      // one call - the manager can then refuse or undo it as a unit
+      $bases = $input['bases'] ?? null;
+      if( ! is_array($bases) || empty($bases) )
+        $bases = [$input['basePath'] ?? null];
 
-      // Basic validation
-      if( $oldPath === '' || $newPath === '' ) {
-        $response = ['success' => false, 'message' => 'Invalid parameters'];
-        break;
-      }
-      if( ! $manager->isSafeRelativePath($oldPath) || ! $manager->isSafeRelativePath($newPath) ) {
-        $response = ['success' => false, 'message' => 'Invalid path'];
-        break;
-      }
-
-      $base = $manager->resolveBasePath($input['basePath'] ?? null);
-      if( $base === null ) {
-        $response = ['success' => false, 'message' => 'Invalid source folder'];
-        break;
-      }
-      $base = rtrim($base, '/');
-
-      // Build absolute paths
-      $oldFull = $base . '/' . ltrim($oldPath, '/');
-      $newFull = $base . '/' . ltrim($newPath, '/');
-
-      // Ensure old exists and new doesn't
-      if( ! file_exists($oldFull) ) {
-        $response = ['success' => false, 'message' => 'Source missing'];
-        break;
-      }
-      if( file_exists($newFull) ) {
-        $response = ['success' => false, 'message' => 'Target already exists'];
-        break;
-      }
-
-      // Ensure the target's parent directory exists (for nested renames)
-      $parentDir = dirname($newFull);
-      if( ! is_dir($parentDir) ) {
-        if( ! mkdir($parentDir, 0755, true) ) {
-          $response = ['success' => false, 'message' => 'Failed to prepare target directory'];
-          break;
-        }
-      }
-
-      if( @rename($oldFull, $newFull) )
-        $response = ['success' => true, 'message' => 'Renamed successfully'];
-      else
-        $response = ['success' => false, 'message' => 'Failed to rename'];
+      $response = $manager->renameItem($input['oldPath'] ?? '', $input['newPath'] ?? '', $bases);
       break;
 
     case 'batchRename':

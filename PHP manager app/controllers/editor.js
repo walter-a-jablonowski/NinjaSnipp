@@ -356,6 +356,9 @@ class EditorController
     }
     else {
       showError('Failed to delete: ' + (result?.message || 'Unknown error'));
+      // A merged folder is deleted per source, so part of it may be gone already - show
+      // what is really left rather than the state from before the attempt
+      this.app.loadFiles();
     }
   }
 
@@ -367,17 +370,16 @@ class EditorController
     const safeName = (input?.value || '').trim();
     if( ! safeName ) return;
     const newPath = (ctx.parent ? ctx.parent + '/' : '') + (ctx.type === 'file' && ctx.ext ? (safeName + '.' + ctx.ext) : safeName);
-    let result;
-    if( ctx.mergedBases && ctx.mergedBases.length > 1 ) {
-      const results = await Promise.all(
-        ctx.mergedBases.map(base => apiCall(this.app.currentDataPath, 'renameItem', { oldPath: ctx.oldPath, newPath, basePath: base }))
-      );
-      result = { success: results.every(r => r && r.success), message: results.find(r => !r?.success)?.message };
-    }
-    else {
-      result = await apiCall(this.app.currentDataPath, 'renameItem',
-        { oldPath: ctx.oldPath, newPath, basePath: ctx.basePath || null });
-    }
+
+    // One call for all sources: a merged folder has to move everywhere or nowhere, and only
+    // the server can undo the halves it already renamed
+    const bases = (ctx.mergedBases && ctx.mergedBases.length > 1)
+      ? ctx.mergedBases
+      : [ctx.basePath || null];
+
+    const result = await apiCall(this.app.currentDataPath, 'renameItem',
+      { oldPath: ctx.oldPath, newPath, bases });
+
     if( result && result.success ) {
       const modal = bootstrap.Modal.getInstance(document.getElementById('renameItemModal')) || new bootstrap.Modal(document.getElementById('renameItemModal'));
       if( modal ) modal.hide();
@@ -392,6 +394,9 @@ class EditorController
     }
     else {
       showError('Failed to rename: ' + (result?.message || 'Unknown error'));
+      // Reload anyway: the tree still shows the state from before the attempt, which is
+      // only right as long as nothing moved
+      this.app.loadFiles();
     }
   }
 
