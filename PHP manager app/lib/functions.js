@@ -85,9 +85,6 @@ function showAlert(message, type)
   }, 5000);
 }
 
-// Escapes text for HTML. Quotes are escaped too, so the result is safe both in a text
-// node and inside a quoted attribute value (the previous DOM-based version left " and '
-// untouched, which broke data-choices='...' on names containing an apostrophe)
 // Finds a tree row by one of its path attributes. Paths contain spaces, brackets and
 // quotes, so the value has to be escaped before it goes into a selector.
 function treeItemByPath(path, attr = 'data-path')
@@ -96,6 +93,9 @@ function treeItemByPath(path, attr = 'data-path')
   return document.querySelector(`.tree-item[${attr}=${CSS.escape(path)}]`);
 }
 
+// Escapes text for HTML. Quotes are escaped too, so the result is safe both in a text
+// node and inside a quoted attribute value (the previous DOM-based version left " and '
+// untouched, which broke data-choices='...' on names containing an apostrophe)
 function escapeHtml(text)
 {
   return String(text ?? '')

@@ -12,28 +12,30 @@ header('Content-Type: application/json');
 $input  = json_decode( file_get_contents('php://input'), true);
 $action = $input['action'] ?? '';
 
-$appConfig = app_config();
-$special   = (bool)($appConfig['special'] ?? false);
-
-$userDir = user_dir();
-$config  = Yaml::parseFile("$userDir/settings.yml");
-$manager = new SnippetManager( $config['dataPaths'] ?? ['data'], $config, __DIR__);
-if( isset($config['nav']['foldersFirst']) )
-  $manager->setFoldersFirst( (bool)$config['nav']['foldersFirst'] );
-
-// Set current data set by label, or fall back to first
-if( isset($input['dataPath']) && !empty($input['dataPath']) )
-  $manager->setCurrentDataPath($input['dataPath']);
-else
-{
-  $firstLabel = array_key_first($manager->getDataPaths());
-  if( $firstLabel !== null )
-    $manager->setCurrentDataPath($firstLabel);
-}
-
 $response = ['success' => false, 'message' => 'Unknown action'];
 
+// Inside the try as well: a broken settings.yml would otherwise throw before the handler
+// is in place and the client would get an HTML error page instead of the JSON it parses
 try {
+
+  $appConfig = app_config();
+  $special   = (bool)($appConfig['special'] ?? false);
+
+  $userDir = user_dir();
+  $config  = Yaml::parseFile("$userDir/settings.yml");
+  $manager = new SnippetManager( $config['dataPaths'] ?? ['data'], $config, __DIR__);
+  if( isset($config['nav']['foldersFirst']) )
+    $manager->setFoldersFirst( (bool)$config['nav']['foldersFirst'] );
+
+  // Set current data set by label, or fall back to first
+  if( isset($input['dataPath']) && !empty($input['dataPath']) )
+    $manager->setCurrentDataPath($input['dataPath']);
+  else
+  {
+    $firstLabel = array_key_first($manager->getDataPaths());
+    if( $firstLabel !== null )
+      $manager->setCurrentDataPath($firstLabel);
+  }
 
   switch( $action )
   {
@@ -57,9 +59,11 @@ try {
       $path           = $input['path'] ?? '';
       $data           = $input['data'] ?? [];
       $targetBasePath = $input['targetBasePath'] ?? null;
+      // Set by "New Snippet": creating must never write over a snippet that is already there
+      $createOnly     = (bool)($input['createOnly'] ?? false);
 
       try {
-        $saved = $manager->saveSnippet($path, $data, $targetBasePath);
+        $saved = $manager->saveSnippet($path, $data, $targetBasePath, $createOnly);
 
         // The normalized snippet goes back so the client's copy keeps its parsed `usage`
         $response = $saved !== null
@@ -93,11 +97,16 @@ try {
     case 'duplicateSnippet':
       $sourcePath = $input['sourcePath'] ?? '';
       $targetPath = $input['targetPath'] ?? '';
-      
-      if( $manager->duplicateSnippet($sourcePath, $targetPath, $input['basePath'] ?? null) )
-        $response = ['success' => true, 'message' => 'Snippet duplicated successfully'];
-      else
-        $response = ['success' => false, 'message' => 'Failed to duplicate snippet'];
+
+      try {
+        if( $manager->duplicateSnippet($sourcePath, $targetPath, $input['basePath'] ?? null) )
+          $response = ['success' => true, 'message' => 'Snippet duplicated successfully'];
+        else
+          $response = ['success' => false, 'message' => 'Failed to duplicate snippet'];
+      }
+      catch( RuntimeException $e ) {
+        $response = ['success' => false, 'message' => $e->getMessage()];
+      }
       break;
 
     case 'renameItem':
@@ -357,8 +366,8 @@ try {
         break;
       }
 
-      $relPath  = $input['path']     ?? '';
-      $itemType = $input['itemType'] === 'folder' ? 'folder' : 'file';
+      $relPath  = $input['path'] ?? '';
+      $itemType = ($input['itemType'] ?? '') === 'folder' ? 'folder' : 'file';
 
       // The base is resolved server-side and must be a configured source. Taking a full
       // path from the client would put arbitrary text into the command line below.

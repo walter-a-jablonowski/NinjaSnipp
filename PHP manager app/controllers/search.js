@@ -60,9 +60,12 @@ class SearchController
         metaInfo = result.type.toUpperCase() + ' • ' + result.path;
       }
 
+      // The source folder travels with the hit, so opening a result of a name that exists
+      // in several merged sources loads the copy that actually matched
       return `
         <div class="list-group-item file-item" data-path="${escapeHtml(result.path)}"
-             data-type="${dataType}" data-extension="${escapeHtml(dataExtension)}">
+             data-type="${dataType}" data-extension="${escapeHtml(dataExtension)}"
+             data-base-path="${escapeHtml(result.basePath || '')}">
           <div class="d-flex align-items-center">
             <i class="bi ${icon} file-icon me-2"></i>
             <div class="flex-grow-1">
@@ -185,13 +188,13 @@ class SearchController
       const timeStr = timeAgo(item.timestamp);
 
       return `
-        <div class="list-group-item file-item recent-file-item" data-path="${item.path}"
-             data-type="file" data-extension="${extension}">
+        <div class="list-group-item file-item recent-file-item" data-path="${escapeHtml(item.path)}"
+             data-type="file" data-extension="${escapeHtml(extension)}">
           <div class="d-flex align-items-center">
             <i class="bi ${icon} file-icon me-2"></i>
             <div class="flex-grow-1 overflow-hidden">
-              <div class="recent-file-name">${item.name}</div>
-              <div class="file-meta">${timeStr}</div>
+              <div class="recent-file-name">${escapeHtml(item.name)}</div>
+              <div class="file-meta">${escapeHtml(timeStr)}</div>
             </div>
           </div>
         </div>

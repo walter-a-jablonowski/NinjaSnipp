@@ -595,8 +595,10 @@ class SnippetManager
   // Atomically renumbers/renames a batch of sibling items, possibly across multiple source folders.
   // $subPath is the (virtual = on-disk) parent level; '' for the root.
   // $ops: [ ['base'=>absSource, 'oldName'=>name, 'newName'=>name, 'type'=>'file'|'folder'], ... ]
-  // Per base it renames in two phases (old -> temp -> new) so permutations can't clobber each other,
-  // and migrates each renamed file's color entry in the parent folder's .sys/ninja.json.
+  // Per base it renames in two phases (old -> temp -> new) so permutations can't clobber each other.
+  // Any failure undoes every rename already made, so a refused batch leaves the tree untouched
+  // instead of stranding half of it under temp names. Color entries in the parent folder's
+  // .sys/ninja.json are migrated only once the whole batch went through.
   public function batchRename( string $subPath, array $ops ) : array
   {
     if( ! $this->isSafeRelativePath($subPath) )
@@ -629,15 +631,18 @@ class SnippetManager
     foreach( $clean as $op )
       $byBase[$op['base']][] = $op;
 
+    $done            = [];   // [[from, to], ...] every rename that really happened, in order
+    $colorMigrations = [];   // [[dir, oldName, newName], ...] applied only on full success
+
     foreach( $byBase as $base => $list )
     {
       $dir = $base . ($subPath !== '' ? "/$subPath" : '');
       if( ! is_dir($dir) )
-        return ['success' => false, 'message' => "Folder missing: $subPath"];
+        return $this->undoRenames($done, "Folder missing: $subPath");
 
       foreach( $list as $op )
         if( ! file_exists("$dir/{$op['old']}") )
-          return ['success' => false, 'message' => "Source missing: {$op['old']}"];
+          return $this->undoRenames($done, "Source missing: {$op['old']}");
 
       // Phase 1: move every source to a unique temp name
       $temps = [];
@@ -645,7 +650,8 @@ class SnippetManager
       {
         $tmp = "$dir/.reorder_tmp_{$i}_" . bin2hex(random_bytes(3));
         if( ! @rename("$dir/{$op['old']}", $tmp) )
-          return ['success' => false, 'message' => "Failed to stage {$op['old']}"];
+          return $this->undoRenames($done, "Failed to stage {$op['old']}");
+        $done[]    = ["$dir/{$op['old']}", $tmp];
         $temps[$i] = $tmp;
       }
 
@@ -654,16 +660,29 @@ class SnippetManager
       {
         $target = "$dir/{$op['new']}";
         if( file_exists($target) )
-          return ['success' => false, 'message' => "Target exists: {$op['new']}"];
+          return $this->undoRenames($done, "Target exists: {$op['new']}");
         if( ! @rename($temps[$i], $target) )
-          return ['success' => false, 'message' => "Failed to rename to {$op['new']}"];
+          return $this->undoRenames($done, "Failed to rename to {$op['new']}");
+        $done[] = [$temps[$i], $target];
 
         if( $op['type'] === 'file' )
-          $this->migrateFileColorKey($dir, $op['old'], $op['new']);
+          $colorMigrations[] = [$dir, $op['old'], $op['new']];
       }
     }
 
+    foreach( $colorMigrations as $migration )
+      $this->migrateFileColorKey($migration[0], $migration[1], $migration[2]);
+
     return ['success' => true, 'message' => 'Reordered'];
+  }
+
+  // Walks a failed batch back, newest rename first, so every item ends up under its original name
+  private function undoRenames( array $done, string $message ) : array
+  {
+    foreach( array_reverse($done) as $step )
+      @rename($step[1], $step[0]);
+
+    return ['success' => false, 'message' => $message];
   }
 
   // Deletes the empty "INCLUDE <target>" marker file(s) that produce a link, without touching the target.
@@ -864,7 +883,9 @@ class SnippetManager
   // Returns the normalized snippet on success (usage parsed back into an array, so the
   // caller's in-memory copy stays structured), or null when nothing was written.
   // Throws RuntimeException if the usage text is unparsable - the file stays untouched.
-  public function saveSnippet( string $path, array $data, ?string $targetBasePath = null ) : ?array
+  // $failIfExists is for callers that create a snippet rather than update one (New Snippet,
+  // Duplicate): without it they would silently write over a snippet that is already there.
+  public function saveSnippet( string $path, array $data, ?string $targetBasePath = null, bool $failIfExists = false ) : ?array
   {
     $type = $data['_type'] ?? null;
     if( $type !== 'yml' && $type !== 'md' )
@@ -892,6 +913,9 @@ class SnippetManager
 
     $fullPath = rtrim($base, '/') . '/' . ltrim($path, '/');
     $dir = dirname($fullPath);
+
+    if( $failIfExists && file_exists($fullPath) )
+      throw new \RuntimeException('A snippet with this name already exists');
 
     if( ! is_dir($dir) )
       mkdir($dir, 0755, true);
@@ -990,13 +1014,15 @@ class SnippetManager
     return rmdir($path);
   }
 
+  // Throws RuntimeException when the target name is taken - overwriting the other snippet
+  // would be silent data loss
   public function duplicateSnippet( string $sourcePath, string $targetPath, ?string $basePath = null ) : bool
   {
     $snippet = $this->loadSnippet($sourcePath, $basePath);
 
     // The copy lands next to its original, in the same source
     if( $snippet )
-      return $this->saveSnippet($targetPath, $snippet, $basePath) !== null;
+      return $this->saveSnippet($targetPath, $snippet, $basePath, true) !== null;
 
     return false;
   }
@@ -1033,30 +1059,38 @@ class SnippetManager
       // Search works on the physical path so results stay loadable.
       $fsPath = $item['fsPath'] ?? $item['path'];
 
+      // The source a hit belongs to, so clicking it opens that copy and not whichever
+      // source happens to win last. An included item is resolved by name across all
+      // sources, so its basePath is the folder holding the marker, not the file - the
+      // caller has to fall back to the last-wins lookup for those.
+      $base = empty($item['isIncluded']) ? ($item['basePath'] ?? null) : null;
+
       if( $item['type'] === 'folder' )
       {
         if( $this->matchesFolderQuery($item, $query) )
         {
           $results[] = [
-            'path'    => $fsPath,
-            'name'    => $item['name'],
-            'type'    => 'folder',
-            'snippet' => null
+            'path'     => $fsPath,
+            'name'     => $item['name'],
+            'type'     => 'folder',
+            'basePath' => $base,
+            'snippet'  => null
           ];
         }
         $this->searchInDirectory($fsPath, $query, $results);
       }
       else
       {
-        $snippet = $this->loadSnippet($fsPath);
+        $snippet = $this->loadSnippet($fsPath, $base);
 
         if( $snippet && $this->matchesQuery($snippet, $query) )
         {
           $results[] = [
-            'path'    => $fsPath,
-            'name'    => $item['name'],
-            'type'    => $snippet['_type'],
-            'snippet' => $snippet
+            'path'     => $fsPath,
+            'name'     => $item['name'],
+            'type'     => $snippet['_type'],
+            'basePath' => $base,
+            'snippet'  => $snippet
           ];
         }
       }
@@ -1280,12 +1314,21 @@ class SnippetManager
     return null;
   }
 
+  // A `{{ ... }}` token that is block syntax rather than a placeholder. `END-MAYBE` in
+  // particular looks exactly like a plain placeholder name, so it has to be named here.
+  private function isSyntaxToken( string $token ) : bool
+  {
+    return stripos($token, 'include:') === 0
+        || stripos($token, 'MAYBE:') === 0
+        || strcasecmp($token, 'END-MAYBE') === 0;
+  }
+
   private function processPlaceholders( string $content, array $placeholders ) : string
   {
     return preg_replace_callback('/\{\{\s*([^}]*)\s*\}\}/', function($matches) use ($placeholders) {
       $token = trim($matches[1]);
 
-      if( stripos($token, 'include:') === 0 )
+      if( $this->isSyntaxToken($token) )
         return $matches[0];
 
       if( preg_match('/^([A-Za-z0-9_.-]+)(?:=(.+))?$/', $token, $m) )
@@ -1324,7 +1367,7 @@ class SnippetManager
     {
       $token = trim($raw);
 
-      if( stripos($token, 'include:') === 0 )
+      if( $this->isSyntaxToken($token) )
         continue;
 
       if( preg_match('/^([A-Za-z0-9_.-]+)(?:=(.+))?$/', $token, $m) )

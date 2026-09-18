@@ -168,7 +168,7 @@ class FileTreeController
     const displayName = this._displayName(name);
 
     const icon = isFolder
-      ? (isMerged ? (isOpen ? 'bi-folder-symlink' : 'bi-folder-symlink') : (isOpen ? 'bi-folder2-open' : 'bi-folder'))
+      ? (isMerged ? 'bi-folder-symlink' : (isOpen ? 'bi-folder2-open' : 'bi-folder'))
       : (extension === 'yml' ? 'bi-file-code' : 'bi-file-text-fill');
 
     const toggleEl = isFolder
@@ -364,19 +364,19 @@ class FileTreeController
       }
     }
     else if( action === 'new-snippet' ) {
-      this.app.currentPath        = fsPath;
+      this.app.newItemPath        = fsPath;
       this.app.currentMergedBases = mergedBases || null;
       if( fsPath ) this.app.expandedFolders.add(path);
       showModal('newSnippetModal');
     }
     else if( action === 'new-folder' ) {
-      this.app.currentPath        = fsPath;
+      this.app.newItemPath        = fsPath;
       this.app.currentMergedBases = mergedBases || null;
       if( fsPath ) this.app.expandedFolders.add(path);
       showModal('newFolderModal');
     }
     else if( action === 'new-link' ) {
-      this.app.currentPath        = fsPath;
+      this.app.newItemPath        = fsPath;
       this.app.currentMergedBases = mergedBases || null;
       if( fsPath ) this.app.expandedFolders.add(path);
       showModal('newLinkModal');

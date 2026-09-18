@@ -494,20 +494,22 @@ class EditorController
     }
 
     const extension = type === 'yml' ? 'yml' : 'md';
-    const path = (this.app.currentPath ? this.app.currentPath + '/' : '') + name + '.' + extension;
+    const folder = this.app.newItemPath;
+    const path = (folder ? folder + '/' : '') + name + '.' + extension;
     const baseFolderSel = document.getElementById('snippetBaseFolder');
-    const needTarget     = ! this.app.currentPath || (this.app.currentMergedBases && this.app.currentMergedBases.length > 1);
+    const needTarget     = ! folder || (this.app.currentMergedBases && this.app.currentMergedBases.length > 1);
     const targetBasePath = (needTarget && baseFolderSel && baseFolderSel.options.length > 0)
       ? baseFolderSel.value
       : null;
 
-    const payload = { path, data };
+    // createOnly: a name that is already taken must be reported, never written over
+    const payload = { path, data, createOnly: true };
     if( targetBasePath ) payload.targetBasePath = targetBasePath;
 
     const result = await apiCall(this.app.currentDataPath, 'saveSnippet', payload);
 
     if( result.success ) {
-      if( this.app.currentPath ) this.app.expandedFolders.add(this.app.currentPath);
+      if( folder ) this.app.expandedFolders.add(folder);
       await this.app.loadFiles();
 
       document.querySelectorAll('.tree-item.active, .file-item.active').forEach(item => item.classList.remove('active'));
@@ -515,6 +517,7 @@ class EditorController
       if( newItem ) newItem.classList.add('active');
 
       // Open the copy in the source it was just created in, not whichever source wins last
+      this.app.currentPath     = folder;
       this.app.currentBasePath = targetBasePath || null;
       this.app.currentTreePath = path;
       await this.loadSnippet(path, this.app.currentBasePath);
@@ -538,9 +541,10 @@ class EditorController
       return;
     }
 
-    const folderPath = (this.app.currentPath ? this.app.currentPath + '/' : '') + name;
+    const folder = this.app.newItemPath;
+    const folderPath = (folder ? folder + '/' : '') + name;
     const baseFolderSel = document.getElementById('folderBaseFolder');
-    const needTarget     = ! this.app.currentPath || (this.app.currentMergedBases && this.app.currentMergedBases.length > 1);
+    const needTarget     = ! folder || (this.app.currentMergedBases && this.app.currentMergedBases.length > 1);
     const targetBasePath = (needTarget && baseFolderSel && baseFolderSel.options.length > 0)
       ? baseFolderSel.value
       : null;
@@ -551,7 +555,7 @@ class EditorController
     const result = await apiCall(this.app.currentDataPath, 'createFolder', payload);
 
     if( result.success ) {
-      if( this.app.currentPath ) this.app.expandedFolders.add(this.app.currentPath);
+      if( folder ) this.app.expandedFolders.add(folder);
       this.app.loadFiles();
       const modal = bootstrap.Modal.getInstance(document.getElementById('newFolderModal'));
       modal.hide();
@@ -583,10 +587,11 @@ class EditorController
 
     // A link is an empty marker file named "INCLUDE <target>"
     const fileName = 'INCLUDE ' + target;
-    const linkPath = (this.app.currentPath ? this.app.currentPath + '/' : '') + fileName;
+    const folder   = this.app.newItemPath;
+    const linkPath = (folder ? folder + '/' : '') + fileName;
 
     const baseFolderSel  = document.getElementById('linkBaseFolder');
-    const needTarget     = ! this.app.currentPath || (this.app.currentMergedBases && this.app.currentMergedBases.length > 1);
+    const needTarget     = ! folder || (this.app.currentMergedBases && this.app.currentMergedBases.length > 1);
     const targetBasePath = (needTarget && baseFolderSel && baseFolderSel.options.length > 0)
       ? baseFolderSel.value
       : null;
@@ -597,7 +602,7 @@ class EditorController
     const result = await apiCall(this.app.currentDataPath, 'createLink', payload);
 
     if( result.success ) {
-      if( this.app.currentPath ) this.app.expandedFolders.add(this.app.currentPath);
+      if( folder ) this.app.expandedFolders.add(folder);
       await this.app.loadFiles();
       const modal = bootstrap.Modal.getInstance(document.getElementById('newLinkModal'));
       if( modal ) modal.hide();

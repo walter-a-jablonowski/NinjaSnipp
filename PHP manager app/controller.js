@@ -3,7 +3,9 @@
   constructor(options = {})
   {
     // Shared state accessed by sub-controllers via this.app
-    this.currentPath = '';
+    this.currentPath = '';       // folder of the open snippet (drives save / duplicate / delete)
+    this.newItemPath = '';       // folder the New Snippet/Folder/Link dialogs create in
+    this.currentMergedBases = null; // sources behind newItemPath when it is a merged folder
     this.currentSnippet = null;
     this.currentBasePath = null; // source folder of the open snippet (merged duplicates)
     this.currentTreePath = null; // tree row it was opened from
@@ -172,11 +174,11 @@
     // Button bindings
     const buttonEvents = [
       ['searchBtn',          'click', () => this.search.performSearch()],
-      ['newSnippetBtn',      'click', () => { this.currentPath = ''; this.currentMergedBases = null; showModal('newSnippetModal'); }],
-      ['newFolderBtn',       'click', () => { this.currentPath = ''; this.currentMergedBases = null; showModal('newFolderModal'); }],
-      ['newSnippetDropBtn',  'click', () => { this.currentPath = ''; this.currentMergedBases = null; showModal('newSnippetModal'); }],
-      ['newFolderDropBtn',   'click', () => { this.currentPath = ''; this.currentMergedBases = null; showModal('newFolderModal'); }],
-      ['newLinkDropBtn',     'click', () => { this.currentPath = ''; this.currentMergedBases = null; showModal('newLinkModal'); }],
+      ['newSnippetBtn',      'click', () => { this.newItemPath = ''; this.currentMergedBases = null; showModal('newSnippetModal'); }],
+      ['newFolderBtn',       'click', () => { this.newItemPath = ''; this.currentMergedBases = null; showModal('newFolderModal'); }],
+      ['newSnippetDropBtn',  'click', () => { this.newItemPath = ''; this.currentMergedBases = null; showModal('newSnippetModal'); }],
+      ['newFolderDropBtn',   'click', () => { this.newItemPath = ''; this.currentMergedBases = null; showModal('newFolderModal'); }],
+      ['newLinkDropBtn',     'click', () => { this.newItemPath = ''; this.currentMergedBases = null; showModal('newLinkModal'); }],
       ['backBtn',            'click', () => this.goBack()],
       ['createSnippetBtn',   'click', () => this.editor.createSnippet()],
       ['createFolderBtn',    'click', () => this.editor.createFolder()],
@@ -218,7 +220,7 @@
       newSnippetModalEl.addEventListener('show.bs.modal', () => {
         const row     = document.getElementById('snippetBaseFolderRow');
         const sel     = document.getElementById('snippetBaseFolder');
-        const atRoot  = ! this.currentPath;
+        const atRoot  = ! this.newItemPath;
         const merged  = this.currentMergedBases;
         this._populateBaseFolderSelect(sel, merged);
         const show = (atRoot || (merged && merged.length > 1)) && sel && sel.options.length > 1;
@@ -236,7 +238,7 @@
       newFolderModalEl.addEventListener('show.bs.modal', () => {
         const row     = document.getElementById('folderBaseFolderRow');
         const sel     = document.getElementById('folderBaseFolder');
-        const atRoot  = ! this.currentPath;
+        const atRoot  = ! this.newItemPath;
         const merged  = this.currentMergedBases;
         this._populateBaseFolderSelect(sel, merged);
         const show = (atRoot || (merged && merged.length > 1)) && sel && sel.options.length > 1;
@@ -254,7 +256,7 @@
       newLinkModalEl.addEventListener('show.bs.modal', () => {
         const row     = document.getElementById('linkBaseFolderRow');
         const sel     = document.getElementById('linkBaseFolder');
-        const atRoot  = ! this.currentPath;
+        const atRoot  = ! this.newItemPath;
         const merged  = this.currentMergedBases;
         this._populateBaseFolderSelect(sel, merged);
         const show = (atRoot || (merged && merged.length > 1)) && sel && sel.options.length > 1;
@@ -623,6 +625,8 @@
     if( result.success ) {
       this._updateBrandLabel(dataPath);
       this.currentPath = '';
+      this.newItemPath = '';
+      this.currentMergedBases = null;
       this.fileTree = [];
       this.expandedFolders.clear();
       this.currentSnippet = null;
