@@ -7,6 +7,15 @@ class EditorController
 
   async loadSnippet(path, basePath = null)
   {
+    // A scheduled autosave belongs to the snippet that is open right now. Run it before
+    // that state is replaced, or the edits made just before the click are dropped - and
+    // the timer would fire against the next snippet instead.
+    if( this.app._autosaveTimer ) {
+      this.clearAutosaveTimer();
+      if( this.getAutosaveEnabled() && this.app.currentSnippet )
+        await this.saveCurrentSnippet(true);
+    }
+
     showLoading('editContent');
 
     const result = await apiCall(this.app.currentDataPath, 'loadSnippet', { path, basePath });
@@ -164,7 +173,20 @@ class EditorController
     const payload = { path, data };
     if( this.app.currentBasePath ) payload.targetBasePath = this.app.currentBasePath;
 
+    // The snippet that is open when the request comes back may not be the one it was sent
+    // for - opening another snippet mid-request used to overwrite `currentSnippet` with
+    // this stale copy, and every later save then wrote the new content under the old name
+    const savedSnippet = this.app.currentSnippet;
+
     const result = await apiCall(this.app.currentDataPath, 'saveSnippet', payload);
+
+    if( this.app.currentSnippet !== savedSnippet ) {
+      // The file itself was written (or refused) correctly; only the on-screen state has
+      // moved on, so none of it may be touched here
+      if( ! result.success && ! silent )
+        showError('Failed to save snippet: ' + result.message);
+      return;
+    }
 
     if( result.success ) {
       if( ! silent ) showSuccess('Snippet saved successfully');
@@ -402,6 +424,9 @@ class EditorController
 
   clearEditForm()
   {
+    // The form is going away (delete, data folder switch) - a queued save must not fire
+    // against whatever takes its place
+    this.clearAutosaveTimer();
     this.app.currentBasePath = null;
     this.app.currentTreePath = null;
     this.setAutosaveStatus(null);
