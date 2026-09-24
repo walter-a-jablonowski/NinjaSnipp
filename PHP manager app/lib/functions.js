@@ -41,19 +41,6 @@ function showModal(modalId)
   }
 }
 
-function activateTab(tabButtonId)
-{
-  const btn = document.getElementById(tabButtonId);
-  if( ! btn ) return;
-  try {
-    const tab = new bootstrap.Tab(btn);
-    tab.show();
-  }
-  catch(e) {
-    // Nix if BS is unavailable
-  }
-}
-
 function showSuccess(message)
 {
   showAlert(message, 'success');

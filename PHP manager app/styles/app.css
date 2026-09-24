@@ -853,18 +853,26 @@ body {
   padding: 0;
 }
 
-.force-hide { display: none !important; }
+/* Markdown files have no usage column (and need no pills or content label) */
+#editForm[data-type="md"] #fieldUsage,
+#editForm[data-type="md"] #usageHeader,
+#editForm[data-type="md"] #labelSnippetContent { display: none !important; }
+#editForm[data-type="md"] #contentHeader { width: 100%; }
 
 /* Mobile pill toggle for Usage/Content fields */
 @media (max-width: 767.98px) {
-  #editFieldsRow.mobile-content-active #fieldUsage { display: none !important; }
-  #editFieldsRow.mobile-usage-active #fieldContent { display: none !important; }
+  #editForm.mobile-content-active #fieldUsage { display: none !important; }
+  #editForm.mobile-usage-active #fieldContent { display: none !important; }
+
+  /* Headers in one line: pills + buttons of the visible column, file actions always */
+  #fieldHeaders { flex-wrap: nowrap; }
+  #usageHeader { flex: 1 1 auto; width: auto; }
+  #contentHeader { flex: 0 0 auto; width: auto; }
+  #editForm.mobile-content-active #usageViewBtn,
+  #editForm.mobile-usage-active #contentViewBtn,
+  #editForm.mobile-usage-active #copyRenderedBtn { display: none !important; }
 
   .app-content { padding-bottom: 1rem !important; }
-
-  /* Mobile render view toggle */
-  #renderRow.render-snippet-active #renderUsageCol { display: none !important; }
-  #renderRow.render-usage-active #renderSnippetCol { display: none !important; }
 }
 
 /* Responsive adjustments */
@@ -898,9 +906,8 @@ body {
   overflow: hidden;
 }
 
-#renderContent,
 #editContent {
-  height: 100%;
+  flex: 1 1 0;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -931,9 +938,43 @@ body {
 }
 
 #snippetUsage,
-#usagePreview {
+#renderUsage {
   flex: 1 1 0;
   min-height: 0;
+}
+
+#renderUsage {
+  overflow-y: auto;
+}
+
+/* Column headers: label (desktop) or pills (mobile) left, view toggle + actions right */
+#fieldHeaders {
+  flex-shrink: 0;
+  margin-bottom: 0.25rem;
+  --bs-gutter-x: 0.5rem; /* same columns as #editFieldsRow */
+  --bs-gutter-y: 0;
+}
+
+.field-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 31px; /* btn-sm height */
+}
+
+.field-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: auto;
+}
+
+/* Save, menu, ... of the open file: set apart from the column buttons */
+.file-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: 0.5rem;
 }
 
 #fieldShortScRow {
@@ -943,15 +984,6 @@ body {
 #snippetSc {
   width: 110px;
   flex-shrink: 0;
-}
-
-@media (min-width: 768px) {
-  #usagePreviewBtn {
-    border: 1px solid #dee2e6 !important;
-    border-radius: 0.25rem;
-    padding: 0 0.4rem !important;
-    align-self: stretch;
-  }
 }
 
 /* Default (>= sm): show full brand, hide short brand */

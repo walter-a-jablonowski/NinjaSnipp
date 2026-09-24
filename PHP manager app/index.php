@@ -19,6 +19,9 @@ $sources      = new Sources( $settings['dataPaths'] ?? ['data'], __DIR__);
 if( isset($_GET['data']) )
   $sources->select((string)$_GET['data']);
 
+// Snippet columns, switchable via pills on mobile (one column at a time)
+$fieldPanes = ['usage' => 'Usage', 'content' => 'Content'];
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -182,138 +185,116 @@ if( isset($_GET['data']) )
       <!-- Main Content -->
       <main class="app-content px-3 pb-1">
         <div class="pt-3 d-flex flex-column h-100">
-          <!-- Content Tab Control -->
-          <ul class="nav nav-tabs mb-2" id="contentTabs" role="tablist">
-            <li class="nav-item" role="presentation">
-              <button id="render-tab" class="nav-link small py-1 px-2 active" data-bs-toggle="tab" data-bs-target="#render-pane" type="button" role="tab" disabled>
-                <i class="bi bi-eye me-2"></i>Preview
-              </button>
-            </li>
-            <li class="nav-item" role="presentation">
-              <button id="edit-tab" class="nav-link small py-1 px-2" data-bs-toggle="tab" data-bs-target="#edit-pane" type="button" role="tab">
-                <i class="bi bi-pencil me-2"></i>Edit
-              </button>
-            </li>
-            <li class="nav-item ms-auto" role="presentation">
-              <div class="d-flex gap-2 align-items-center">
-                <!-- Shown while the last autosave was refused; the reason is in the tooltip -->
-                <span id="autosaveStatus" class="autosave-status" style="display: none;" role="status">
-                  <i class="bi bi-exclamation-triangle-fill"></i><span class="autosave-status-text ms-1">Not saved</span>
-                </span>
-                <div id="autosaveSwitchWrapper" class="form-check form-switch" title="autosave" style="display: none;">
-                  <input class="form-check-input" type="checkbox" id="autosaveSwitch">
-                </div>
-                <button type="button" class="btn btn-sm btn-outline-secondary d-md-none" id="renderViewToggleBtn" title="Switch view" style="display: none;">
-                  <i class="bi bi-card-text"></i>
-                </button>
-                <button type="button" class="btn btn-sm btn-outline-primary" id="copyRenderedBtn" title="Copy rendered" aria-label="Copy rendered" style="display: none;" disabled>
-                  <i class="bi bi-clipboard"></i>
-                </button>
-                <button type="button" class="btn btn-sm btn-primary" id="saveSnippetBtn" title="Save" aria-label="Save">
-                  <i class="bi bi-save"></i>
-                </button>
-                <div class="dropdown" id="snippetActionsDropdown" style="display: none;">
-                  <button type="button" class="btn btn-sm btn-outline-warning btn-outline-accent dropdown-toggle-split" id="snippetActionsBtn" data-bs-toggle="dropdown" aria-expanded="false" title="More actions">
-                    <i class="bi bi-three-dots-vertical"></i>
-                  </button>
-                  <ul class="dropdown-menu dropdown-menu-end">
-                    <li>
-                      <button class="dropdown-item" id="toggleLineWrapBtn" type="button">
-                        <i class="bi bi-text-wrap me-2"></i>Toggle line wrap
-                      </button>
-                    </li>
-                    <li id="snippetActionsEditDivider"><hr class="dropdown-divider"></li>
-                    <li id="snippetActionsEditGroup">
-                      <button class="dropdown-item" id="duplicateSnippetBtn" type="button">
-                        <i class="bi bi-files me-2"></i>Duplicate
-                      </button>
-                    </li>
-                    <li><hr class="dropdown-divider" id="snippetActionsDeleteDivider"></li>
-                    <li id="snippetActionsDeleteGroup">
-                      <button class="dropdown-item text-danger" id="deleteSnippetBtn" type="button">
-                        <i class="bi bi-trash me-2"></i>Delete
-                      </button>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </li>
-          </ul>
-
-          <!-- Content Tab Panes -->
-          <div class="tab-content">
-            <!-- Rendered Tab -->
-            <div id="render-pane" class="tab-pane fade show active" role="tabpanel">
-              <div id="renderContent">
-                <div class="row g-2 render-snippet-active" id="renderRow">
-                  <!-- Usage preview (left) -->
-                  <div class="col-md-6" id="renderUsageCol">
-                    <div id="renderUsage" class="usage-preview"></div>
-                  </div>
-                  <!-- Snippet (right) -->
-                  <div class="col-md-6" id="renderSnippetCol">
-                    <div id="inlineSnippet" class="inline-snippet"></div>
-                  </div>
-                </div>
-                <!-- Markdown file: simple rendered preview -->
-                <div id="markdownPreview" class="markdown-preview" style="display: none;"></div>
-                <!-- Choice menu for placeholders (shown on demand) -->
-                <div id="phChoiceMenu" class="dropdown-menu" tabindex="-1"></div>
-              </div>
+          <div id="editContent">
+            <!-- Empty state (shown when no snippet selected) -->
+            <div id="editEmptyState" class="text-center text-muted py-5">
+              <i class="bi bi-file-text display-1"></i>
+              <p class="mt-3">Select a snippet to edit or create a new one</p>
             </div>
 
-            <!-- Edit Tab -->
-            <div id="edit-pane" class="tab-pane fade" role="tabpanel">
-              <div id="editContent">
-                <!-- Empty state (shown when no snippet selected) -->
-                <div id="editEmptyState" class="text-center text-muted py-5">
-                  <i class="bi bi-file-text display-1"></i>
-                  <p class="mt-3">Select a snippet to edit or create a new one</p>
-                </div>
+            <!-- Static Edit Form (hidden by default; JS will populate)
+                 data-type: yml | md, mobile-*-active: the one column shown on mobile -->
+            <form id="editForm" class="snippet-form mobile-content-active" style="display: none;">
 
-                <!-- Static Edit Form (hidden by default; JS will populate) -->
-                <form id="editForm" class="snippet-form" style="display: none;">
-
-                  <!-- Mobile pill switcher (YAML-only; d-md-none hides on desktop; JS toggles for YAML/MD) -->
-                  <div class="align-items-center d-md-none mb-2" id="editFieldPills" style="display: none;">
-                    <ul class="nav nav-pills gap-1" role="tablist">
-                      <li class="nav-item">
-                        <button class="nav-link small py-1 px-2" id="usageFieldPill" type="button">Usage</button>
-                      </li>
-                      <li class="nav-item">
-                        <button class="nav-link small py-1 px-2 active" id="contentFieldPill" type="button">Content</button>
-                      </li>
-                    </ul>
-                    <button type="button" class="btn btn-sm btn-link ms-auto p-0 text-muted" id="usagePreviewBtnMobile" title="Preview usage">
-                      <i class="bi bi-eye"></i>
+              <!-- Column headers: one per column on desktop, a single line on mobile
+                   (pills, the visible column's buttons, file actions) -->
+              <div class="row g-2" id="fieldHeaders">
+                <div class="col-md-6 field-header" id="usageHeader">
+                  <label class="form-label mb-0 d-none d-md-block">Usage</label>
+                  <div class="field-pills nav nav-pills gap-1 d-md-none">
+                    <?php foreach( $fieldPanes as $pane => $paneLabel ): ?>
+                      <button type="button" class="nav-link small py-1 px-2<?= $pane === 'content' ? ' active' : '' ?>" data-pane="<?= $pane ?>"><?= $paneLabel ?></button>
+                    <?php endforeach; ?>
+                  </div>
+                  <div class="field-actions">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="usageViewBtn" title="Show source" aria-label="Show source">
+                      <i class="bi bi-code-slash"></i>
                     </button>
                   </div>
+                </div>
 
-                  <!-- Usage + Content: side by side on desktop, switchable via pills on mobile -->
-                  <div class="row g-2 mobile-content-active" id="editFieldsRow">
-                    <!-- Usage (YAML-only) -->
-                    <div class="col-md-6 d-flex flex-column" id="fieldUsage">
-                      <label class="form-label mb-1 d-none d-md-block">Usage</label>
-                      <div class="d-flex align-items-center gap-1 mb-1" id="fieldShortScRow">
-                        <input type="text" class="form-control form-control-sm flex-grow-1" id="snippetShort" placeholder="Short description">
-                        <input type="text" class="form-control form-control-sm" id="snippetSc" placeholder="Short code">
-                        <button type="button" class="btn btn-sm btn-link p-0 px-1 text-muted d-none d-md-inline-flex align-items-center" id="usagePreviewBtn" title="Preview usage">
-                          <i class="bi bi-eye"></i>
+                <div class="col-md-6 field-header" id="contentHeader">
+                  <label for="snippetContent" class="form-label mb-0 d-none d-md-block" id="labelSnippetContent">Content</label>
+                  <div class="field-actions">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="contentViewBtn" title="Show source" aria-label="Show source">
+                      <i class="bi bi-code-slash"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="copyRenderedBtn" title="Copy rendered" aria-label="Copy rendered" disabled>
+                      <i class="bi bi-clipboard"></i>
+                    </button>
+
+                    <!-- File actions -->
+                    <div class="file-actions">
+                      <!-- Shown while the last autosave was refused; the reason is in the tooltip -->
+                      <span id="autosaveStatus" class="autosave-status" style="display: none;" role="status">
+                        <i class="bi bi-exclamation-triangle-fill"></i><span class="autosave-status-text ms-1">Not saved</span>
+                      </span>
+                      <!-- Hidden while autosave is on (unless the last autosave was refused) -->
+                      <button type="button" class="btn btn-sm btn-primary" id="saveSnippetBtn" title="Save" aria-label="Save" style="display: none;">
+                        <i class="bi bi-save"></i>
+                      </button>
+                      <div class="dropdown" id="snippetActionsDropdown" style="display: none;">
+                        <button type="button" class="btn btn-sm btn-outline-warning btn-outline-accent dropdown-toggle-split" id="snippetActionsBtn" data-bs-toggle="dropdown" aria-expanded="false" title="More actions">
+                          <i class="bi bi-three-dots-vertical"></i>
                         </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                          <li>
+                            <button class="dropdown-item" id="toggleLineWrapBtn" type="button">
+                              <i class="bi bi-text-wrap me-2"></i>Toggle line wrap
+                            </button>
+                          </li>
+                          <li>
+                            <label class="dropdown-item d-flex align-items-center" for="autosaveSwitch">
+                              <i class="bi bi-cloud-arrow-up me-2"></i>Autosave
+                              <span class="form-switch ms-auto ps-3">
+                                <input class="form-check-input m-0" type="checkbox" role="switch" id="autosaveSwitch">
+                              </span>
+                            </label>
+                          </li>
+                          <li><hr class="dropdown-divider"></li>
+                          <li>
+                            <button class="dropdown-item" id="duplicateSnippetBtn" type="button">
+                              <i class="bi bi-files me-2"></i>Duplicate
+                            </button>
+                          </li>
+                          <li><hr class="dropdown-divider"></li>
+                          <li>
+                            <button class="dropdown-item text-danger" id="deleteSnippetBtn" type="button">
+                              <i class="bi bi-trash me-2"></i>Delete
+                            </button>
+                          </li>
+                        </ul>
                       </div>
-                      <textarea class="form-control flex-grow-1" id="snippetUsage" rows="3" placeholder="Usage..."></textarea>
-                      <div id="usagePreview" class="usage-preview flex-grow-1" style="display: none;"></div>
-                    </div>
-
-                    <!-- Content -->
-                    <div class="col-md-6 d-flex flex-column" id="fieldContent">
-                      <label for="snippetContent" class="form-label mb-1" id="labelSnippetContent">Content</label>
-                      <textarea class="form-control" id="snippetContent" rows="12" placeholder="Some {{ var }} snippet..." required></textarea>
                     </div>
                   </div>
-                </form>
+                </div>
               </div>
-            </div>
+
+              <!-- Usage + Content: side by side on desktop, one at a time on mobile.
+                   Each column shows its rendered version or its source (toggle in the header) -->
+              <div class="row g-2" id="editFieldsRow">
+                <!-- Usage (YAML-only) -->
+                <div class="col-md-6 d-flex flex-column" id="fieldUsage">
+                  <div class="d-flex align-items-center gap-1 mb-1" id="fieldShortScRow">
+                    <input type="text" class="form-control form-control-sm flex-grow-1" id="snippetShort" placeholder="Short description">
+                    <input type="text" class="form-control form-control-sm" id="snippetSc" placeholder="Short code">
+                  </div>
+                  <textarea class="form-control" id="snippetUsage" rows="3" placeholder="Usage..."></textarea>
+                  <div id="renderUsage" class="usage-preview"></div>
+                </div>
+
+                <!-- Content -->
+                <div class="col-md-6 d-flex flex-column" id="fieldContent">
+                  <textarea class="form-control" id="snippetContent" rows="12" placeholder="Some {{ var }} snippet..." required></textarea>
+                  <div id="inlineSnippet" class="inline-snippet"></div>
+                  <!-- Markdown file: rendered preview -->
+                  <div id="markdownPreview" class="markdown-preview"></div>
+                </div>
+              </div>
+            </form>
+
+            <!-- Choice menu for placeholders (shown on demand) -->
+            <div id="phChoiceMenu" class="dropdown-menu" tabindex="-1"></div>
           </div>
         </div>
       </main>

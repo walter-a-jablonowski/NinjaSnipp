@@ -31,6 +31,7 @@
     this._autosaveBound = false; // ensure we bind handlers once
     this._autosaveFailed = false; // last autosave was refused (drives the "Not saved" badge)
     this._lineWrapOff = true; // global line-wrap toggle state
+    this.fieldViews = { usage: 'rendered', content: 'rendered' }; // per column: 'rendered' | 'source'
     this._themeMediaBound = false;
     this.currentTheme = 'light';
     this.themePreference = options.initialTheme || 'light';
@@ -109,7 +110,7 @@
       return;
     }
 
-    // YAML: resize inline snippet and usage preview
+    // YAML: resize inline snippet (the usage column fills #fieldUsage via CSS flex)
     const el = document.getElementById('inlineSnippet');
     if( ! el ) return;
     const rect = el.getBoundingClientRect();
@@ -117,15 +118,6 @@
     el.style.height = available + 'px';
     el.style.overflowY = 'auto';
     el.style.overflowX = this._lineWrapOff ? 'auto' : 'hidden';
-    // Keep usage preview the same height so both columns align
-    const renderUsage = document.getElementById('renderUsage');
-    if( renderUsage ) {
-      renderUsage.style.height = available + 'px';
-      // overflow-y must be set explicitly: without it, vertical scroll only works as
-      // a side-effect of overflow-x:auto (set by applyLineWrap when wrap is off).
-      // Toggling wrap on would otherwise clip long content inside renderContent.
-      renderUsage.style.overflowY = 'auto';
-    }
   }
 
   async init()
@@ -183,7 +175,8 @@
       ['createSnippetBtn',   'click', () => this.editor.createSnippet()],
       ['createFolderBtn',    'click', () => this.editor.createFolder()],
       ['createLinkBtn',      'click', () => this.editor.createLink()],
-      ['render-tab',         'click', () => this.render.composeAndRenderInline()],
+      ['usageViewBtn',       'click', () => this.render.toggleFieldView('usage')],
+      ['contentViewBtn',     'click', () => this.render.toggleFieldView('content')],
       ['copyRenderedBtn',    'click', () => this.render.copyRenderedContent()],
       ['saveSnippetBtn',     'click', () => this.editor.saveCurrentSnippet()],
       ['duplicateSnippetBtn','click', () => this.editor.duplicateCurrentSnippet()],
@@ -307,16 +300,6 @@
     this._bindFormSubmit('duplicateSnippetForm', () => this.editor.performDuplicate());
     this._bindFormSubmit('renameItemForm', () => this.editor.performRename());
 
-    // Tab switching
-    document.querySelectorAll('#contentTabs [data-bs-toggle="tab"]').forEach(btn =>
-      btn.addEventListener('shown.bs.tab', () => {
-        this.editor.updateActionButtonsVisibility();
-        this.render.applyLineWrap();
-        this.resizeMdTextarea();
-        this.resizeInlineSnippet();
-      })
-    );
-
     // Global click: file navigation + context menu
     document.addEventListener('click', (e) => {
       if( e.target.closest('.dropdown') || e.target.closest('.dropdown-menu') ) return;
@@ -342,6 +325,7 @@
         const enabled = !!autosaveSwitch.checked;
         await this.setAutosave(enabled);
         if( ! enabled ) this.editor.clearAutosaveTimer();
+        this.editor.updateActionButtonsVisibility();   // Save is only offered without autosave
       });
     }
 
@@ -368,41 +352,10 @@
     }
     document.addEventListener('keydown', (e) => this.tree.fileListKeyDown(e));
 
-    // Mobile Usage/Content pill switcher
-    const usageFieldPill   = document.getElementById('usageFieldPill');
-    const contentFieldPill = document.getElementById('contentFieldPill');
-    const editFieldsRow    = document.getElementById('editFieldsRow');
-    if( usageFieldPill && contentFieldPill && editFieldsRow ) {
-      const usagePreviewBtnMobile = document.getElementById('usagePreviewBtnMobile');
-      const setMobileEyeVisible = (visible) => {
-        if( usagePreviewBtnMobile ) usagePreviewBtnMobile.style.display = visible ? '' : 'none';
-      };
-      usageFieldPill.addEventListener('click', () => {
-        editFieldsRow.classList.add('mobile-usage-active');
-        editFieldsRow.classList.remove('mobile-content-active');
-        usageFieldPill.classList.add('active');
-        contentFieldPill.classList.remove('active');
-        setMobileEyeVisible(true);
-      });
-      contentFieldPill.addEventListener('click', () => {
-        editFieldsRow.classList.add('mobile-content-active');
-        editFieldsRow.classList.remove('mobile-usage-active');
-        contentFieldPill.classList.add('active');
-        usageFieldPill.classList.remove('active');
-        setMobileEyeVisible(false);
-        this.render.resetUsagePreview();
-      });
-    }
-
-    // Usage preview buttons
-    const usagePreviewBtn       = document.getElementById('usagePreviewBtn');
-    const usagePreviewBtnMobile = document.getElementById('usagePreviewBtnMobile');
-    if( usagePreviewBtn )       usagePreviewBtn.addEventListener('click', () => this.render.toggleUsagePreview());
-    if( usagePreviewBtnMobile ) usagePreviewBtnMobile.addEventListener('click', () => this.render.toggleUsagePreview());
-
-    // Render view toggle (mobile)
-    const renderViewToggleBtn = document.getElementById('renderViewToggleBtn');
-    if( renderViewToggleBtn ) renderViewToggleBtn.addEventListener('click', () => this.render.toggleRenderView());
+    // Mobile Usage/Content pills (only one column is visible)
+    document.querySelectorAll('.field-pills [data-pane]').forEach(pill =>
+      pill.addEventListener('click', () => this.render.showMobilePane(pill.dataset.pane))
+    );
 
     // Bind autosave handlers to edit form inputs (once)
     this.editor.bindAutosaveHandlers();

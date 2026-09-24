@@ -3,6 +3,82 @@ class RenderController
   constructor(app)
   {
     this.app = app;
+    this._composedFrom = null; // { snippet, content } the rendered columns were built from
+  }
+
+  // --- Column views: each column shows either its rendered version or its source ---
+
+  applyFieldViews()
+  {
+    const snippet = this.app.currentSnippet;
+    if( ! snippet ) return;
+
+    const isYaml          = snippet._type === 'yml';
+    const usageRendered   = this.app.fieldViews.usage   === 'rendered';
+    const contentRendered = this.app.fieldViews.content === 'rendered';
+
+    const visible = {
+      snippetUsage:    ! usageRendered,
+      renderUsage:     usageRendered,
+      snippetContent:  ! contentRendered,
+      inlineSnippet:   isYaml && contentRendered,
+      markdownPreview: ! isYaml && contentRendered,
+      copyRenderedBtn: isYaml && contentRendered   // copies what the rendered snippet shows
+    };
+    Object.entries(visible).forEach(([id, show]) => {
+      const el = document.getElementById(id);
+      if( el ) el.style.display = show ? '' : 'none';
+    });
+
+    this._setViewButton('usageViewBtn', usageRendered);
+    this._setViewButton('contentViewBtn', contentRendered);
+
+    // Heights are measured from the top of the visible element
+    this.app.resizeMdTextarea();
+    this.app.resizeInlineSnippet();
+  }
+
+  _setViewButton( id, rendered )
+  {
+    const btn = document.getElementById(id);
+    if( ! btn ) return;
+    const title = rendered ? 'Show source' : 'Show rendered';
+    btn.querySelector('i').className = rendered ? 'bi bi-code-slash' : 'bi bi-eye';
+    btn.title = title;
+    btn.setAttribute('aria-label', title);
+  }
+
+  setFieldView( field, view )
+  {
+    if( ! this.app.currentSnippet ) return;
+    this.app.fieldViews[field] = view;
+    this.applyFieldViews();
+
+    // Composing resets entered placeholder values, so only do it when the source was
+    // edited since the last render (markdown has no such state and always re-renders)
+    const from    = this._composedFrom;
+    const content = document.getElementById('snippetContent')?.value;
+    const stale   = ! from || from.snippet !== this.app.currentSnippet || from.content !== content;
+    if( view === 'rendered' && stale ) this.composeAndRenderInline();
+  }
+
+  toggleFieldView(field)
+  {
+    this.setFieldView( field, this.app.fieldViews[field] === 'rendered' ? 'source' : 'rendered');
+  }
+
+  // Mobile: one column at a time (desktop shows both, the classes only matter < md)
+  showMobilePane(pane)
+  {
+    const form = document.getElementById('editForm');
+    if( ! form ) return;
+    form.classList.toggle('mobile-usage-active', pane === 'usage');
+    form.classList.toggle('mobile-content-active', pane !== 'usage');
+    form.querySelectorAll('.field-pills [data-pane]').forEach(pill =>
+      pill.classList.toggle('active', pill.dataset.pane === pane)
+    );
+    this.app.resizeMdTextarea();
+    this.app.resizeInlineSnippet();
   }
 
   toggleLineWrap()
@@ -16,16 +92,10 @@ class RenderController
   {
     if( ! this.app.currentSnippet ) return;
 
-    const activeTab = document.querySelector('#contentTabs .nav-link.active');
-    const isEdit    = activeTab && activeTab.id === 'edit-tab';
-    const isYaml    = this.app.currentSnippet._type === 'yml';
-    const off       = this.app._lineWrapOff;
+    const off = this.app._lineWrapOff;
 
-    let ids;
-    if( isYaml && isEdit )        ids = ['snippetContent', 'snippetUsage', 'usagePreview'];
-    else if( isYaml && ! isEdit ) ids = ['renderUsage', 'inlineSnippet'];
-    else if( isEdit )             ids = ['snippetContent'];
-    else                          ids = ['markdownPreview'];
+    // Source and rendered views alike (hidden ones keep the setting for when they are shown)
+    const ids = ['snippetUsage', 'renderUsage', 'snippetContent', 'inlineSnippet', 'markdownPreview'];
 
     ids.forEach(id => {
       const el = document.getElementById(id);
@@ -55,28 +125,13 @@ class RenderController
     const inlineContainer = document.getElementById('inlineSnippet');
     if( ! snippetContent || ! inlineContainer ) return;
 
-    const renderRow    = document.getElementById('renderRow');
-    const mdPreview    = document.getElementById('markdownPreview');
-    if( renderRow )  renderRow.style.display  = '';
-    if( mdPreview )  mdPreview.style.display  = 'none';
-
-    const snippet = { ...this.app.currentSnippet, content: snippetContent.value };
+    const source  = this.app.currentSnippet;
+    const snippet = { ...source, content: snippetContent.value };
     const result = await apiCall(this.app.currentDataPath, 'composeContent', { snippet });
     if( result.success ) {
+      this._composedFrom = { snippet: source, content: snippet.content };
       this.renderInlineSnippet(result.composed || '');
       this.renderUsageInPreview();
-      if( renderRow ) {
-        const usage = this.app.currentSnippet?.usage;
-        const hasUsage = usage && (typeof usage === 'string' ? usage.trim() : (usage.text || Object.keys(usage).length));
-        const mobileUsageFirst = window.innerWidth < 768 && hasUsage;
-        renderRow.classList.toggle('render-usage-active', !!mobileUsageFirst);
-        renderRow.classList.toggle('render-snippet-active', !mobileUsageFirst);
-      }
-      const renderToggleBtn = document.getElementById('renderViewToggleBtn');
-      if( renderToggleBtn ) {
-        const icon = renderToggleBtn.querySelector('i');
-        if( icon ) icon.className = 'bi bi-card-text';
-      }
       this.updateRenderedOutput();
       this.app.resizeInlineSnippet();
       this.applyLineWrap();
@@ -85,12 +140,8 @@ class RenderController
 
   renderMarkdownPreview()
   {
-    const renderRow = document.getElementById('renderRow');
     const mdPreview = document.getElementById('markdownPreview');
     if( ! mdPreview ) return;
-
-    if( renderRow ) renderRow.style.display = 'none';
-    mdPreview.style.display = '';
 
     const content = document.getElementById('snippetContent')?.value || '';
     mdPreview.innerHTML = parseMd(content);
@@ -518,7 +569,8 @@ class RenderController
     return `<span class="usage-unused-indicator text-warning" title="${escapeHtml(title)}"><i class="bi bi-exclamation-triangle-fill"></i></span>`;
   }
 
-  _buildUsageHtml(withInputs = false)
+  // Rendered usage with a value input per var and a checkbox per MAYBE area
+  _buildUsageHtml()
   {
     const s = this.app.currentSnippet;
     const usage = s?.usage ?? null;
@@ -531,37 +583,28 @@ class RenderController
     if( usage && typeof usage === 'object' ) {
       if( usage.head )      html += `<div class="usage-head">${parseMd(usage.head)}</div>`;
       if( usage.maybe && typeof usage.maybe === 'object' ) {
-        const cbTh = withInputs ? '<th class="maybe-cb-th"></th>' : '';
         const defined = new Set(Object.keys(usage.maybe));
         const missing = [...contentMaybes].filter(n => ! defined.has(n));
         const indicator = this._buildMissingIndicator(missing, 'maybe');
         const rows = Object.entries(usage.maybe)
           .map(([k, v]) => {
-            const cbTd = withInputs
-              ? `<td><input type="checkbox" class="maybe-table-cb" data-maybe-name="${escapeHtml(k)}" checked></td>`
-              : '';
             const unused = this._buildUnusedIndicator(contentMaybes.has(k));
-            return `<tr>${cbTd}<td><code>${k}</code>${unused}</td><td>${v ?? ''}</td></tr>`;
+            return `<tr><td><input type="checkbox" class="maybe-table-cb" data-maybe-name="${escapeHtml(k)}" checked></td><td><code>${k}</code>${unused}</td><td>${v ?? ''}</td></tr>`;
           })
           .join('');
-        html += `<div class="usage-meta usage-meta-vars"><table class="usage-vars-table"><thead><tr>${cbTh}<th>Maybe</th><th>Description${indicator}</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+        html += `<div class="usage-meta usage-meta-vars"><table class="usage-vars-table"><thead><tr><th class="maybe-cb-th"></th><th>Maybe</th><th>Description${indicator}</th></tr></thead><tbody>${rows}</tbody></table></div>`;
       }
       if( usage.vars && typeof usage.vars === 'object' ) {
         const defined = new Set(Object.keys(usage.vars));
         const missing = [...contentVars].filter(n => ! defined.has(n));
         const indicator = this._buildMissingIndicator(missing, 'vars');
-        const descTh = withInputs ? '<th>Description</th>' : `<th>Description${indicator}</th>`;
-        const valTh  = withInputs ? `<th class="var-input-th">Value${indicator}</th>` : '';
         const rows = Object.entries(usage.vars)
           .map(([k, v]) => {
-            const inputTd = withInputs
-              ? `<td><input type="text" class="form-control form-control-sm var-input" data-var-name="${escapeHtml(k)}" placeholder="…"></td>`
-              : '';
             const unused = this._buildUnusedIndicator(contentVars.has(k));
-            return `<tr><td class="var-name-td"><code>${k}</code>${unused}</td><td class="var-desc-td">${v ?? ''}</td>${inputTd}</tr>`;
+            return `<tr><td class="var-name-td"><code>${k}</code>${unused}</td><td class="var-desc-td">${v ?? ''}</td><td><input type="text" class="form-control form-control-sm var-input" data-var-name="${escapeHtml(k)}" placeholder="…"></td></tr>`;
           })
           .join('');
-        html += `<div class="usage-meta usage-meta-vars"><table class="usage-vars-table"><thead><tr><th>Var</th>${descTh}${valTh}</tr></thead><tbody>${rows}</tbody></table></div>`;
+        html += `<div class="usage-meta usage-meta-vars"><table class="usage-vars-table"><thead><tr><th>Var</th><th>Description</th><th class="var-input-th">Value${indicator}</th></tr></thead><tbody>${rows}</tbody></table></div>`;
       }
       if( usage.text )
         html += this._buildUsageTextHtml(usage.text);
@@ -628,67 +671,11 @@ class RenderController
     return html;
   }
 
-  toggleUsagePreview()
-  {
-    const textarea = document.getElementById('snippetUsage');
-    const preview  = document.getElementById('usagePreview');
-    if( ! textarea || ! preview ) return;
-
-    const editFieldsRow = document.getElementById('editFieldsRow');
-    if( editFieldsRow?.classList.contains('mobile-content-active') ) {
-      editFieldsRow.classList.add('mobile-usage-active');
-      editFieldsRow.classList.remove('mobile-content-active');
-      document.getElementById('usageFieldPill')?.classList.add('active');
-      document.getElementById('contentFieldPill')?.classList.remove('active');
-    }
-
-    const isActive = preview.style.display !== 'none';
-    if( isActive ) {
-      preview.style.display = 'none';
-      textarea.style.display = '';
-      this._setUsagePreviewIcon('bi-eye');
-    }
-    else {
-      preview.innerHTML = this._buildUsageHtml();
-      preview.style.display = '';
-      textarea.style.display = 'none';
-      this._setUsagePreviewIcon('bi-eye-slash');
-    }
-  }
-
-  resetUsagePreview()
-  {
-    const textarea = document.getElementById('snippetUsage');
-    const preview  = document.getElementById('usagePreview');
-    if( textarea ) textarea.style.display = '';
-    if( preview ) preview.style.display = 'none';
-    this._setUsagePreviewIcon('bi-eye');
-  }
-
-  showUsagePreview()
-  {
-    const textarea = document.getElementById('snippetUsage');
-    const preview  = document.getElementById('usagePreview');
-    if( ! textarea || ! preview ) return;
-    preview.innerHTML = this._buildUsageHtml();
-    preview.style.display = '';
-    textarea.style.display = 'none';
-    this._setUsagePreviewIcon('bi-eye-slash');
-  }
-
-  _setUsagePreviewIcon(iconClass)
-  {
-    ['usagePreviewBtn', 'usagePreviewBtnMobile'].forEach(id => {
-      const btn = document.getElementById(id);
-      if( btn ) btn.querySelector('i').className = `bi ${iconClass}`;
-    });
-  }
-
   renderUsageInPreview()
   {
     const el = document.getElementById('renderUsage');
     if( ! el ) return;
-    el.innerHTML = this._buildUsageHtml(true);
+    el.innerHTML = this._buildUsageHtml();
     this.bindVarInputEvents();
   }
 
@@ -754,25 +741,6 @@ class RenderController
       const row = input.closest('tr');
       if( row ) row.style.display = allHidden ? 'none' : '';
     });
-  }
-
-  toggleRenderView()
-  {
-    const row = document.getElementById('renderRow');
-    const btn = document.getElementById('renderViewToggleBtn');
-    if( ! row || ! btn ) return;
-
-    const showingUsage = row.classList.contains('render-usage-active');
-    if( showingUsage ) {
-      row.classList.remove('render-usage-active');
-      row.classList.add('render-snippet-active');
-      btn.querySelector('i').className = 'bi bi-card-text';
-    }
-    else {
-      row.classList.remove('render-snippet-active');
-      row.classList.add('render-usage-active');
-      btn.querySelector('i').className = 'bi bi-braces';
-    }
   }
 
   getCurrentPlaceholderValues()

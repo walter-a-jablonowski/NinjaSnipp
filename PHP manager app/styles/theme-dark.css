@@ -126,7 +126,6 @@
 }
 
 [data-theme="dark"] .usage-preview,
-[data-theme="dark"] #usagePreview,
 [data-theme="dark"] #renderUsage {
   background-color: #161f2b !important;
   color: #dfe7ef !important;
@@ -151,24 +150,21 @@
 }
 
 [data-theme="dark"] .usage-preview code,
-[data-theme="dark"] #renderUsage code,
-[data-theme="dark"] #usagePreview code {
+[data-theme="dark"] #renderUsage code {
   background: #253142 !important;
   color: #ffd08a !important;
   border: 1px solid #3a4a5d !important;
 }
 
 [data-theme="dark"] .usage-preview pre,
-[data-theme="dark"] #renderUsage pre,
-[data-theme="dark"] #usagePreview pre {
+[data-theme="dark"] #renderUsage pre {
   background: #121a24 !important;
   color: #dfe7ef !important;
   border: 1px solid #31404f !important;
 }
 
 [data-theme="dark"] .usage-preview pre code,
-[data-theme="dark"] #renderUsage pre code,
-[data-theme="dark"] #usagePreview pre code {
+[data-theme="dark"] #renderUsage pre code {
   background: transparent !important;
   border: none !important;
   color: inherit !important;
@@ -257,19 +253,6 @@
   --bs-nav-tabs-link-active-color: #ffb15a;
 }
 
-[data-theme="dark"] #contentTabs .nav-link {
-  color: #ffb15a !important;
-}
-
-[data-theme="dark"] #contentTabs .nav-link:hover,
-[data-theme="dark"] #contentTabs .nav-link:focus {
-  color: #ffd29a !important;
-}
-
-[data-theme="dark"] #contentTabs .nav-link.active {
-  color: #ffb15a !important;
-}
-
 [data-theme="dark"] .dropdown-menu,
 [data-theme="dark"] .modal-content,
 [data-theme="dark"] .card {
@@ -321,18 +304,6 @@
   --bs-btn-active-border-color: #c65f0e;
   --bs-btn-disabled-bg: #e26e10;
   --bs-btn-disabled-border-color: #e26e10;
-}
-
-/* Soften usagePreviewBtn border (hardcoded light grey in app.css) */
-[data-theme="dark"] #usagePreviewBtn {
-  border-color: #2a3642 !important;
-}
-
-[data-theme="dark"] #usagePreviewBtn:hover,
-[data-theme="dark"] #usagePreviewBtn:focus {
-  background-color: #202a35;
-  border-color: #3a4d63 !important;
-  color: #f7fbff;
 }
 
 [data-theme="dark"] .btn-close {

@@ -39,16 +39,9 @@ class EditorController
       this.app.recentSnippets = this.app.recentSnippets.slice(0, 10);
       await apiCall(this.app.currentDataPath, 'saveRecentSnippets', { data: this.app.recentSnippets });
 
-      // Activate the appropriate tab and render
-      if( result.snippet._type === 'yml' ) {
-        this.app.render.composeAndRenderInline();
-        this.updateActionButtonsVisibility();
-      }
-      else {
-        this.app.render.renderMarkdownPreview();
-        activateTab('render-tab');
-        this.updateActionButtonsVisibility();
-      }
+      // Render the rendered views (markdown files get their preview)
+      this.app.render.composeAndRenderInline();
+      this.updateActionButtonsVisibility();
       this.app.render.applyLineWrap();
     }
     else {
@@ -62,12 +55,10 @@ class EditorController
   {
     const editEmptyState = document.getElementById('editEmptyState');
     const editForm = document.getElementById('editForm');
-    const fieldUsage = document.getElementById('fieldUsage');
     const snippetSc = document.getElementById('snippetSc');
     const snippetShort = document.getElementById('snippetShort');
     const snippetUsage = document.getElementById('snippetUsage');
     const snippetContent = document.getElementById('snippetContent');
-    const labelSnippetContent = document.getElementById('labelSnippetContent');
 
     if( ! editForm || ! snippetContent ) return;
 
@@ -82,43 +73,21 @@ class EditorController
       if( snippetUsage ) snippetUsage.value = snippet._usageText || '';
     }
 
-    if( fieldUsage ) fieldUsage.classList.toggle('force-hide', ! isYaml);
+    editForm.dataset.type = snippet._type;   // CSS hides the usage column (+ its header, content label) for md
 
     const fieldContent = document.getElementById('fieldContent');
     if( fieldContent )
       fieldContent.className = isYaml ? 'col-md-6 d-flex flex-column' : 'col-12 d-flex flex-column';
 
-    const editFieldPills = document.getElementById('editFieldPills');
-    if( editFieldPills ) editFieldPills.style.display = isYaml ? 'flex' : 'none';
-
-    const editFieldsRow    = document.getElementById('editFieldsRow');
-    const usageFieldPill   = document.getElementById('usageFieldPill');
-    const contentFieldPill = document.getElementById('contentFieldPill');
-    if( editFieldsRow ) {
-      editFieldsRow.classList.remove('mobile-usage-active');
-      editFieldsRow.classList.add('mobile-content-active');
-    }
-    if( usageFieldPill ) usageFieldPill.classList.remove('active');
-    if( contentFieldPill ) contentFieldPill.classList.add('active');
-    if( isYaml ) this.app.render.showUsagePreview();
-    else this.app.render.resetUsagePreview();
-
-    if( labelSnippetContent ) {
-      if( isYaml ) {
-        labelSnippetContent.style.display = '';
-        labelSnippetContent.classList.add('d-none', 'd-md-block');
-      }
-      else {
-        labelSnippetContent.style.display = 'none';
-        labelSnippetContent.classList.remove('d-none', 'd-md-block');
-      }
-    }
-
-    const usagePreviewBtnMobile = document.getElementById('usagePreviewBtnMobile');
-    if( usagePreviewBtnMobile ) usagePreviewBtnMobile.style.display = 'none';
-
     if( editEmptyState ) editEmptyState.style.display = 'none';
     editForm.style.display = 'flex';
+
+    // Mobile: start with the usage when there is some to read
+    const usage    = snippet.usage;
+    const hasUsage = isYaml && usage && (typeof usage === 'string' ? usage.trim() : (usage.text || Object.keys(usage).length));
+    this.app.render.showMobilePane(hasUsage ? 'usage' : 'content');
+
+    this.app.render.applyFieldViews();
 
     requestAnimationFrame(() => {
       if( isYaml ) {
@@ -137,19 +106,7 @@ class EditorController
       }, 150);
     });
 
-    this.configureRenderTab(true);
     this.setActionButtonsEnabled(true);
-  }
-
-  configureRenderTab(enabled)
-  {
-    const renderTab = document.getElementById('render-tab');
-    if( renderTab ) {
-      renderTab.disabled = !enabled;
-      renderTab.classList.toggle('disabled', !enabled);
-      const tabLi = renderTab.closest('li');
-      if( tabLi ) tabLi.style.display = enabled ? '' : 'none';
-    }
   }
 
   // silent: autosave path, no success toast
@@ -204,7 +161,8 @@ class EditorController
       this.app.currentSnippet = result.snippet || data;
 
       // Autosave changes neither the file list nor a visible preview (it only fires from
-      // the edit tab), so skip both round trips - the render tab recomposes on activation
+      // the source fields), so skip both round trips - a column recomposes when switched
+      // back to its rendered view
       if( ! silent ) {
         this.app.loadFiles();
         if( this.app.currentSnippet._type === 'yml' )
@@ -226,11 +184,12 @@ class EditorController
     }
   }
 
-  // Standing "Not saved" badge next to the autosave switch. Kept out of the toast flow so
-  // it can stay visible for as long as the snippet really is unsaved.
+  // Standing "Not saved" badge next to the file actions. Kept out of the toast flow so it can
+  // stay visible for as long as the snippet really is unsaved.
   setAutosaveStatus(message)
   {
     this.app._autosaveFailed = !!message;
+    this.updateActionButtonsVisibility();   // a refused autosave brings back the Save button
 
     const el = document.getElementById('autosaveStatus');
     if( ! el ) return;
@@ -492,54 +451,25 @@ class EditorController
       });
     }
 
-    const editFieldPills = document.getElementById('editFieldPills');
-    if( editFieldPills ) editFieldPills.style.display = 'none';
-    const editFieldsRow = document.getElementById('editFieldsRow');
-    if( editFieldsRow ) {
-      editFieldsRow.classList.remove('mobile-usage-active');
-      editFieldsRow.classList.add('mobile-content-active');
-    }
-    this.app.render.resetUsagePreview();
-
-    const renderRow = document.getElementById('renderRow');
-    const mdPreview = document.getElementById('markdownPreview');
-    if( renderRow ) renderRow.style.display = '';
-    if( mdPreview ) mdPreview.style.display = 'none';
-
     const fieldContent = document.getElementById('fieldContent');
     if( fieldContent ) fieldContent.className = 'col-md-6 d-flex flex-column';
 
-    this.configureRenderTab(false);
+    this.updateActionButtonsVisibility();
     this.setActionButtonsEnabled(false);
   }
 
+  // File actions (the copy button belongs to the content view, see applyFieldViews)
   updateActionButtonsVisibility()
   {
-    const activeTab = document.querySelector('#contentTabs .nav-link.active');
-    const show = activeTab && activeTab.id === 'edit-tab';
-
-    const saveBtn = document.getElementById('saveSnippetBtn');
-    if( saveBtn ) saveBtn.style.display = show ? '' : 'none';
-
     const hasSnippet = !!this.app.currentSnippet;
+
+    // With autosave on, Save is only offered while the last autosave was refused
+    const saveBtn = document.getElementById('saveSnippetBtn');
+    const showSave = hasSnippet && ( ! this.getAutosaveEnabled() || this.app._autosaveFailed );
+    if( saveBtn ) saveBtn.style.display = showSave ? '' : 'none';
+
     const dropdown = document.getElementById('snippetActionsDropdown');
     if( dropdown ) dropdown.style.display = hasSnippet ? '' : 'none';
-
-    ['snippetActionsEditGroup', 'snippetActionsEditDivider',
-     'snippetActionsDeleteGroup', 'snippetActionsDeleteDivider'].forEach(id => {
-      const el = document.getElementById(id);
-      if( el ) el.style.display = show ? '' : 'none';
-    });
-
-    const copyBtn         = document.getElementById('copyRenderedBtn');
-    const renderToggleBtn = document.getElementById('renderViewToggleBtn');
-    const renderActive    = !!(activeTab && activeTab.id === 'render-tab');
-    const canRender       = !!(this.app.currentSnippet && this.app.currentSnippet._type === 'yml');
-    if( copyBtn )         copyBtn.style.display         = (renderActive && canRender) ? '' : 'none';
-    if( renderToggleBtn ) renderToggleBtn.style.display = (renderActive && canRender) ? '' : 'none';
-
-    const autosaveWrap = document.getElementById('autosaveSwitchWrapper');
-    if( autosaveWrap ) autosaveWrap.style.display = show ? '' : 'none';
   }
 
   setActionButtonsEnabled(enabled)
@@ -596,7 +526,7 @@ class EditorController
 
       // Open the copy in the source it was just created in, not whichever source wins last
       await this.loadSnippet(path, targetBasePath || null);
-      activateTab('edit-tab');
+      this.app.render.setFieldView('content', 'source');   // a new snippet is there to be written
 
       const modal = bootstrap.Modal.getInstance(document.getElementById('newSnippetModal'));
       modal.hide();
