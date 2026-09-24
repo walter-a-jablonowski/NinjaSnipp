@@ -246,17 +246,26 @@ class SnippetManager
       : $this->resolveExistingFilePath($relativePath);
   }
 
-  // Returns the last folder that contains $relativePath, or first folder as fallback for new files
-  private function resolveWritePath( string $relativePath ) : string
+  // Returns the source to write $relativePath to (last source wins): the one that contains
+  // the item, else - for a new item - the one that contains its parent folder, else the first.
+  // Without the parent step a new item in a folder that only exists in a later source would
+  // land in the first source, in a second folder of the same name.
+  public function resolveWritePath( string $relativePath ) : string
   {
-    $match = null;
+    $relativePath = ltrim($relativePath, '/');
+    $parentDir    = dirname($relativePath);
+    $itemMatch    = null;
+    $parentMatch  = null;
+
     foreach( $this->currentFolders as $folder )
     {
-      $abs = $folder['path'] . '/' . ltrim($relativePath, '/');
-      if( file_exists($abs) )
-        $match = $folder['path'];
+      if( file_exists("{$folder['path']}/$relativePath") )
+        $itemMatch = $folder['path'];
+      if( $parentDir !== '.' && is_dir("{$folder['path']}/$parentDir") )
+        $parentMatch = $folder['path'];
     }
-    return $match ?? $this->getCurrentDataPath();
+
+    return $itemMatch ?? $parentMatch ?? $this->getCurrentDataPath();
   }
 
   public function getCurrentDataLabel() : string
@@ -1382,14 +1391,15 @@ class SnippetManager
     {
       $fsPath = $item['fsPath'] ?? $item['path'];
 
+      // A name match that fails to load (broken YAML) must not end the search
+      $result = null;
       if( $item['type'] === 'file' && $item['name'] === $name )
-        return $this->loadSnippet($fsPath);
+        $result = $this->loadSnippet($fsPath);
       elseif( $item['type'] === 'folder' )
-      {
         $result = $this->searchSnippetRecursively($name, $fsPath, $visited);
-        if( $result )
-          return $result;
-      }
+
+      if( $result )
+        return $result;
     }
 
     return null;

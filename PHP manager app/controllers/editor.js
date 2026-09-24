@@ -5,7 +5,9 @@ class EditorController
     this.app = app;
   }
 
-  async loadSnippet(path, basePath = null)
+  // path: physical path of the file; basePath: its source folder (null = last source wins);
+  // treePath: the tree row it was opened from (differs from path for links and duplicates)
+  async loadSnippet(path, basePath = null, treePath = path)
   {
     // A scheduled autosave belongs to the snippet that is open right now. Run it before
     // that state is replaced, or the edits made just before the click are dropped - and
@@ -16,6 +18,11 @@ class EditorController
         await this.saveCurrentSnippet(true);
     }
 
+    // Only now switch the location state: the save above must still write to the old one
+    this.app.currentPath     = path.split('/').slice(0, -1).join('/');
+    this.app.currentBasePath = basePath || null;
+    this.app.currentTreePath = treePath;
+
     showLoading('editContent');
 
     const result = await apiCall(this.app.currentDataPath, 'loadSnippet', { path, basePath });
@@ -25,8 +32,9 @@ class EditorController
       this.setAutosaveStatus(null);   // a fresh snippet starts in sync
       this.renderEditForm(result.snippet);
       // Add to recent snippets and persist
-      const item = { path, name: result.snippet._name, timestamp: Date.now() };
-      this.app.recentSnippets = this.app.recentSnippets.filter(snippet => snippet.path !== path);
+      // basePath too, so a merged duplicate reopens from its own source
+      const item = { path, basePath: basePath || null, name: result.snippet._name, timestamp: Date.now() };
+      this.app.recentSnippets = this.app.recentSnippets.filter(r => r.path !== path || (r.basePath || null) !== item.basePath);
       this.app.recentSnippets.unshift(item);
       this.app.recentSnippets = this.app.recentSnippets.slice(0, 10);
       await apiCall(this.app.currentDataPath, 'saveRecentSnippets', { data: this.app.recentSnippets });
@@ -334,8 +342,15 @@ class EditorController
       if( this.app.currentSnippet ) {
         const ext = this.app.currentSnippet._type === 'yml' ? 'yml' : 'md';
         const curPath = (this.app.currentPath ? this.app.currentPath + '/' : '') + this.app.currentSnippet._name + '.' + ext;
-        // Same file only when it is also the same source
-        if( curPath === path && basePath === (this.app.currentBasePath || null) ) clearCurrent = true;
+        // Same file only when it is also the same source. A deleted folder takes the open
+        // snippet with it - kept open, the next autosave would recreate folder and file.
+        const isFolderCtx = this.app._deleteContext.type === 'folder';
+        const sameSource  = isFolderCtx
+          ? ! basePath || ! this.app.currentBasePath || basePath === this.app.currentBasePath
+            || (this.app._deleteContext.mergedBases || []).includes(this.app.currentBasePath)
+          : basePath === (this.app.currentBasePath || null);
+        const affected = isFolderCtx ? curPath.startsWith(path + '/') : curPath === path;
+        if( affected && sameSource ) clearCurrent = true;
       }
     }
     else if( this.app.currentSnippet ) {
@@ -374,6 +389,10 @@ class EditorController
         this.app.currentSnippet = null;
         this.clearEditForm();
       }
+      // Drop recent entries that point at what is gone, or clicking them only shows an error
+      this.app.recentSnippets = this.app.recentSnippets.filter(r => r.path !== path && ! r.path.startsWith(path + '/'));
+      apiCall(this.app.currentDataPath, 'saveRecentSnippets', { data: this.app.recentSnippets });
+      this.app.search.loadRecentSnippets();
       this.app.loadFiles();
     }
     else {
@@ -403,6 +422,7 @@ class EditorController
       { oldPath: ctx.oldPath, newPath, bases });
 
     if( result && result.success ) {
+      this.followRename(ctx.oldPath, newPath, ctx.type, bases);
       const modal = bootstrap.Modal.getInstance(document.getElementById('renameItemModal')) || new bootstrap.Modal(document.getElementById('renameItemModal'));
       if( modal ) modal.hide();
       if( ctx.parent ) this.app.expandedFolders.add(ctx.parent);
@@ -419,6 +439,34 @@ class EditorController
       // Reload anyway: the tree still shows the state from before the attempt, which is
       // only right as long as nothing moved
       this.app.loadFiles();
+    }
+  }
+
+  // Keeps the open snippet pointing at its file after a rename or reorder. Without this
+  // the next (auto)save writes the content back under the old name as a second file.
+  // bases: the sources the rename happened in (empty / null entries = unknown, not checked)
+  followRename(oldPath, newPath, type, bases = [])
+  {
+    const snippet = this.app.currentSnippet;
+    if( ! snippet ) return;
+
+    const knownBases = (bases || []).filter(Boolean);
+    if( knownBases.length && this.app.currentBasePath && ! knownBases.includes(this.app.currentBasePath) )
+      return;
+
+    const ext     = snippet._type === 'yml' ? 'yml' : 'md';
+    const curDir  = this.app.currentPath || '';
+    const curPath = (curDir ? curDir + '/' : '') + snippet._name + '.' + ext;
+
+    if( type === 'file' && curPath === oldPath ) {
+      const parts = newPath.split('/');
+      snippet._name = parts.pop().slice(0, -(ext.length + 1));
+      this.app.currentPath     = parts.join('/');
+      this.app.currentTreePath = newPath;
+    }
+    else if( type === 'folder' && (curDir === oldPath || curDir.startsWith(oldPath + '/')) ) {
+      this.app.currentPath     = newPath + curDir.slice(oldPath.length);
+      this.app.currentTreePath = (this.app.currentPath ? this.app.currentPath + '/' : '') + snippet._name + '.' + ext;
     }
   }
 
@@ -547,10 +595,7 @@ class EditorController
       if( newItem ) newItem.classList.add('active');
 
       // Open the copy in the source it was just created in, not whichever source wins last
-      this.app.currentPath     = folder;
-      this.app.currentBasePath = targetBasePath || null;
-      this.app.currentTreePath = path;
-      await this.loadSnippet(path, this.app.currentBasePath);
+      await this.loadSnippet(path, targetBasePath || null);
       activateTab('edit-tab');
 
       const modal = bootstrap.Modal.getInstance(document.getElementById('newSnippetModal'));

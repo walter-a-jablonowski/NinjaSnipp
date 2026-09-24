@@ -164,7 +164,10 @@ try {
 
     case 'createFolder':
       $folderPath = $input['folderPath'] ?? '';
-      $base       = $manager->resolveBasePath($input['targetBasePath'] ?? null);
+      // No explicit source: the one holding the parent folder (it may exist in a later source only)
+      $base       = ($input['targetBasePath'] ?? '') !== ''
+        ? $manager->resolveBasePath($input['targetBasePath'])
+        : $manager->resolveWritePath($folderPath);
 
       if( $folderPath === '' || ! $manager->isSafeRelativePath($folderPath) || $base === null ) {
         $response = ['success' => false, 'message' => 'Invalid folder path'];
@@ -181,7 +184,9 @@ try {
 
     case 'createLink':
       $linkPath = $input['linkPath'] ?? '';
-      $base     = $manager->resolveBasePath($input['targetBasePath'] ?? null);
+      $base     = ($input['targetBasePath'] ?? '') !== ''
+        ? $manager->resolveBasePath($input['targetBasePath'])
+        : $manager->resolveWritePath($linkPath);
 
       if( $linkPath === '' ) {
         $response = ['success' => false, 'message' => 'Missing link path'];

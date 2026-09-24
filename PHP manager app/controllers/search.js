@@ -188,7 +188,7 @@ class SearchController
       const timeStr = timeAgo(item.timestamp);
 
       return `
-        <div class="list-group-item file-item recent-file-item" data-path="${escapeHtml(item.path)}"
+        <div class="list-group-item file-item recent-file-item" data-path="${escapeHtml(item.path)}" data-base-path="${escapeHtml(item.basePath || '')}"
              data-type="file" data-extension="${escapeHtml(extension)}">
           <div class="d-flex align-items-center">
             <i class="bi ${icon} file-icon me-2"></i>

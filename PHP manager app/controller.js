@@ -690,10 +690,7 @@
         if( firstFile ) {
           const fileItem = treeItemByPath(firstFile.path);
           if( fileItem ) fileItem.classList.add('active');
-          this.currentPath     = '';
-          this.currentBasePath = firstFile.basePath || null;
-          this.currentTreePath = firstFile.path;
-          this.editor.loadSnippet(firstFile.fsPath || firstFile.path, this.currentBasePath);
+          this.editor.loadSnippet(firstFile.fsPath || firstFile.path, firstFile.basePath || null, firstFile.path);
         }
         this._initialLoad = false;
       }

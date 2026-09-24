@@ -259,9 +259,14 @@ class FileTreeController
            <li><a class="dropdown-item small text-danger" href="#" data-action="delete">Delete</a></li>`;
     }
 
+    // A link's basePath is the source holding the marker file, not its target (which is
+    // resolved by name across all sources) - so a link row carries none and the server
+    // finds the target itself. remove-link reads the marker source from the tree node.
+    const rowBasePath = isIncluded ? '' : (basePath || '');
+
     return `<div class="tree-item${isFolder ? ' tree-folder' : ' tree-file'}${isIncluded ? ' tree-included' : ''}${isMerged ? ' tree-merged' : ''}" ` +
       `data-path="${escapeHtml(path)}" data-fspath="${escapeHtml(realFsPath)}" data-type="${type}" data-extension="${escapeHtml(extension || '')}" ` +
-      `data-base-path="${escapeHtml(basePath || '')}"${mergedBasesAttr} ` +
+      `data-base-path="${escapeHtml(rowBasePath)}"${mergedBasesAttr} ` +
       `draggable="${isIncluded ? 'false' : 'true'}" ` +
       `tabindex="0" title="${escapeHtml(displayName)}" style="${styleVal}">` +
       `<div class="d-flex align-items-center">` +
@@ -469,16 +474,9 @@ class FileTreeController
     document.querySelectorAll('.tree-item.active, .file-item.active').forEach(i => i.classList.remove('active'));
     item.classList.add('active');
 
-    const parts = fsPath.split('/');
-    parts.pop();
-    this.app.currentPath = parts.join('/');
-
     // With foldersMerged, two rows can share one fsPath - the source folder is what
     // tells them apart, so it is remembered for save / delete / duplicate
-    this.app.currentBasePath = item.dataset.basePath || null;
-    this.app.currentTreePath = path;
-
-    this.app.editor.loadSnippet(fsPath, this.app.currentBasePath);
+    this.app.editor.loadSnippet(fsPath, item.dataset.basePath || null, path);
 
     // Auto-close sidebar on mobile
     if( window.innerWidth < 992 ) {
@@ -711,6 +709,9 @@ class FileTreeController
 
     // Keep expansion + selection sensible after on-disk names changed
     this._remapPaths(folderRenames);
+    const dir = parentPath ? parentPath + '/' : '';
+    ops.filter(op => op.type === 'file')
+       .forEach(op => this.app.editor.followRename(dir + op.oldName, dir + op.newName, 'file', [op.base]));
     if( parentPath ) this.app.expandedFolders.add(parentPath);
     await this.app.loadFiles();
 
@@ -741,6 +742,7 @@ class FileTreeController
     this.app.expandedFolders.forEach(p => next.add(remap(p)));
     this.app.expandedFolders = next;
 
-    if( this.app.currentPath ) this.app.currentPath = remap(this.app.currentPath);
+    if( this.app.currentPath )     this.app.currentPath     = remap(this.app.currentPath);
+    if( this.app.currentTreePath ) this.app.currentTreePath = remap(this.app.currentTreePath);
   }
 }
