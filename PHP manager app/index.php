@@ -74,10 +74,27 @@ $fieldPanes = ['usage' => 'Usage', 'content' => 'Content'];
         <div class="nav-item">
           <button class="btn btn-outline-light" type="button" id="aiBtn">AI</button>
         </div>
-        <div class="nav-item d-none d-lg-flex">
-          <button class="btn btn-outline-light" type="button" id="themeToggleBtn" title="Toggle theme" aria-label="Toggle theme">
-            <i class="bi bi-moon-stars"></i>
+        <!-- App settings (stays open while settings are changed) -->
+        <div class="nav-item dropdown settings-dropdown">
+          <button class="btn btn-outline-light" type="button" id="settingsBtn" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" title="Settings" aria-label="Settings">
+            <i class="bi bi-gear"></i>
           </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li>
+              <button class="dropdown-item d-flex align-items-center" type="button" id="themeToggleBtn">
+                <i class="bi bi-moon-stars me-2"></i>Theme
+                <span class="ms-auto ps-3 text-muted text-capitalize" id="themeValue"></span>
+              </button>
+            </li>
+            <li>
+              <label class="dropdown-item d-flex align-items-center" for="autosaveSwitch">
+                <i class="bi bi-cloud-arrow-up me-2"></i>Autosave
+                <span class="form-switch ms-auto ps-3">
+                  <input class="form-check-input m-0" type="checkbox" role="switch" id="autosaveSwitch">
+                </span>
+              </label>
+            </li>
+          </ul>
         </div>
       </div>
     </div>
@@ -93,10 +110,7 @@ $fieldPanes = ['usage' => 'Usage', 'content' => 'Content'];
         <div class="offcanvas offcanvas-start offcanvas-lg" tabindex="-1" id="sidebarNav" aria-labelledby="sidebarNavLabel">
           <div class="offcanvas-header border-bottom">
             <h5 class="offcanvas-title" id="sidebarNavLabel">Navigation</h5>
-            <button type="button" class="btn btn-sm btn-outline-secondary ms-auto me-2 d-lg-none" id="themeToggleSidebarBtn" title="Toggle theme" aria-label="Toggle theme">
-              <i class="bi bi-moon-stars"></i>
-            </button>
-            <button type="button" class="btn-close d-lg-none" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            <button type="button" class="btn-close ms-auto d-lg-none" data-bs-dismiss="offcanvas" aria-label="Close"></button>
           </div>
           <div class="offcanvas-body p-0">
             <div class="p-3" id="sidebarInner">
@@ -242,14 +256,6 @@ $fieldPanes = ['usage' => 'Usage', 'content' => 'Content'];
                             <button class="dropdown-item" id="toggleLineWrapBtn" type="button">
                               <i class="bi bi-text-wrap me-2"></i>Toggle line wrap
                             </button>
-                          </li>
-                          <li>
-                            <label class="dropdown-item d-flex align-items-center" for="autosaveSwitch">
-                              <i class="bi bi-cloud-arrow-up me-2"></i>Autosave
-                              <span class="form-switch ms-auto ps-3">
-                                <input class="form-check-input m-0" type="checkbox" role="switch" id="autosaveSwitch">
-                              </span>
-                            </label>
                           </li>
                           <li><hr class="dropdown-divider"></li>
                           <li>

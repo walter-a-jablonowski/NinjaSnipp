@@ -183,8 +183,7 @@
       ['deleteSnippetBtn',   'click', () => this.editor.deleteCurrentSnippet()],
       ['toggleLineWrapBtn',  'click', () => this.render.toggleLineWrap()],
       ['aiBtn',              'click', () => this.toggleAiSidebar()],
-      ['themeToggleBtn',        'click', () => this.toggleTheme()],
-      ['themeToggleSidebarBtn', 'click', () => this.toggleTheme()],
+      ['themeToggleBtn',     'click', () => this.toggleTheme()],
       ['aiSidebarClose',     'click', () => this.toggleAiSidebar(false)],
       ['confirmDuplicateBtn','click', () => this.editor.performDuplicate()],
       ['confirmDeleteBtn',   'click', () => this.editor.performDelete()],
@@ -525,14 +524,14 @@
     else
       iconClass = 'bi bi-moon-stars';
 
-    ['themeToggleBtn', 'themeToggleSidebarBtn'].forEach(id => {
-      const btn = document.getElementById(id);
-      if( ! btn ) return;
-      const icon = btn.querySelector('i');
-      if( icon ) icon.className = iconClass;
-      btn.title = title;
-      btn.setAttribute('aria-label', title);
-    });
+    // Settings menu entry: icon, current preference as value, next one in the tooltip
+    const btn = document.getElementById('themeToggleBtn');
+    if( ! btn ) return;
+    const icon = btn.querySelector('i');
+    if( icon ) icon.className = `${iconClass} me-2`;
+    const value = document.getElementById('themeValue');
+    if( value ) value.textContent = this.themePreference;
+    btn.title = title;
   }
 
   getNextThemePreference()
