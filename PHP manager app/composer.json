@@ -6,10 +6,21 @@
     "php": ">=7.4",
     "symfony/yaml": "^5.4"
   },
+  "require-dev": {
+    "phpunit/phpunit": "^9.6"
+  },
   "autoload": {
     "psr-4": {
       "SnippetManager\\": "lib/"
     }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "SnippetManager\\Tests\\": "tests/"
+    }
+  },
+  "scripts": {
+    "test": "phpunit"
   },
   "config": {
     "optimize-autoloader": true

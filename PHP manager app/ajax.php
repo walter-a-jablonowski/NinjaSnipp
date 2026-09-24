@@ -1,7 +1,13 @@
 <?php
 
+// Routes ajax calls: {"action": "...", "dataPath": "<data set label>", ...} -> JSON
+//
+// The handlers live in /ajax, one file per area, each returning action => handler.
+// A handler gets the request data and returns the response array. It reports a failure
+// by throwing RuntimeException with a user-facing message.
+
 use SnippetManager\SnippetManager;
-use Symfony\Component\Yaml\Yaml;
+use SnippetManager\UserStore;
 
 require_once 'vendor/autoload.php';
 require_once 'lib/functions.php';
@@ -9,356 +15,37 @@ require_once 'lib/functions.php';
 
 header('Content-Type: application/json');
 
-$input  = json_decode( file_get_contents('php://input'), true);
-$action = $input['action'] ?? '';
+$input  = json_decode( file_get_contents('php://input'), true) ?: [];
+$action = (string)($input['action'] ?? '');
 
-$response = ['success' => false, 'message' => 'Unknown action'];
-
-// Inside the try as well: a broken settings.yml would otherwise throw before the handler
+// Everything inside the try: a broken settings.yml would otherwise throw before the handler
 // is in place and the client would get an HTML error page instead of the JSON it parses
 try {
 
   $appConfig = app_config();
-  $special   = (bool)($appConfig['special'] ?? false);
+  $user      = new UserStore( APP_ROOT . '/' . user_dir());
+  $settings  = $user->getSettings();
+  $manager   = new SnippetManager( $settings, __DIR__);
 
-  $userDir = user_dir();
-  $config  = Yaml::parseFile("$userDir/settings.yml");
-  $manager = new SnippetManager( $config['dataPaths'] ?? ['data'], $config, __DIR__);
-  if( isset($config['nav']['foldersFirst']) )
-    $manager->setFoldersFirst( (bool)$config['nav']['foldersFirst'] );
+  // The data set the client works in; the first one if missing or unknown
+  if( ! empty($input['dataPath']) )
+    $manager->sources->select( (string)$input['dataPath']);
 
-  // Set current data set by label, or fall back to first
-  if( isset($input['dataPath']) && !empty($input['dataPath']) )
-    $manager->setCurrentDataPath($input['dataPath']);
-  else
-  {
-    $firstLabel = array_key_first($manager->getDataPaths());
-    if( $firstLabel !== null )
-      $manager->setCurrentDataPath($firstLabel);
-  }
+  $handlers = array_merge(
+    require 'ajax/files.php',
+    require 'ajax/snippets.php',
+    require 'ajax/user.php'
+  );
 
-  switch( $action )
-  {
-    case 'listFiles':
-      $subPath = $input['subPath'] ?? '';
-      $files = $manager->listFiles($subPath);
-      $response = ['success' => true, 'files' => $files, 'baseFolderLabels' => $manager->getBaseFolderLabels()];
-      break;
-
-    case 'loadSnippet':
-      $path = $input['path'] ?? '';
-      $snippet = $manager->loadSnippet($path, $input['basePath'] ?? null);
-
-      if( $snippet )
-        $response = ['success' => true, 'snippet' => $snippet];
-      else
-        $response = ['success' => false, 'message' => 'Snippet missing'];
-      break;
-
-    case 'saveSnippet':
-      $path           = $input['path'] ?? '';
-      $data           = $input['data'] ?? [];
-      $targetBasePath = $input['targetBasePath'] ?? null;
-      // Set by "New Snippet": creating must never write over a snippet that is already there
-      $createOnly     = (bool)($input['createOnly'] ?? false);
-
-      try {
-        $saved = $manager->saveSnippet($path, $data, $targetBasePath, $createOnly);
-
-        // The normalized snippet goes back so the client's copy keeps its parsed `usage`
-        $response = $saved !== null
-          ? ['success' => true, 'message' => 'Snippet saved successfully', 'snippet' => $saved]
-          : ['success' => false, 'message' => 'Failed to save snippet'];
-      }
-      catch( RuntimeException $e ) {
-        $response = ['success' => false, 'message' => $e->getMessage()];
-      }
-      break;
-
-    case 'deleteSnippet':
-      $path = $input['path'] ?? '';
-
-      if( $manager->deleteSnippet($path, $input['basePath'] ?? null) )
-        $response = ['success' => true, 'message' => 'Snippet deleted successfully'];
-      else
-        $response = ['success' => false, 'message' => 'Failed to delete snippet'];
-      break;
-
-    case 'deleteFolder':
-      $path       = $input['path'] ?? '';
-      $targetBase = $input['targetBase'] ?? null;
-
-      if( $manager->deleteFolder($path, $targetBase) )
-        $response = ['success' => true, 'message' => 'Folder deleted successfully'];
-      else
-        $response = ['success' => false, 'message' => 'Failed to delete folder'];
-      break;
-
-    case 'duplicateSnippet':
-      $sourcePath = $input['sourcePath'] ?? '';
-      $targetPath = $input['targetPath'] ?? '';
-
-      try {
-        if( $manager->duplicateSnippet($sourcePath, $targetPath, $input['basePath'] ?? null) )
-          $response = ['success' => true, 'message' => 'Snippet duplicated successfully'];
-        else
-          $response = ['success' => false, 'message' => 'Failed to duplicate snippet'];
-      }
-      catch( RuntimeException $e ) {
-        $response = ['success' => false, 'message' => $e->getMessage()];
-      }
-      break;
-
-    case 'renameItem':
-      // A merged folder is renamed in all of its sources at once, so the whole set goes in
-      // one call - the manager can then refuse or undo it as a unit
-      $bases = $input['bases'] ?? null;
-      if( ! is_array($bases) || empty($bases) )
-        $bases = [$input['basePath'] ?? null];
-
-      $response = $manager->renameItem($input['oldPath'] ?? '', $input['newPath'] ?? '', $bases);
-      break;
-
-    case 'batchRename':
-      $subPath = $input['subPath'] ?? '';
-      $ops     = $input['ops'] ?? [];
-      $response = $manager->batchRename($subPath, is_array($ops) ? $ops : []);
-      break;
-
-    case 'removeLink':
-      $subPath = $input['subPath'] ?? '';
-      $target  = $input['target'] ?? '';
-      $bases   = $input['bases'] ?? null;
-
-      if( $manager->removeLink($subPath, $target, is_array($bases) ? $bases : null) )
-        $response = ['success' => true, 'message' => 'Link removed successfully'];
-      else
-        $response = ['success' => false, 'message' => 'Link not found'];
-      break;
-
-    case 'searchSnippets':
-      $query = $input['query'] ?? '';
-      $results = $manager->searchSnippets($query);
-      $response = ['success' => true, 'results' => $results];
-      break;
-
-    case 'renderSnippet':
-      $snippet = $input['snippet'] ?? [];
-      $placeholders = $input['placeholders'] ?? [];
-      
-      $rendered = $manager->renderSnippet($snippet, $placeholders);
-      $response = ['success' => true, 'rendered' => $rendered];
-      break;
-
-    case 'composeContent':
-      $snippet = $input['snippet'] ?? [];
-      $composed = $manager->composeContent($snippet);
-      $response = ['success' => true, 'composed' => $composed];
-      break;
-
-    case 'extractPlaceholders':
-      $content = $input['content'] ?? '';
-      $placeholders = $manager->extractPlaceholders($content);
-      $response = ['success' => true, 'placeholders' => $placeholders];
-      break;
-
-    case 'createFolder':
-      $folderPath = $input['folderPath'] ?? '';
-      // No explicit source: the one holding the parent folder (it may exist in a later source only)
-      $base       = ($input['targetBasePath'] ?? '') !== ''
-        ? $manager->resolveBasePath($input['targetBasePath'])
-        : $manager->resolveWritePath($folderPath);
-
-      if( $folderPath === '' || ! $manager->isSafeRelativePath($folderPath) || $base === null ) {
-        $response = ['success' => false, 'message' => 'Invalid folder path'];
-        break;
-      }
-
-      $fullPath = rtrim($base, '/') . '/' . ltrim($folderPath, '/');
-
-      if( ! is_dir($fullPath) && mkdir($fullPath, 0755, true) )
-        $response = ['success' => true, 'message' => 'Folder created successfully'];
-      else
-        $response = ['success' => false, 'message' => 'Failed to create folder or folder already exists'];
-      break;
-
-    case 'createLink':
-      $linkPath = $input['linkPath'] ?? '';
-      $base     = ($input['targetBasePath'] ?? '') !== ''
-        ? $manager->resolveBasePath($input['targetBasePath'])
-        : $manager->resolveWritePath($linkPath);
-
-      if( $linkPath === '' ) {
-        $response = ['success' => false, 'message' => 'Missing link path'];
-        break;
-      }
-      if( ! $manager->isSafeRelativePath($linkPath) || $base === null ) {
-        $response = ['success' => false, 'message' => 'Invalid link path'];
-        break;
-      }
-
-      $fullPath = rtrim($base, '/') . '/' . ltrim($linkPath, '/');
-      $dir      = dirname($fullPath);
-
-      if( ! is_dir($dir) && ! mkdir($dir, 0755, true) ) {
-        $response = ['success' => false, 'message' => 'Failed to prepare target directory'];
-        break;
-      }
-      if( file_exists($fullPath) ) {
-        $response = ['success' => false, 'message' => 'Link already exists'];
-        break;
-      }
-
-      // A link is an empty marker file named "INCLUDE <target>"; the resolver renders the target in its place
-      if( file_put_contents($fullPath, '') !== false )
-        $response = ['success' => true, 'message' => 'Link created successfully'];
-      else
-        $response = ['success' => false, 'message' => 'Failed to create link'];
-      break;
-
-    case 'setFolderColor':
-      $folderPath = $input['folderPath'] ?? '';
-      $color      = isset($input['color']) ? (string)$input['color'] : null;
-      if( $color === '' ) $color = null;
-      if( $folderPath === '' ) {
-        $response = ['success' => false, 'message' => 'Missing folderPath'];
-        break;
-      }
-      $targetBase = $input['targetBase'] ?? null;
-      if( $manager->writeFolderColor($folderPath, $color, $targetBase) )
-        $response = ['success' => true];
-      else
-        $response = ['success' => false, 'message' => 'Failed to write folder color'];
-      break;
-
-    case 'setFileColor':
-      $filePath = $input['filePath'] ?? '';
-      $color    = isset($input['color']) ? (string)$input['color'] : null;
-      if( $color === '' ) $color = null;
-      if( $filePath === '' ) {
-        $response = ['success' => false, 'message' => 'Missing filePath'];
-        break;
-      }
-      if( $manager->writeFileColor($filePath, $color, $input['basePath'] ?? null) )
-        $response = ['success' => true];
-      else
-        $response = ['success' => false, 'message' => 'Failed to write file color'];
-      break;
-
-    case 'getFolderColors':
-      $themeMode = (string)($input['themeMode'] ?? 'light');
-      if( $themeMode === 'dark' )
-        $colors = $config['folderColorsDark'] ?? ($config['folderColors'] ?? []);
-      else
-        $colors = $config['folderColors'] ?? [];
-      $response = ['success' => true, 'colors' => $colors];
-      break;
-
-    case 'setDataPath':
-      $dataPath = $input['dataPath'] ?? '';
-      
-      if( $manager->setCurrentDataPath($dataPath) )
-        $response = ['success' => true, 'message' => 'Data path changed successfully'];
-      else
-        $response = ['success' => false, 'message' => 'Invalid data path'];
-      break;
-
-    // --- User data: search history ---
-    case 'getSearchHistory':
-      $file = "$userDir/search_history.json";
-      $history = read_json_file($file, []);
-      $response = ['success' => true, 'data' => $history];
-      break;
-
-    case 'saveSearchHistory':
-      $data = $input['data'] ?? [];
-      $file = "$userDir/search_history.json";
-      if( write_json_file($file, $data) )
-        $response = ['success' => true];
-      else
-        $response = ['success' => false, 'message' => 'Failed to save search history'];
-      break;
-
-    // --- User data: recent snippets ---
-    case 'getRecentSnippets':
-      $file = "$userDir/recent_snippets.json";
-      $allRecent = read_json_file($file, []);
-      $currentDataLabel = $manager->getCurrentDataLabel();
-      $recent = $allRecent[$currentDataLabel] ?? [];
-      $response = ['success' => true, 'data' => $recent];
-      break;
-
-    case 'saveRecentSnippets':
-      $data = $input['data'] ?? [];
-      $file = "$userDir/recent_snippets.json";
-      $allRecent = read_json_file($file, []);
-      $currentDataLabel = $manager->getCurrentDataLabel();
-      $allRecent[$currentDataLabel] = $data;
-      if( write_json_file($file, $allRecent) )
-        $response = ['success' => true];
-      else
-        $response = ['success' => false, 'message' => 'Failed to save recent snippets'];
-      break;
-
-    // --- User settings (YAML) ---
-    case 'getUserSettings':
-      $settingsFile = "$userDir/settings.yml";
-      if( is_file($settingsFile) )
-        $settings = Yaml::parseFile($settingsFile);
-      else
-        $settings = [];
-      $response = ['success' => true, 'settings' => $settings];
-      break;
-
-    case 'setUserSettings':
-      $settingsFile = "$userDir/settings.yml";
-      $current = is_file($settingsFile) ? Yaml::parseFile($settingsFile) : [];
-      $incoming = $input['settings'] ?? [];
-      if( ! is_array($incoming) ) $incoming = [];
-      // Merge recursively: incoming overrides current
-      $merged = array_replace_recursive($current, $incoming);
-      $yaml = Yaml::dump($merged, 4, 2);
-      if( file_put_contents($settingsFile, $yaml) !== false )
-        $response = ['success' => true, 'settings' => $merged];
-      else
-        $response = ['success' => false, 'message' => 'Failed to write settings'];
-      break;
-
-    case 'openInExplorer':
-      // Local-only convenience feature; the UI hides it unless config.yml sets special
-      if( ! $special ) {
-        $response = ['success' => false, 'message' => 'Not available'];
-        break;
-      }
-
-      $relPath  = $input['path'] ?? '';
-      $itemType = ($input['itemType'] ?? '') === 'folder' ? 'folder' : 'file';
-
-      // The base is resolved server-side and must be a configured source. Taking a full
-      // path from the client would put arbitrary text into the command line below.
-      $fullPath = $manager->resolvePhysicalPath($relPath, $itemType, $input['basePath'] ?? null);
-
-      if( $fullPath === null ) {
-        $response = ['success' => false, 'message' => 'Path not found'];
-        break;
-      }
-
-      $winPath = escapeshellarg(str_replace('/', '\\', $fullPath));
-      if( $itemType === 'folder' )
-        pclose(popen("start \"\" explorer.exe $winPath", 'r'));
-      else
-        pclose(popen("start \"\" explorer.exe /select,$winPath", 'r'));
-
-      $response = ['success' => true];
-      break;
-
-    default:
-      $response = ['success' => false, 'message' => "Unknown action: $action"];
-  }
+  $response = isset($handlers[$action])
+    ? $handlers[$action]($input)
+    : ['success' => false, 'message' => "Unknown action: $action"];
+}
+catch( RuntimeException $e ) {
+  $response = ['success' => false, 'message' => $e->getMessage()];
 }
 catch( Throwable $e ) {
-  // Throwable, not Exception: a TypeError/Error would otherwise escape as a fatal and
-  // the client would get an HTML error page instead of the JSON it parses
+  // Throwable, not Exception: a TypeError/Error would otherwise escape as a fatal
   $response = ['success' => false, 'message' => 'Server error: ' . $e->getMessage()];
 }
 

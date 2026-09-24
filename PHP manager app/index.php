@@ -1,7 +1,7 @@
 <?php
 
-use SnippetManager\SnippetManager;
-use Symfony\Component\Yaml\Yaml;
+use SnippetManager\Sources;
+use SnippetManager\UserStore;
 
 require_once 'vendor/autoload.php';
 require_once 'lib/functions.php';
@@ -11,15 +11,13 @@ $appConfig = app_config();
 $debug     = (bool)($appConfig['debug']['on'] ?? false);
 $allBtns   = (bool)($appConfig['debug']['showAllFileBtns'] ?? false);
 
-$config  = Yaml::parseFile(user_dir() . '/settings.yml');
-$initialTheme = $config['theme'] ?? 'light';
-$manager = new SnippetManager( $config['dataPaths'] ?? ['data'], $config, __DIR__);
-if( isset($config['nav']['foldersFirst']) )
-  $manager->setFoldersFirst( (bool)$config['nav']['foldersFirst'] );
+$settings     = ( new UserStore( APP_ROOT . '/' . user_dir()))->getSettings();
+$initialTheme = $settings['theme'] ?? 'light';
+$sources      = new Sources( $settings['dataPaths'] ?? ['data'], __DIR__);
 
 // Optional URL param: select initial data folder by label key from config (e.g., ?data=Demo%201)
 if( isset($_GET['data']) )
-  $manager->setCurrentDataPath((string)$_GET['data']);
+  $sources->select((string)$_GET['data']);
 
 ?>
 <!DOCTYPE html>
@@ -46,14 +44,14 @@ if( isset($_GET['data']) )
         <a class="navbar-brand d-flex align-items-center" href="#" data-bs-toggle="dropdown" aria-expanded="false">
           <i class="bi bi-code-square me-2 fs-4 d-none d-sm-inline"></i>
           <span class="fw-bold brand-full">Ninja</span>
-          <span class="brand-full brand-source" id="brandDataLabel"><?= htmlspecialchars($manager->getCurrentDataLabel()) ?></span>
-          <span class="fw-bold brand-short brand-source" id="brandDataLabelMobile"><?= htmlspecialchars($manager->getCurrentDataLabel()) ?></span>
+          <span class="brand-full brand-source" id="brandDataLabel"><?= htmlspecialchars($sources->getCurrentLabel()) ?></span>
+          <span class="fw-bold brand-short brand-source" id="brandDataLabelMobile"><?= htmlspecialchars($sources->getCurrentLabel()) ?></span>
           <i class="bi bi-chevron-down brand-chevron"></i>
         </a>
-        <ul class="dropdown-menu" id="dataFolderDropdown" data-current="<?= htmlspecialchars($manager->getCurrentDataLabel()) ?>">
-          <?php foreach( array_keys($manager->getDataPaths()) as $label ): ?>
+        <ul class="dropdown-menu" id="dataFolderDropdown" data-current="<?= htmlspecialchars($sources->getCurrentLabel()) ?>">
+          <?php foreach( array_keys($sources->getDataSets()) as $label ): ?>
             <li>
-              <a class="dropdown-item<?= $label === $manager->getCurrentDataLabel() ? ' active' : '' ?>" href="#" data-label="<?= htmlspecialchars($label) ?>">
+              <a class="dropdown-item<?= $label === $sources->getCurrentLabel() ? ' active' : '' ?>" href="#" data-label="<?= htmlspecialchars($label) ?>">
                 <?= htmlspecialchars($label) ?>
               </a>
             </li>

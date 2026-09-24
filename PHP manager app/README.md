@@ -114,7 +114,7 @@ content: |    # Snippet
 
 #### Required vs. optional fields
 
-Only `content` is enforced. The editor blocks saving when `content` is empty (`Content is required`). All other fields are optional: the loader (`SnippetManager::loadSnippet`) and saver (`SnippetManager::saveSnippet`) do no field validation, and the preview renders every field conditionally (missing fields are simply skipped or default to empty).
+Only `content` is enforced. The editor blocks saving when `content` is empty (`Content is required`). All other fields are optional: the loader and saver (`SnippetStore::load` / `SnippetStore::save`) do no field validation, and the preview renders every field conditionally (missing fields are simply skipped or default to empty).
 
 | Field | Required | Coemmnts |
 |---|---|---|
@@ -165,3 +165,33 @@ Copyright (C) Walter A. Jablonowski 2025, free under the [MIT license](LICENSE)
 This app is build upon PHP and free software (see [credits](credits.md)).
 
 [Privacy](https://walter-a-jablonowski.github.io/privacy.html) | [Legal](https://walter-a-jablonowski.github.io/imprint.html)
+
+### Code structure
+
+```
+ajax.php                 routes ajax calls to the handlers in /ajax
+ajax/files.php           tree listing, folders, links, renames, colors
+ajax/snippets.php        snippet files, search, rendering
+ajax/user.php            data set selection, settings, search history, recent snippets
+lib/SnippetManager.php   builds the services below from the user settings
+lib/Sources.php          data sets, source folders, path rules (which source a path lives in / is written to)
+lib/FileTree.php         merged tree listing, INCLUDE links
+lib/FileOperations.php   create folder / link, rename, reorder, delete folder
+lib/SnippetStore.php     read / write / delete / duplicate snippet files
+lib/ColorStore.php       folder and file colors (.sys/ninja.json)
+lib/Search.php           full-text search
+lib/Renderer.php         includes, MAYBE blocks, placeholders
+lib/UserStore.php        per-user settings and lists
+tests/                   PHPUnit tests
+```
+
+A handler returns the response array and reports a failure by throwing `RuntimeException` with a user-facing message; `ajax.php` turns it into `{success: false, message}`.
+
+### Tests
+
+```
+composer install
+composer test
+```
+
+Every test runs on a fresh temporary data set with two sources, so no real data is touched.
