@@ -516,10 +516,10 @@ class RenderController
     if( ! s ) return '';
     const parts = [];
     if( s.id ) {
-      const scHtml = s.sc ? `<code class="usage-meta-sc">${s.sc}</code>` : '';
-      parts.push(`<div class="usage-meta-id"><span class="usage-meta-label">ID</span> <code>${s.id}</code>${scHtml}</div>`);
+      const scHtml = s.sc ? `<code class="usage-meta-sc">${escapeHtml(s.sc)}</code>` : '';
+      parts.push(`<div class="usage-meta-id"><span class="usage-meta-label">ID</span> <code>${escapeHtml(s.id)}</code>${scHtml}</div>`);
     }
-    if( s.short ) parts.push(`<div class="usage-meta-short">${s.short}</div>`);
+    if( s.short ) parts.push(`<div class="usage-meta-short">${escapeHtml(s.short)}</div>`);
     return parts.length ? `<div class="usage-meta">${parts.join('')}</div>` : '';
   }
 
@@ -565,7 +565,7 @@ class RenderController
         const rows = Object.entries(usage.maybe)
           .map(([k, v]) => {
             const unused = this._buildUnusedIndicator(contentMaybes.has(k));
-            return `<tr><td><input type="checkbox" class="maybe-table-cb" data-maybe-name="${escapeHtml(k)}" checked></td><td><code>${k}</code>${unused}</td><td>${v ?? ''}</td></tr>`;
+            return `<tr><td><input type="checkbox" class="maybe-table-cb" data-maybe-name="${escapeHtml(k)}" checked></td><td><code>${escapeHtml(k)}</code>${unused}</td><td>${escapeHtml(v)}</td></tr>`;
           })
           .join('');
         html += `<div class="usage-meta usage-meta-vars"><table class="usage-vars-table"><thead><tr><th class="maybe-cb-th"></th><th>Maybe</th><th>Description${indicator}</th></tr></thead><tbody>${rows}</tbody></table></div>`;
@@ -577,7 +577,7 @@ class RenderController
         const rows = Object.entries(usage.vars)
           .map(([k, v]) => {
             const unused = this._buildUnusedIndicator(contentVars.has(k));
-            return `<tr><td class="var-name-td"><code>${k}</code>${unused}</td><td class="var-desc-td">${v ?? ''}</td><td><input type="text" class="form-control form-control-sm var-input" data-var-name="${escapeHtml(k)}" placeholder="…"></td></tr>`;
+            return `<tr><td class="var-name-td"><code>${escapeHtml(k)}</code>${unused}</td><td class="var-desc-td">${escapeHtml(v)}</td><td><input type="text" class="form-control form-control-sm var-input" data-var-name="${escapeHtml(k)}" placeholder="…"></td></tr>`;
           })
           .join('');
         html += `<div class="usage-meta usage-meta-vars"><table class="usage-vars-table"><thead><tr><th>Var</th><th>Description</th><th class="var-input-th">Value${indicator}</th></tr></thead><tbody>${rows}</tbody></table></div>`;
@@ -612,10 +612,10 @@ class RenderController
     const uid = Math.random().toString(36).slice(2, 7);
 
     const navItems = allTabs.map(({ name, color }, i) => {
-      const colorStyle = color ? ` style="color:${color}"` : '';
+      const colorStyle = color ? ` style="color:${escapeHtml(color)}"` : '';
       return `<li class="nav-item" role="presentation">
         <button class="nav-link usage-tab-btn${i === 0 ? ' active' : ''}" data-bs-toggle="tab"
-          data-bs-target="#ut-${uid}-${i}" type="button" role="tab"${colorStyle}>${name}</button>
+          data-bs-target="#ut-${uid}-${i}" type="button" role="tab"${colorStyle}>${escapeHtml(name)}</button>
       </li>`;
     }).join('');
 
