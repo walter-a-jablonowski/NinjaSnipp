@@ -22,6 +22,12 @@ if( isset($_GET['data']) )
 // Snippet columns, switchable via pills on mobile (one column at a time)
 $fieldPanes = ['usage' => 'Usage', 'content' => 'Content'];
 
+// Name / description lists of a snippet's usage, edited row by row
+$usageLists = [
+  'maybe' => ['label' => 'Maybe', 'item' => 'maybe block', 'empty' => 'No optional blocks'],
+  'vars'  => ['label' => 'Vars',  'item' => 'variable',    'empty' => 'No variables']
+];
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -281,11 +287,38 @@ $fieldPanes = ['usage' => 'Usage', 'content' => 'Content'];
               <div class="row g-2" id="editFieldsRow">
                 <!-- Usage (YAML-only) -->
                 <div class="col-md-6 d-flex flex-column" id="fieldUsage">
-                  <div class="d-flex align-items-center gap-1 mb-1" id="fieldShortScRow">
-                    <input type="text" class="form-control form-control-sm flex-grow-1" id="snippetShort" placeholder="Short description">
-                    <input type="text" class="form-control form-control-sm" id="snippetSc" placeholder="Short code">
+                  <!-- Source view: one control per field of the snippet's usage (see UsageFormController) -->
+                  <div id="usageForm" class="usage-form">
+                    <div class="usage-form-row">
+                      <input type="text" class="form-control form-control-sm flex-grow-1" id="snippetShort" placeholder="Short description" aria-label="Short description">
+                      <input type="text" class="form-control form-control-sm" id="snippetSc" placeholder="Short code" aria-label="Short code">
+                    </div>
+
+                    <div class="usage-form-section">
+                      <label for="usageHead" class="usage-form-label">Head</label>
+                      <textarea class="form-control form-control-sm usage-autogrow" id="usageHead" rows="3" placeholder="Why / when use this snippet? (markdown)"></textarea>
+                    </div>
+
+                    <?php foreach( $usageLists as $list => $listInfo ): ?>
+                      <div class="usage-form-section">
+                        <div class="usage-form-label-row">
+                          <span class="usage-form-label"><?= $listInfo['label'] ?></span>
+                          <button type="button" class="btn btn-link btn-sm usage-missing-btn text-warning" data-list="<?= $list ?>" style="display: none;">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i><span class="usage-missing-text"></span>
+                          </button>
+                          <button type="button" class="btn btn-sm btn-outline-secondary usage-add-btn" data-list="<?= $list ?>" title="Add <?= $listInfo['item'] ?>" aria-label="Add <?= $listInfo['item'] ?>">
+                            <i class="bi bi-plus-lg"></i>
+                          </button>
+                        </div>
+                        <div class="usage-list" id="usage<?= ucfirst($list) ?>List" data-list="<?= $list ?>" data-empty="<?= $listInfo['empty'] ?>"></div>
+                      </div>
+                    <?php endforeach; ?>
+
+                    <div class="usage-form-section">
+                      <label for="usageText" class="usage-form-label">Text</label>
+                      <textarea class="form-control form-control-sm usage-autogrow" id="usageText" rows="10" placeholder="Details (markdown, -- Tab -------- for tabs, &lt;secondary&gt; for a muted part)"></textarea>
+                    </div>
                   </div>
-                  <textarea class="form-control" id="snippetUsage" rows="3" placeholder="Usage..."></textarea>
                   <div id="renderUsage" class="usage-preview"></div>
                 </div>
 
@@ -298,6 +331,17 @@ $fieldPanes = ['usage' => 'Usage', 'content' => 'Content'];
                 </div>
               </div>
             </form>
+
+            <!-- One entry of a usage list (maybe, vars), cloned by UsageFormController -->
+            <template id="usageListRowTpl">
+              <div class="usage-list-row">
+                <input type="text" class="form-control form-control-sm usage-list-name" placeholder="name" aria-label="Name" spellcheck="false">
+                <input type="text" class="form-control form-control-sm usage-list-desc" placeholder="Description" aria-label="Description">
+                <button type="button" class="btn btn-sm usage-list-remove" title="Remove" aria-label="Remove" tabindex="-1">
+                  <i class="bi bi-x-lg"></i>
+                </button>
+              </div>
+            </template>
 
             <!-- Choice menu for placeholders (shown on demand) -->
             <div id="phChoiceMenu" class="dropdown-menu" tabindex="-1"></div>
@@ -496,6 +540,7 @@ $fieldPanes = ['usage' => 'Usage', 'content' => 'Content'];
   <script src="<?= asset_url('lib/functions.js') ?>"></script>
   <script src="<?= asset_url('controllers/file-tree.js') ?>"></script>
   <script src="<?= asset_url('controllers/editor.js') ?>"></script>
+  <script src="<?= asset_url('controllers/usage-form.js') ?>"></script>
   <script src="<?= asset_url('controllers/render.js') ?>"></script>
   <script src="<?= asset_url('controllers/search.js') ?>"></script>
   <script src="<?= asset_url('controller.js') ?>"></script>

@@ -10,7 +10,6 @@ use Symfony\Component\Yaml\Exception\ParseException;
 // A loaded snippet is the parsed YAML plus meta keys that are never written to disk:
 //   _type       'yml' | 'md'
 //   _name       file name without extension
-//   _usageText  the usage block as editable YAML text (yml only)
 class SnippetStore
 {
   // Key order of a written snippet, as documented in the README file format
@@ -74,7 +73,7 @@ class SnippetStore
         if( ! is_array($data) )
           $data = [];
 
-        return array_merge($data, ['_type' => 'yml', '_name' => $name, '_usageText' => $this->usageToText($data['usage'] ?? null)]);
+        return array_merge($data, ['_type' => 'yml', '_name' => $name]);
 
       case 'md':
         return ['_type' => 'md', '_name' => $name, 'content' => file_get_contents($fullPath)];
@@ -117,7 +116,7 @@ class SnippetStore
       return ['_type' => 'md', '_name' => $name, 'content' => $content];
     }
 
-    unset($data['_type'], $data['_name'], $data['_usageText']);
+    unset($data['_type'], $data['_name']);
 
     $ordered = [];
     foreach( self::KEY_ORDER as $key )
@@ -130,7 +129,7 @@ class SnippetStore
 
     $this->writeFile($fullPath, Yaml::dump($data, 4, 2, Yaml::DUMP_MULTI_LINE_LITERAL_BLOCK));
 
-    return array_merge($data, ['_type' => 'yml', '_name' => $name, '_usageText' => $this->usageToText($data['usage'] ?? null)]);
+    return array_merge($data, ['_type' => 'yml', '_name' => $name]);
   }
 
   private function writeFile( string $fullPath, string $content ) : void
@@ -162,31 +161,13 @@ class SnippetStore
     $this->save($targetPath, $snippet, $basePath, true);
   }
 
-  // The editable YAML text for the usage block. Dumped with the same library that parses
-  // it back on save, so values that need quoting (a colon, a newline) survive the trip.
-  private function usageToText( $usage ) : string
-  {
-    if( $usage === null || $usage === '' )
-      return '';
-
-    if( ! is_array($usage) )
-      return (string)$usage;
-
-    $yaml = Yaml::dump($usage, 4, 2, Yaml::DUMP_MULTI_LINE_LITERAL_BLOCK);
-
-    // Blank line between top-level blocks, for readability only; ignored when parsed back.
-    // The trailing newline is kept on purpose: trimming it would chop the final newline
-    // off the last `|` block and quietly shorten that value on every save.
-    return preg_replace('/\n(?=\S)/', "\n\n", $yaml);
-  }
-
-  // The editor posts `usage` back as raw textarea text. A scalar result means the user
-  // typed prose, which the renderer supports; a parse error means the text is broken and
-  // must not be written, or the structured block would be flattened into a string.
+  // The editor posts `usage` structured (one control per field). A string is YAML text:
+  // a scalar result means prose, which the renderer supports; a parse error means the
+  // text is broken and must not be written, or the structured block would be flattened.
   private function parseUsageText( $usage )
   {
     if( ! is_string($usage) )
-      return $usage;                  // already structured (e.g. from duplicate)
+      return $usage;                  // already structured (editor, duplicate)
 
     if( trim($usage) === '' )
       return '';

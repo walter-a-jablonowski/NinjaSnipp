@@ -942,7 +942,7 @@ body {
   max-height: 100%;
 }
 
-#snippetUsage,
+#usageForm,
 #renderUsage {
   flex: 1 1 0;
   min-height: 0;
@@ -982,13 +982,98 @@ body {
   margin-left: 0.5rem;
 }
 
-#fieldShortScRow {
-  flex-shrink: 0;
+/* Usage source view: one control per usage field, scrolls as a whole (textareas grow) */
+.usage-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  overflow-y: auto;
+  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem 0.75rem;
+  background: #fff;
+}
+
+.usage-form-row,
+.usage-form-label-row,
+.usage-list-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 #snippetSc {
   width: 110px;
   flex-shrink: 0;
+}
+
+.usage-form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* Same look as the labels of the rendered usage header */
+.usage-form-label {
+  margin: 0 auto 0 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6c757d;
+}
+
+.usage-form-label-row .btn {
+  padding: 0 0.35rem;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.usage-missing-btn { text-decoration: none; }
+.usage-missing-btn:hover { text-decoration: underline; }
+
+.usage-autogrow {
+  resize: none;
+  overflow: hidden;
+}
+
+.usage-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.usage-list:empty::before {
+  content: attr(data-empty);
+  font-size: 0.8rem;
+  font-style: italic;
+  color: #6c757d;
+}
+
+.usage-list-name {
+  flex: 0 0 35%;
+  max-width: 12rem;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+.usage-list-desc {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.usage-list-remove {
+  padding: 0 0.35rem;
+  border: 0;
+  color: #6c757d;
+}
+
+.usage-list-remove:hover { color: var(--bs-danger); }
+
+/* With a mouse the remove button only shows for the row in use (always there on touch) */
+@media (hover: hover) {
+  .usage-list-remove { opacity: 0; }
+  .usage-list-row:hover .usage-list-remove,
+  .usage-list-row:focus-within .usage-list-remove { opacity: 1; }
 }
 
 /* Default (>= sm): show full brand, hide short brand */

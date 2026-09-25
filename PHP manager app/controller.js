@@ -39,6 +39,7 @@
     // Sub-controllers (each receives `this` as `app`)
     this.tree   = new FileTreeController(this);
     this.editor = new EditorController(this);
+    this.usageForm = new UsageFormController(this);
     this.render = new RenderController(this);
     this.search = new SearchController(this);
 

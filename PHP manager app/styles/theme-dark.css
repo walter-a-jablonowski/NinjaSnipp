@@ -126,6 +126,7 @@
 }
 
 [data-theme="dark"] .usage-preview,
+[data-theme="dark"] .usage-form,
 [data-theme="dark"] #renderUsage {
   background-color: #161f2b !important;
   color: #dfe7ef !important;
@@ -141,7 +142,10 @@
 
 [data-theme="dark"] .usage-meta-id,
 [data-theme="dark"] .usage-meta-sc,
-[data-theme="dark"] .usage-meta-label {
+[data-theme="dark"] .usage-meta-label,
+[data-theme="dark"] .usage-form-label,
+[data-theme="dark"] .usage-list:empty::before,
+[data-theme="dark"] .usage-list-remove {
   color: #9eb0c2 !important;
 }
 
@@ -308,4 +312,13 @@
 
 [data-theme="dark"] .btn-close {
   filter: invert(1) grayscale(100%) brightness(180%);
+}
+
+/* Duplicate names in the usage lists (the form-control rule above would hide the red border) */
+[data-theme="dark"] .usage-list-name.is-invalid {
+  border-color: var(--bs-danger) !important;
+}
+
+[data-theme="dark"] .usage-list-remove:hover {
+  color: var(--bs-danger) !important;
 }

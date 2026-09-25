@@ -18,7 +18,7 @@ class RenderController
     const contentRendered = this.app.fieldViews.content === 'rendered';
 
     const visible = {
-      snippetUsage:    ! usageRendered,
+      usageForm:       ! usageRendered,   // short + sc are only shown here, the rendered view has them in its header
       renderUsage:     usageRendered,
       snippetContent:  ! contentRendered,
       inlineSnippet:   isYaml && contentRendered,
@@ -34,6 +34,7 @@ class RenderController
     this._setViewButton('contentViewBtn', contentRendered);
 
     // Heights are measured from the top of the visible element
+    this.app.usageForm.resize();
     this.app.resizeMdTextarea();
     this.app.resizeInlineSnippet();
   }
@@ -95,7 +96,7 @@ class RenderController
     const off = this.app._lineWrapOff;
 
     // Source and rendered views alike (hidden ones keep the setting for when they are shown)
-    const ids = ['snippetUsage', 'renderUsage', 'snippetContent', 'inlineSnippet', 'markdownPreview'];
+    const ids = ['usageHead', 'usageText', 'renderUsage', 'snippetContent', 'inlineSnippet', 'markdownPreview'];
 
     ids.forEach(id => {
       const el = document.getElementById(id);
@@ -529,31 +530,6 @@ class RenderController
     return this.app.currentSnippet?.content || '';
   }
 
-  _extractContentMaybes(content)
-  {
-    const set = new Set();
-    const re = /\{\{\s*MAYBE:\s*([^}]+?)\s*\}\}/g;
-    let m;
-    while( (m = re.exec(content)) ) set.add(m[1].trim());
-    return set;
-  }
-
-  _extractContentVars(content)
-  {
-    const set = new Set();
-    const re = /\{\{\s*([^}]*)\s*\}\}/g;
-    let m;
-    while( (m = re.exec(content)) ) {
-      const token = m[1].trim();
-      if( /^include:/i.test(token) ) continue;
-      if( /^MAYBE:/i.test(token) ) continue;       // MAYBE block opener, not a var
-      if( /^END-MAYBE$/i.test(token) ) continue;   // MAYBE block closer, not a var
-      const vm = token.match(/^([A-Za-z0-9_.-]+)(?:=.+)?$/);
-      if( vm ) set.add(vm[1]);
-    }
-    return set;
-  }
-
   _buildMissingIndicator(missing, kind)
   {
     if( ! missing.length ) return '';
@@ -577,8 +553,8 @@ class RenderController
     let html = this._buildUsageMetaHtml();
 
     const content       = this._getCurrentContent();
-    const contentMaybes = this._extractContentMaybes(content);
-    const contentVars   = this._extractContentVars(content);
+    const contentMaybes = extractContentMaybes(content);
+    const contentVars   = extractContentVars(content);
 
     if( usage && typeof usage === 'object' ) {
       if( usage.head )      html += `<div class="usage-head">${parseMd(usage.head)}</div>`;

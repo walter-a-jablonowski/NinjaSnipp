@@ -23,7 +23,6 @@ class SnippetStoreTest extends TestCase
     $this->assertSame('x', $snippet['_name']);
     $this->assertSame('Hi {{ name }}', $snippet['content']);
     $this->assertSame(['vars' => ['name' => 'The name']], $snippet['usage']);
-    $this->assertSame("vars:\n  name: 'The name'\n", $snippet['_usageText']);
   }
 
   public function testLoadMd() : void
@@ -52,7 +51,7 @@ class SnippetStoreTest extends TestCase
     $this->write('a/notes.txt', 'x');
     $snippets = $this->manager()->snippets;
 
-    $this->assertSame('', $snippets->load('empty.yml')['_usageText']);
+    $this->assertSame(['_type' => 'yml', '_name' => 'empty'], $snippets->load('empty.yml'));
     $this->assertNull($snippets->load('broken.yml'));
     $this->assertSame('yml', $snippets->load('meta.yml')['_type']);     // meta keys are never taken from the file
     $this->assertNull($snippets->load('notes.txt'));
@@ -65,24 +64,23 @@ class SnippetStoreTest extends TestCase
   public function testSaveWritesKeysInDocumentedOrderWithoutMetaKeys() : void
   {
     $saved = $this->manager()->snippets->save('x.yml', $this->yml([
-      'content' => "line 1\nline 2\n", 'custom' => 1, 'usage' => "head: Hi\n", 'sc' => 'x', 'id' => '7', '_usageText' => 'ignored'
+      'content' => "line 1\nline 2\n", 'custom' => 1, 'usage' => "head: Hi\n", 'sc' => 'x', 'id' => '7'
     ]));
 
     $this->assertSame(['id', 'sc', 'usage', 'content', 'custom'], array_keys(Yaml::parse($this->read('a/x.yml'))));
     $this->assertStringContainsString("content: |\n  line 1\n  line 2\n", $this->read('a/x.yml'));
     $this->assertSame(['head' => 'Hi'], $saved['usage']);
-    $this->assertSame("head: Hi\n", $saved['_usageText']);
     $this->assertSame('x', $saved['_name']);
   }
 
-  public function testUsageTextSurvivesRoundTrip() : void
+  // The editor posts usage structured, as it came with the loaded snippet
+  public function testStructuredUsageSurvivesRoundTrip() : void
   {
-    $usage = ['head' => "Some text\nwith: colon\n", 'vars' => ['name' => 'A: b'], 'text' => "Last\n"];
+    $usage = ['head' => "Some text\nwith: colon\n", 'maybe' => ['opt' => ''], 'vars' => ['name' => 'A: b'], 'text' => "Last\n", 'custom' => 'kept'];
     $this->write('a/x.yml', Yaml::dump(['usage' => $usage, 'content' => 'c']));
     $snippets = $this->manager()->snippets;
 
-    $loaded = $snippets->load('x.yml');
-    $snippets->save('x.yml', array_merge($loaded, ['usage' => $loaded['_usageText']]));
+    $snippets->save('x.yml', $snippets->load('x.yml'));
 
     $this->assertSame($usage, $snippets->load('x.yml')['usage']);
   }

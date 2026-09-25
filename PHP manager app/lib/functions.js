@@ -126,3 +126,30 @@ function timeAgo(timestamp)
   if( hours < 24 )   return `${hours}h ago`;
   return `${days}d ago`;
 }
+
+// Names of the MAYBE areas used in a snippet's content ({{ MAYBE: name }})
+function extractContentMaybes(content)
+{
+  const set = new Set();
+  const re = /\{\{\s*MAYBE:\s*([^}]+?)\s*\}\}/g;
+  let m;
+  while( (m = re.exec(content)) ) set.add(m[1].trim());
+  return set;
+}
+
+// Names of the placeholders used in a snippet's content ({{ name }}, {{ name=default }})
+function extractContentVars(content)
+{
+  const set = new Set();
+  const re = /\{\{\s*([^}]*)\s*\}\}/g;
+  let m;
+  while( (m = re.exec(content)) ) {
+    const token = m[1].trim();
+    if( /^include:/i.test(token) ) continue;
+    if( /^MAYBE:/i.test(token) ) continue;       // MAYBE block opener, not a var
+    if( /^END-MAYBE$/i.test(token) ) continue;   // MAYBE block closer, not a var
+    const vm = token.match(/^([A-Za-z0-9_.-]+)(?:=.+)?$/);
+    if( vm ) set.add(vm[1]);
+  }
+  return set;
+}

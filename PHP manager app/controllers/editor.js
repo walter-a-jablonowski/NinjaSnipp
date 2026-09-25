@@ -55,9 +55,6 @@ class EditorController
   {
     const editEmptyState = document.getElementById('editEmptyState');
     const editForm = document.getElementById('editForm');
-    const snippetSc = document.getElementById('snippetSc');
-    const snippetShort = document.getElementById('snippetShort');
-    const snippetUsage = document.getElementById('snippetUsage');
     const snippetContent = document.getElementById('snippetContent');
 
     if( ! editForm || ! snippetContent ) return;
@@ -66,12 +63,8 @@ class EditorController
 
     snippetContent.value = snippet.content || '';
 
-    if( isYaml ) {
-      if( snippetSc )    snippetSc.value    = snippet.sc    || '';
-      if( snippetShort ) snippetShort.value = snippet.short || '';
-      // The server dumps usage to YAML text with the same library that parses it back
-      if( snippetUsage ) snippetUsage.value = snippet._usageText || '';
-    }
+    if( isYaml )
+      this.app.usageForm.fill(snippet);
 
     editForm.dataset.type = snippet._type;   // CSS hides the usage column (+ its header, content label) for md
 
@@ -124,12 +117,8 @@ class EditorController
     // Spread all current fields so non-editable keys (short, id, version, ...) are preserved
     const data = { ...this.app.currentSnippet, content: contentInput.value };
 
-    if( this.app.currentSnippet._type === 'yml' ) {
-      data.sc    = document.getElementById('snippetSc')?.value.trim()    || '';
-      data.short = document.getElementById('snippetShort')?.value.trim() || '';
-      // Not trimmed: the trailing newline belongs to the last `|` block in the usage YAML
-      data.usage = document.getElementById('snippetUsage')?.value ?? '';
-    }
+    if( this.app.currentSnippet._type === 'yml' )
+      Object.assign( data, this.app.usageForm.read());   // short, sc, usage
 
     const extension = this.app.currentSnippet._type === 'yml' ? 'yml' : 'md';
     const path = (this.app.currentPath ? this.app.currentPath + '/' : '') + data._name + '.' + extension;
@@ -156,8 +145,7 @@ class EditorController
     if( result.success ) {
       if( ! silent ) showSuccess('Snippet saved successfully');
       this.setAutosaveStatus(null);
-      // Adopt the server's normalized copy so `usage` stays a parsed object; keeping the
-      // raw textarea text would make the usage preview fall back to rendering plain YAML
+      // Adopt the server's copy, it is what the file holds now
       this.app.currentSnippet = result.snippet || data;
 
       // Autosave changes neither the file list nor a visible preview (it only fires from
@@ -201,15 +189,14 @@ class EditorController
   bindAutosaveHandlers()
   {
     if( this.app._autosaveBound ) return;
-    const scEl      = document.getElementById('snippetSc');
-    const shortEl   = document.getElementById('snippetShort');
-    const usageEl   = document.getElementById('snippetUsage');
+    // The usage form as a whole (short, sc and all usage controls, rows come and go)
+    const usageEl   = document.getElementById('usageForm');
     const contentEl = document.getElementById('snippetContent');
     const handler = () => this.onEditFieldChanged();
-    [scEl, shortEl, usageEl, contentEl].forEach(el => {
+    [usageEl, contentEl].forEach(el => {
       if( el ) {
         el.addEventListener('input', handler);
-        el.addEventListener('blur', handler);
+        el.addEventListener('focusout', handler);
       }
     });
     this.app._autosaveBound = true;
@@ -444,11 +431,8 @@ class EditorController
     if( editEmptyState && editForm ) {
       editForm.style.display = 'none';
       editEmptyState.style.display = 'block';
-      const inputs = ['snippetSc', 'snippetShort', 'snippetUsage', 'snippetContent'];
-      inputs.forEach(id => {
-        const input = document.getElementById(id);
-        if( input ) input.value = '';
-      });
+      document.getElementById('snippetContent').value = '';
+      this.app.usageForm.clear();
     }
 
     const fieldContent = document.getElementById('fieldContent');
