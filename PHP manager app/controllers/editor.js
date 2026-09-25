@@ -109,8 +109,9 @@ class EditorController
 
     const contentInput = document.getElementById('snippetContent');
 
+    // Autosave runs while the content is being retyped, so this is the common failure
     if( ! contentInput.value.trim() ) {
-      showError('Content is required');
+      this.reportSaveFailure( 'Content is required', silent);
       return;
     }
 
@@ -157,19 +158,21 @@ class EditorController
           this.app.render.composeAndRenderInline();
       }
     }
-    else if( silent ) {
-      // Autosave: the file keeps its last good content. Toast once when saving starts
-      // failing - repeating it every debounce would spam while a usage block is mid-edit
-      // and briefly unparsable - and leave a standing badge until a save succeeds.
-      if( ! this.app._autosaveFailed )
-        showError('Autosave paused: ' + result.message);
+    else
+      this.reportSaveFailure( result.message, silent);
+  }
 
-      this.setAutosaveStatus(result.message);
-    }
-    else {
-      showError('Failed to save snippet: ' + result.message);
-      this.setAutosaveStatus(result.message);
-    }
+  // The file keeps its last good content. Autosave toasts only when saving starts failing -
+  // it retries on every debounce and focus change, repeating the toast each time would spam -
+  // and leaves the standing badge until a save succeeds.
+  reportSaveFailure( message, silent )
+  {
+    if( ! silent )
+      showError(`Failed to save snippet: ${message}`);
+    else if( ! this.app._autosaveFailed )
+      showError(`Autosave paused: ${message}`);
+
+    this.setAutosaveStatus(message);
   }
 
   // Standing "Not saved" badge next to the file actions. Kept out of the toast flow so it can

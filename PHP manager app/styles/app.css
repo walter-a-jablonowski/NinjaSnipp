@@ -1102,12 +1102,23 @@ body {
 }
 
 /* Success/Error messages */
-.alert-floating {
+/* Alerts stack below each other instead of covering one another */
+.alert-stack {
   position: fixed;
   top: 70px;
   right: 20px;
   z-index: 1060;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+  max-width: calc(100vw - 40px);
+}
+
+.alert-floating {
   min-width: 300px;
+  max-width: 100%;
+  margin: 0;
   box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
 }
 

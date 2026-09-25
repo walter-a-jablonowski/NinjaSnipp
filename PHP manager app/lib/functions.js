@@ -51,17 +51,27 @@ function showError(message)
   showAlert(message, 'danger');
 }
 
+// Alerts stack in #alertStack (upper right). The same message while it is still up only
+// restarts its timer: a repeated action (copy, save, ...) would otherwise pile up copies.
 function showAlert(message, type)
 {
-  const alertEl = document.createElement('div');
-  alertEl.className = `alert alert-${type} alert-floating alert-dismissible fade show`;
-  alertEl.setAttribute('role', 'alert');
-  alertEl.innerHTML = `${escapeHtml(message)}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
-  document.body.appendChild(alertEl);
+  const stack = document.getElementById('alertStack');
+  let alertEl = [...stack.children].find(el => el.dataset.type === type && el.dataset.message === message);
+
+  if( ! alertEl ) {
+    alertEl = document.createElement('div');
+    alertEl.className = `alert alert-${type} alert-floating alert-dismissible fade show`;
+    alertEl.setAttribute('role', 'alert');
+    alertEl.dataset.type    = type;
+    alertEl.dataset.message = message;
+    alertEl.innerHTML = `${escapeHtml(message)}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+    stack.appendChild(alertEl);
+  }
 
   // Close this alert. Looking it up by class would close whichever one happens to be
   // first in the DOM, so dismissing one by hand could leave a later one up forever.
-  setTimeout(() => {
+  clearTimeout(alertEl._closeTimer);
+  alertEl._closeTimer = setTimeout(() => {
     if( ! alertEl.isConnected ) return;
     try {
       bootstrap.Alert.getOrCreateInstance(alertEl).close();

@@ -534,6 +534,9 @@ $usageLists = [
     </div>
   </div>
 
+  <!-- Alerts (see showAlert() in lib/functions.js) -->
+  <div id="alertStack" class="alert-stack" aria-live="polite"></div>
+
   <script>const APP_DEBUG = <?= json_encode($debug) ?>; const APP_SPECIAL = <?= json_encode((bool)($appConfig['special'] ?? false)) ?>; const APP_INITIAL_THEME = <?= json_encode($initialTheme) ?>;</script>
   <script src="<?= asset_url('lib/ext/bootstrap.bundle.min.js') ?>"></script>
   <script src="<?= asset_url('lib/ext/marked.min.js') ?>"></script>
