@@ -810,7 +810,7 @@ class RenderController
       return indent + line.slice(indent.length).replace(/[ \t]{2,}/g, ' ').trim();
     };
 
-    const lines = block.split('\n').map(squeeze).filter(line => line !== '');
+    const lines = block.split('\n').map(squeeze).filter(line => line.trim() !== '');   // squeeze keeps the indent of blank lines
     const out = [];
 
     lines.forEach(line => {

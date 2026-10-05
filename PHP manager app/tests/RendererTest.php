@@ -43,6 +43,17 @@ class RendererTest extends TestCase
     ], $placeholders);
   }
 
+  // The front-end has its own copy of this parser (extractContentVars in lib/functions.js),
+  // tests/js/functions.test.js runs the same cases against it
+  public function testExtractPlaceholdersSharedCases() : void
+  {
+    $renderer = $this->manager()->renderer;
+    $cases    = json_decode( file_get_contents(__DIR__ . '/fixtures/placeholders.json'), true);
+
+    foreach( $cases as $case )
+      $this->assertSame( $case['placeholders'], $renderer->extractPlaceholders($case['content']), $case['description']);
+  }
+
   public function testMaybeBlocks() : void
   {
     $content = "Start\n  {{ MAYBE: Extra }}\n  optional\n  {{ END-MAYBE }}\nEnd";

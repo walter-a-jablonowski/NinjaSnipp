@@ -1,0 +1,76 @@
+[
+  {
+    "description": "simple, default and choice placeholders",
+    "content": "Hi {{ name }}, {{ method=GET | POST }} {{path=/x}}",
+    "placeholders": {
+      "name":   { "type": "text", "default": "" },
+      "method": { "type": "choice", "choices": ["GET", "POST"], "default": "GET" },
+      "path":   { "type": "text", "default": "/x" }
+    }
+  },
+  {
+    "description": "names may contain dots, dashes and underscores",
+    "content": "{{ user.name }} {{ api-key }} {{ v_2 }}",
+    "placeholders": {
+      "user.name": { "type": "text", "default": "" },
+      "api-key":   { "type": "text", "default": "" },
+      "v_2":       { "type": "text", "default": "" }
+    }
+  },
+  {
+    "description": "a default may contain spaces and = signs",
+    "content": "{{ q=a = b }}",
+    "placeholders": {
+      "q": { "type": "text", "default": "a = b" }
+    }
+  },
+  {
+    "description": "a choice may have an empty option",
+    "content": "{{ sep=|, }}",
+    "placeholders": {
+      "sep": { "type": "choice", "choices": ["", ","], "default": "" }
+    }
+  },
+  {
+    "description": "order of first use, a later default wins",
+    "content": "{{ b }} {{ a }} {{ b=x }}",
+    "placeholders": {
+      "b": { "type": "text", "default": "x" },
+      "a": { "type": "text", "default": "" }
+    }
+  },
+  {
+    "description": "tabs and line breaks around the token",
+    "content": "{{\tname\t}}{{a}}{{ c=1\n}}",
+    "placeholders": {
+      "name": { "type": "text", "default": "" },
+      "a":    { "type": "text", "default": "" },
+      "c":    { "type": "text", "default": "1" }
+    }
+  },
+  {
+    "description": "block syntax is no placeholder",
+    "content": "{{ MAYBE: Extra }}x{{ END-MAYBE }}{{ include: \"y\" }}",
+    "placeholders": {}
+  },
+  {
+    "description": "block syntax is case-insensitive",
+    "content": "{{ maybe: a }}x{{ end-maybe }}{{ INCLUDE: 'y' }}",
+    "placeholders": {}
+  },
+  {
+    "description": "invalid names and empty defaults",
+    "content": "{{ not a placeholder! }} {{ näme }} {{ x= }} {{ }}",
+    "placeholders": {}
+  },
+  {
+    "description": "a default can't span lines",
+    "content": "{{ a=x\ny }}",
+    "placeholders": {}
+  },
+  {
+    "description": "unclosed and nested braces",
+    "content": "{{ a } {{ {{ b }} }}",
+    "placeholders": {}
+  }
+]

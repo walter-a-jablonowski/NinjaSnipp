@@ -20,7 +20,8 @@
     }
   },
   "scripts": {
-    "test": "phpunit"
+    "test": "phpunit",
+    "test:js": "node --test \"tests/js/*.test.js\""
   },
   "config": {
     "optimize-autoloader": true

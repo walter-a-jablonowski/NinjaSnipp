@@ -183,6 +183,8 @@ lib/Search.php           full-text search
 lib/Renderer.php         includes, MAYBE blocks, placeholders
 lib/UserStore.php        per-user settings and lists
 tests/                   PHPUnit tests
+tests/js/                JS tests (Node test runner)
+tests/fixtures/          test cases shared by both
 ```
 
 A handler returns the response array and reports a failure by throwing `RuntimeException` with a user-facing message; `ajax.php` turns it into `{success: false, message}`.
@@ -191,7 +193,10 @@ A handler returns the response array and reports a failure by throwing `RuntimeE
 
 ```
 composer install
-composer test
+composer test        # PHP
+composer test:js     # JS, needs Node 22+ (no npm packages)
 ```
 
-Every test runs on a fresh temporary data set with two sources, so no real data is touched.
+Every PHP test runs on a fresh temporary data set with two sources, so no real data is touched.
+
+The JS tests cover the front-end logic that has no DOM dependency: placeholder parsing, the inline snippet view, copy output, tree state and drag & drop renumbering. `tests/js/load.js` runs the browser scripts unchanged. The placeholder cases in `tests/fixtures/placeholders.json` run against both the PHP and the JS parser, so the two stay in sync.

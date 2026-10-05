@@ -647,16 +647,52 @@ class FileTreeController
     this.handleDragEnd();
   }
 
-  // Computes the new sibling order, renumbers ordinal prefixes, and persists via batchRename.
-  // Only items that already have a 2-digit prefix (or the dragged item) get renamed; unprefixed
-  // bystanders are left untouched (they sort after the numbered ones).
+  // Persists a drag & drop reorder of one tree level (see planReorder) via batchRename
   async _applyReorder(parentPath, draggedPath, targetPath, position)
   {
     const siblings = this._siblingsOf(parentPath);
     if( ! siblings ) return;
 
+    const plan = this.planReorder(siblings, parentPath, draggedPath, targetPath, position);
+    if( ! plan || ! plan.ops.length ) return;
+
+    const { ops, folderRenames, draggedFilePath } = plan;
+
+    const res = await apiCall(this.app.currentDataPath, 'batchRename', { subPath: parentPath, ops });
+    if( ! (res && res.success) ) {
+      showError('Failed to reorder: ' + (res?.message || 'Unknown error'));
+      return;
+    }
+
+    // Keep expansion + selection sensible after on-disk names changed
+    this._remapPaths(folderRenames);
+    const dir = parentPath ? parentPath + '/' : '';
+    ops.filter(op => op.type === 'file')
+       .forEach(op => this.app.editor.followRename(dir + op.oldName, dir + op.newName, 'file', [op.base]));
+    if( parentPath ) this.app.expandedFolders.add(parentPath);
+    await this.app.loadFiles();
+
+    if( draggedFilePath ) {
+      const el = treeItemByPath(draggedFilePath);
+      if( el ) {
+        document.querySelectorAll('.tree-item.active, .file-item.active').forEach(n => n.classList.remove('active'));
+        el.classList.add('active');
+      }
+    }
+  }
+
+  // Computes the new sibling order and renumbers the ordinal prefixes. Only items that already
+  // have a 2-digit prefix (or the dragged item) get renamed; unprefixed bystanders are left
+  // untouched (they sort after the numbered ones). Pure, so it can be unit tested.
+  //
+  // Returns null if the dragged item can't be moved, else
+  //   ops              batchRename operations [{ base, oldName, newName, type }]
+  //   folderRenames    old virtual path => new virtual path of renumbered folders
+  //   draggedFilePath  new tree path of the dragged item if it is a file (to keep it selected)
+  planReorder(siblings, parentPath, draggedPath, targetPath, position)
+  {
     const dragged = siblings.find(n => n.path === draggedPath);
-    if( ! dragged || dragged.isIncluded ) return;
+    if( ! dragged || dragged.isIncluded ) return null;
 
     const order = siblings.filter(n => n.path !== draggedPath);
     const ti    = order.findIndex(n => n.path === targetPath);
@@ -666,6 +702,7 @@ class FileTreeController
     const prefixRe   = /^\d{2}[ _.\-]/;
     const stripRe    = /^\d{2}[ _.\-]+/;
     const fsNameOf   = n => n.type === 'folder' ? n.name : `${n.name}.${n.extension}`;
+    const dir        = parentPath ? parentPath + '/' : '';
 
     const ops            = [];
     const folderRenames  = {};   // oldVirtual -> newVirtual (for expanded-folder/current-path remap)
@@ -682,8 +719,7 @@ class FileTreeController
 
       // newFsName is the on-disk name and also the last segment of the virtual path
       // (file paths include the extension, folder paths don't)
-      const newVirtual = (parentPath ? parentPath + '/' : '') + newFsName;
-      if( node === dragged ) draggedNewPath = newVirtual;
+      if( node === dragged ) draggedNewPath = dir + newFsName;
 
       if( newFsName === fsName ) return;
 
@@ -693,35 +729,11 @@ class FileTreeController
 
       bases.forEach(b => { if( b ) ops.push({ base: b, oldName: fsName, newName: newFsName, type: node.type }); });
 
-      if( node.type === 'folder' ) {
-        const oldVirtual = (parentPath ? parentPath + '/' : '') + node.name;
-        folderRenames[oldVirtual] = (parentPath ? parentPath + '/' : '') + newFsName;
-      }
+      if( node.type === 'folder' )
+        folderRenames[dir + node.name] = dir + newFsName;
     });
 
-    if( ! ops.length ) return;
-
-    const res = await apiCall(this.app.currentDataPath, 'batchRename', { subPath: parentPath, ops });
-    if( ! (res && res.success) ) {
-      showError('Failed to reorder: ' + (res?.message || 'Unknown error'));
-      return;
-    }
-
-    // Keep expansion + selection sensible after on-disk names changed
-    this._remapPaths(folderRenames);
-    const dir = parentPath ? parentPath + '/' : '';
-    ops.filter(op => op.type === 'file')
-       .forEach(op => this.app.editor.followRename(dir + op.oldName, dir + op.newName, 'file', [op.base]));
-    if( parentPath ) this.app.expandedFolders.add(parentPath);
-    await this.app.loadFiles();
-
-    if( dragged.type === 'file' && draggedNewPath ) {
-      const el = treeItemByPath(draggedNewPath);
-      if( el ) {
-        document.querySelectorAll('.tree-item.active, .file-item.active').forEach(n => n.classList.remove('active'));
-        el.classList.add('active');
-      }
-    }
+    return { ops, folderRenames, draggedFilePath: dragged.type === 'file' ? draggedNewPath : null };
   }
 
   // Rewrites stored virtual paths (expanded folders + current path) after folders were renumbered
