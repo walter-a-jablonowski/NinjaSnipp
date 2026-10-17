@@ -11,13 +11,19 @@ namespace SnippetManager;
 // render() resolves everything to plain text.
 class Renderer
 {
+  // An include stands on a line of its own; the indent is kept for includedSameIndent
+  private const INCLUDE_PATTERN = '/^(\s*)\{\{\s*include:\s*["\']([^"\']+)["\']\s*\}\}/m';
+  // Mirrored by extractContentMaybes() in lib/functions.js (case-sensitive like there)
+  private const MAYBE_NAME_PATTERN = '/\{\{\s*MAYBE:\s*([^}]+?)\s*\}\}/';
+
   private Sources $sources;
   private FileTree $tree;
   private SnippetStore $snippets;
   private bool $includedSameIndent;
   private bool $highlightInclude;
-  private array $byName = [];         // "dataSet\0name" => snippet|null, per request
+  private array $byName = [];         // "dataSet\0name" => ['path', 'snippet']|null, per request
   private array $includeStack = [];   // snippets being included right now (cycle guard)
+  private array $maybeOff = [];       // MAYBE names render() leaves out
 
   public function __construct( Sources $sources, FileTree $tree, SnippetStore $snippets, array $renderSettings )
   {
@@ -36,18 +42,22 @@ class Renderer
       return '';
 
     $this->includeStack = [];
-    return $this->processIncludes((string)$snippet['content'], true);
+    $this->maybeOff     = [];
+    return $this->process((string)$snippet['content'], true);
   }
 
   // Plain text: includes and MAYBE blocks resolved, placeholders filled from $values
-  // or their defaults (the first choice for choice placeholders)
-  public function render( array $snippet, array $values = [] ) : string
+  // or their defaults (the first choice for choice placeholders). A MAYBE block is kept
+  // unless its name is in $maybeOff, in included snippets too - as in the preview, where
+  // a switch sets every block of that name.
+  public function render( array $snippet, array $values = [], array $maybeOff = [] ) : string
   {
     if( ! isset($snippet['content']) )
       return '';
 
     $this->includeStack = [];
-    $content = $this->processIncludes((string)$snippet['content'], false);
+    $this->maybeOff     = $maybeOff;
+    $content = $this->process((string)$snippet['content'], false);
 
     return preg_replace_callback('/\{\{\s*([^}]*)\s*\}\}/', function( $matches ) use ( $values ) {
 
@@ -82,6 +92,54 @@ class Renderer
     return $placeholders;
   }
 
+  // What the preview form offers for a snippet, its includes counted in:
+  // ['placeholders' => name => spec, 'maybes' => [name, ...]]
+  public function formNames( array $snippet ) : array
+  {
+    $composed = $this->compose($snippet);
+    preg_match_all('/<<<MAYBE:START:([^>]+)>>>/', $composed, $matches);
+
+    return [
+      'placeholders' => $this->extractPlaceholders($composed),
+      'maybes'       => array_values( array_unique($matches[1]))
+    ];
+  }
+
+  // Names of the MAYBE blocks, in order of first use
+  public function extractMaybes( string $content ) : array
+  {
+    preg_match_all(self::MAYBE_NAME_PATTERN, $content, $matches);
+    return array_values( array_unique( array_map('trim', $matches[1])));
+  }
+
+  // Names of the snippets the content includes, in order of first use
+  public function includeNames( string $content ) : array
+  {
+    preg_match_all(self::INCLUDE_PATTERN, $content, $matches);
+    return array_values( array_unique($matches[2]));
+  }
+
+  // The snippets that include the one called $name: ['path' => fsPath, 'basePath' => ?string]
+  public function includedBy( string $name ) : array
+  {
+    $found = [];
+
+    $this->tree->walk( function( array $item, string $fsPath ) use ( $name, &$found ) {
+
+      // A link's basePath is the source holding the marker, not the target (see Search)
+      $base = empty($item['isIncluded']) ? ($item['basePath'] ?? null) : null;
+
+      if( $item['type'] !== 'file' || isset($found["$base\0$fsPath"]) )
+        return;
+
+      $snippet = $this->snippets->load($fsPath, $base);
+      if( $snippet && in_array($name, $this->includeNames( (string)($snippet['content'] ?? '')), true) )
+        $found["$base\0$fsPath"] = ['path' => $fsPath, 'basePath' => $base];
+    });
+
+    return array_values($found);
+  }
+
   // Returns [name, spec|null] for a placeholder token, spec null when it has no default;
   // null for anything else (block syntax, malformed tokens)
   private function parsePlaceholder( string $raw ) : ?array
@@ -105,22 +163,28 @@ class Renderer
     return [$m[1], ['type' => 'choice', 'choices' => $choices, 'default' => $choices[0] ?? '']];
   }
 
-  private function processIncludes( string $content, bool $forInline ) : string
+  // Includes first, MAYBE blocks after (process()): an include is found by its place at the
+  // start of a line, and an inline MAYBE marker takes the line break of its END line - an
+  // include right below a block, or as its first line, would no longer be found
+  private function process( string $content, bool $forInline ) : string
   {
-    $content = $this->processMaybeBlocks($content, $forInline);
+    return $this->processMaybeBlocks( $this->resolveIncludes($content, $forInline), $forInline);
+  }
 
-    return preg_replace_callback('/^(\s*)\{\{\s*include:\s*["\']([^"\']+)["\']\s*\}\}/m', function( $matches ) use ( $forInline ) {
+  private function resolveIncludes( string $content, bool $forInline ) : string
+  {
+    return preg_replace_callback(self::INCLUDE_PATTERN, function( $matches ) use ( $forInline ) {
 
       [$line, $indent, $name] = $matches;
 
       // A snippet including itself (directly or through a chain) would recurse forever;
       // the marker stays in place instead, so the cycle is visible in the output
-      $snippet = $this->findByName($name);
+      $snippet = $this->findInclude($name)['snippet'] ?? null;
       if( ! $snippet || in_array($name, $this->includeStack, true) )
         return $line;
 
       $this->includeStack[] = $name;
-      $included = $this->processIncludes((string)($snippet['content'] ?? ''), $forInline);
+      $included = $this->resolveIncludes((string)($snippet['content'] ?? ''), $forInline);
       array_pop($this->includeStack);
 
       if( $this->includedSameIndent )
@@ -142,6 +206,9 @@ class Renderer
     return preg_replace_callback($pattern, function( $matches ) use ( $forInline ) {
 
       $name  = trim($matches[1]);
+      if( ! $forInline && in_array($name, $this->maybeOff, true) )
+        return '';                                        // the whole block, tag lines included
+
       $block = rtrim( ltrim($matches[2], "\n"), "\n ");   // no extra blank lines from the block
       $block = $this->processMaybeBlocks($block, $forInline);
 
@@ -151,9 +218,10 @@ class Renderer
     }, $content);
   }
 
-  // First snippet with this name in tree order. A snippet is usually included many times
-  // over and each lookup walks the tree, so results are kept for the request.
-  private function findByName( string $name ) : ?array
+  // The snippet an include of $name resolves to, ['path' => fsPath, 'snippet'], or null:
+  // the first snippet with this name in tree order. A snippet is usually included many
+  // times over and each lookup walks the tree, so results are kept for the request.
+  public function findInclude( string $name ) : ?array
   {
     $key = $this->sources->getCurrentLabel() . "\0$name";
 
@@ -163,7 +231,8 @@ class Renderer
       $this->tree->walk( function( array $item, string $fsPath ) use ( $name, &$found ) {
         if( $item['type'] !== 'file' || $item['name'] !== $name )
           return false;
-        $found = $this->snippets->load($fsPath);   // a broken file must not end the search
+        $snippet = $this->snippets->load($fsPath);   // a broken file must not end the search
+        $found   = $snippet !== null ? ['path' => $fsPath, 'snippet' => $snippet] : null;
         return $found !== null;
       });
       $this->byName[$key] = $found;

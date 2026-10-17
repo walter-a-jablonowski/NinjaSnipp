@@ -1,0 +1,17 @@
+[
+  {
+    "description": "names in order of first use, once each; the pattern is case-sensitive",
+    "content": "{{ MAYBE: Extra info }}a{{ END-MAYBE }} {{maybe:Second}}b{{ end-maybe }} {{ MAYBE: Extra info }}",
+    "maybes": ["Extra info"]
+  },
+  {
+    "description": "placeholders, END-MAYBE and includes are no MAYBE names",
+    "content": "{{ name }} {{ END-MAYBE }} {{ include: \"x\" }}",
+    "maybes": []
+  },
+  {
+    "description": "nested blocks, spaces around the name",
+    "content": "{{MAYBE:Outer}}\n  {{ MAYBE:   Inner   }}\n  x\n  {{ END-MAYBE }}\n{{ END-MAYBE }}",
+    "maybes": ["Outer", "Inner"]
+  }
+]

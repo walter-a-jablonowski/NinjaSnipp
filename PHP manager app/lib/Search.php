@@ -46,7 +46,7 @@ class Search
 
   private function matches( array $snippet, string $query ) : bool
   {
-    foreach( ['_name', 'sc', 'usage', 'content'] as $field )
+    foreach( ['_name', 'sc', 'short', 'usage', 'content'] as $field )
       if( strpos($this->text($snippet[$field] ?? ''), $query) !== false )
         return true;
 

@@ -94,5 +94,50 @@ class RendererTest extends TestCase
     $this->write('a/2/part.yml', 'content: ok');
 
     $this->assertSame('ok', $this->render('{{ include: "part" }}'));
+    $this->assertSame('2/part.yml', $this->manager()->renderer->findInclude('part')['path']);
+  }
+
+  public function testIncludeNextToAMaybeBlockInline() : void
+  {
+    $this->write('a/style.yml', 'content: STYLE');
+
+    $this->assertSame('<<<MAYBE:START:X>>>more<<<MAYBE:END>>>STYLE',
+      $this->compose("{{ MAYBE: X }}\nmore\n{{ END-MAYBE }}\n{{ include: \"style\" }}"));
+    $this->assertSame('<<<MAYBE:START:X>>>STYLE<<<MAYBE:END>>>',
+      $this->compose("{{ MAYBE: X }}\n{{ include: \"style\" }}\n{{ END-MAYBE }}\n"));
+  }
+
+  public function testMaybeBlocksLeftOut() : void
+  {
+    $this->write('a/footer.yml', "content: |\n  {{ MAYBE: Extra }}\n  footer extra\n  {{ END-MAYBE }}\n  footer\n");
+    $content  = "Start\n{{ MAYBE: Extra }}\noptional\n{{ END-MAYBE }}\n{{ MAYBE: Other }}\nother\n{{ END-MAYBE }}\n{{ include: \"footer\" }}";
+    $renderer = $this->manager()->renderer;
+
+    $this->assertSame("Start\nother\nfooter", $renderer->render(['content' => $content], [], ['Extra']));
+    $this->assertSame("Start\noptional\nother\nfooter extra\nfooter", $renderer->render(['content' => $content]));
+  }
+
+  public function testExtractMaybesSharedCases() : void
+  {
+    $renderer = $this->manager()->renderer;
+    $cases    = json_decode( file_get_contents(__DIR__ . '/fixtures/maybes.json'), true);
+
+    foreach( $cases as $case )
+      $this->assertSame( $case['maybes'], $renderer->extractMaybes($case['content']), $case['description']);
+  }
+
+  public function testIncludeNamesAndIncludedBy() : void
+  {
+    $this->write('a/style.yml', 'content: style');
+    $this->write('a/post.yml', "content: |\n  post\n  {{ include: \"style\" }}\n  {{ include: 'style' }}\n");
+    $this->write('b/sub/mail.yml', "content: |\n  {{ include: \"style\" }}\n  {{ include: \"sign\" }}\n");
+    $this->write('a/other.yml', 'content: "inline {{ include: \"style\" }} is no include"');
+    $renderer = $this->manager()->renderer;
+
+    $this->assertSame(['style', 'sign'], $renderer->includeNames("{{ include: \"style\" }}\n  {{ include: 'sign' }}\n{{ include: \"style\" }}"));
+    $this->assertSame(
+      [['path' => 'post.yml', 'basePath' => $this->a], ['path' => 'sub/mail.yml', 'basePath' => $this->b]],
+      $renderer->includedBy('style')
+    );
   }
 }

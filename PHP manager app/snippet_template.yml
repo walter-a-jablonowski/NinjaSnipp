@@ -1,0 +1,53 @@
+id:      "YYYY-MM-DD.01-V1"
+version: 3
+sc:      ""
+short:   ""
+usage:
+  head: |
+    [Why/when use this prompt?]
+
+    - [Main Feature]
+
+    Token usage: ?
+  maybe:
+    myVar:
+  vars:
+    myVar:
+  text: |
+
+    ### Usage
+
+    -
+
+    ### Limitations
+
+    -
+
+    <secondary>
+
+    ### Features details
+
+    -
+
+    ### Prompt output handling
+
+    -
+
+    -- Tasks (color: red) --------
+
+    -- Dev --------
+
+    ### How it works
+
+    -
+
+    ### Made with
+
+    LLM:
+
+    >
+
+    ### Changelog
+
+    - 1.0:
+content: |

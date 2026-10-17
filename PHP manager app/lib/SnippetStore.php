@@ -15,6 +15,9 @@ class SnippetStore
   // Key order of a written snippet, as documented in the README file format
   private const KEY_ORDER = ['id', 'version', 'sc', 'short', 'usage', 'content'];
 
+  // A new yml snippet starts from this file; its version is the current file format
+  public const TEMPLATE = __DIR__ . '/../snippet_template.yml';
+
   private Sources $sources;
   private ColorStore $colors;
 
@@ -132,6 +135,74 @@ class SnippetStore
     return array_merge($data, ['_type' => 'yml', '_name' => $name]);
   }
 
+  // A new snippet, never written over an existing file. A yml one is the template with a
+  // new id and $fields on top: a top-level field replaces the template's, a usage field
+  // only that usage field. An md one is just its content.
+  public function create( string $path, array $fields = [], ?string $targetBasePath = null ) : array
+  {
+    $type = pathinfo($path, PATHINFO_EXTENSION);
+    $data = $fields;
+
+    if( $type === 'yml' )
+    {
+      $template = $this->template();
+      $data     = array_replace($template, $fields, ['id' => $this->newId()]);
+
+      if( is_array($fields['usage'] ?? null) && is_array($template['usage'] ?? null) )
+        $data['usage'] = array_replace($template['usage'], $fields['usage']);
+    }
+
+    return $this->save($path, ['_type' => $type] + $data, $targetBasePath, true);
+  }
+
+  public function template() : array
+  {
+    $template = Yaml::parseFile(self::TEMPLATE);
+    return is_array($template) ? $template : [];
+  }
+
+  public function formatVersion() : int
+  {
+    return (int)($this->template()['version'] ?? 0);
+  }
+
+  // A new prompt's id: today's date, the next free number of the day and "-V1", as in
+  // the template. Only a file written today can hold an id of today, so only those are read.
+  public function newId() : string
+  {
+    $today = date('Y-m-d');
+    $max   = 0;
+
+    foreach( $this->sources->getPaths() as $base )
+      foreach( $this->ymlFilesSince($base, strtotime('today')) as $file )
+      {
+        $id = (string)($this->read($file)['id'] ?? '');
+        if( preg_match('/^' . preg_quote($today, '/') . '\.(\d+)/', $id, $m) )
+          $max = max($max, (int)$m[1]);
+      }
+
+    return sprintf('%s.%02d-V1', $today, $max + 1);
+  }
+
+  private function ymlFilesSince( string $dir, int $since ) : array
+  {
+    $files = [];
+
+    foreach( is_dir($dir) ? scandir($dir) : [] as $name )
+    {
+      $path = "$dir/$name";
+
+      if( $name === '.' || $name === '..' || $name === '.sys' )
+        continue;
+      if( is_dir($path) )
+        $files = array_merge($files, $this->ymlFilesSince($path, $since));
+      elseif( pathinfo($name, PATHINFO_EXTENSION) === 'yml' && filemtime($path) >= $since )
+        $files[] = $path;
+    }
+
+    return $files;
+  }
+
   private function writeFile( string $fullPath, string $content ) : void
   {
     if( file_put_contents($fullPath, $content) === false )
@@ -150,7 +221,8 @@ class SnippetStore
     $this->colors->moveFileColor( dirname($fullPath), basename($fullPath), null);
   }
 
-  // The copy lands next to its original, in the same source; an existing target is refused
+  // The copy lands in the same source; an existing target is refused. A copy is a new
+  // prompt, so a yml one gets a new id.
   public function duplicate( string $sourcePath, string $targetPath, ?string $basePath = null ) : void
   {
     $snippet = $this->load($sourcePath, $basePath);
@@ -158,6 +230,8 @@ class SnippetStore
       throw new \RuntimeException('Failed to duplicate snippet');
 
     $snippet['_name'] = pathinfo($targetPath, PATHINFO_FILENAME);
+    if( $snippet['_type'] === 'yml' )
+      $snippet['id'] = $this->newId();
     $this->save($targetPath, $snippet, $basePath, true);
   }
 

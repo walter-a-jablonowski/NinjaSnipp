@@ -14,17 +14,21 @@ return [
       : ['success' => false, 'message' => 'Snippet missing'];
   },
 
-  // Returns the snippet as stored, so the client's copy keeps its parsed `usage`.
-  // createOnly is set by "New Snippet": a name that is taken must never be written over.
+  // Returns the snippet as stored, so the client's copy keeps its parsed `usage`
   'saveSnippet' => fn( array $in ) => [
     'success' => true,
     'message' => 'Snippet saved successfully',
     'snippet' => $manager->snippets->save(
       (string)($in['path'] ?? ''),
       is_array($in['data'] ?? null) ? $in['data'] : [],
-      $in['targetBasePath'] ?? null,
-      (bool)($in['createOnly'] ?? false)
+      $in['targetBasePath'] ?? null
     )
+  ],
+
+  // New Snippet: a yml one starts from the snippet template, a taken name is refused
+  'createSnippet' => fn( array $in ) => [
+    'success' => true,
+    'snippet' => $manager->snippets->create( (string)($in['path'] ?? ''), [], $in['targetBasePath'] ?? null)
   ],
 
   'deleteSnippet' => function( array $in ) use ( $manager ) : array {

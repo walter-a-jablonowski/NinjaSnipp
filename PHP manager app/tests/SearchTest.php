@@ -13,6 +13,7 @@ class SearchTest extends TestCase
   {
     $this->write('a/alpha.yml', 'content: nothing');
     $this->write('a/b.yml', 'sc: alpha');
+    $this->write('a/s.yml', 'short: An alpha prompt');
     $this->write('a/c.yml', "usage:\n  vars:\n    alpha: x\ncontent: y\n");   // a usage key
     $this->write('a/d.yml', 'content: "some ALPHA text"');                     // case-insensitive
     $this->write('a/e.md', 'alpha in markdown');
@@ -22,7 +23,7 @@ class SearchTest extends TestCase
     $paths = $this->paths( $this->manager()->search->search('Alpha'));
 
     sort($paths);
-    $this->assertSame(['Alpha dir', 'alpha.yml', 'b.yml', 'c.yml', 'd.yml', 'e.md'], $paths);
+    $this->assertSame(['Alpha dir', 'alpha.yml', 'b.yml', 'c.yml', 'd.yml', 'e.md', 's.yml'], $paths);
   }
 
   public function testRanksByRelevance() : void

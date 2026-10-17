@@ -186,13 +186,69 @@ class SnippetStoreTest extends TestCase
 
   public function testDuplicateStaysInItsSource() : void
   {
-    $this->write('a/x.yml', "sc: s\ncontent: from a\n");
+    $this->write('a/x.yml', "id: 2020-01-01.01-V1\nsc: s\ncontent: from a\n");
     $this->write('b/x.yml', "content: from b\n");
 
     $this->manager()->snippets->duplicate('x.yml', 'copy.yml', $this->a);
 
-    $this->assertSame(['sc' => 's', 'content' => 'from a'], Yaml::parse($this->read('a/copy.yml')));
+    $copy = Yaml::parse($this->read('a/copy.yml'));
+    $this->assertSame(['sc' => 's', 'content' => 'from a'], array_diff_key($copy, ['id' => true]));
     $this->assertMissing('b/copy.yml');
+  }
+
+  public function testDuplicateIsANewPrompt() : void
+  {
+    $this->write('a/x.yml', "id: 2020-01-01.01-V1\ncontent: x\n");
+    $this->write('a/notes.md', 'md');
+    $snippets = $this->manager()->snippets;
+
+    $snippets->duplicate('x.yml', 'copy.yml');
+    $snippets->duplicate('notes.md', 'notes 2.md');
+
+    $this->assertSame(date('Y-m-d') . '.01-V1', Yaml::parse($this->read('a/copy.yml'))['id']);
+    $this->assertSame('2020-01-01.01-V1', Yaml::parse($this->read('a/x.yml'))['id']);
+    $this->assertSame('md', $this->read('a/notes 2.md'));
+  }
+
+  // --- new snippets ---
+
+  public function testNewIdTakesTheNextNumberOfTheDay() : void
+  {
+    $today = date('Y-m-d');
+    $this->write('a/one.yml', "id: $today.01-V1\n");
+    $this->write('b/sub/two.yml', "id: \"$today.07-DEMO\"\n");
+    $this->write('b/old.yml', "id: $today.09-V1\n");
+    touch("{$this->b}/old.yml", strtotime('-2 days'));   // not written today: not read
+
+    $this->assertSame("$today.08-V1", $this->manager()->snippets->newId());
+  }
+
+  public function testCreateStartsFromTheTemplate() : void
+  {
+    $snippets = $this->manager()->snippets;
+    $template = $snippets->template();
+
+    $created = $snippets->create('sub/new.yml', ['short' => 'Short', 'usage' => ['head' => 'Head'], 'content' => 'c']);
+    $stored  = Yaml::parse($this->read('a/sub/new.yml'));
+
+    $this->assertSame($stored, array_diff_key($created, ['_type' => true, '_name' => true]));
+    $this->assertSame(date('Y-m-d') . '.01-V1', $stored['id']);
+    $this->assertSame($template['version'], $stored['version']);
+    $this->assertSame('Short', $stored['short']);
+    $this->assertSame('Head', $stored['usage']['head']);
+    $this->assertSame($template['usage']['text'], $stored['usage']['text']);   // the other usage fields stay
+    $this->assertSame(3, $snippets->formatVersion());
+  }
+
+  public function testCreateMarkdownAndRefuseTaken() : void
+  {
+    $snippets = $this->manager()->snippets;
+
+    $snippets->create('notes.md', ['content' => '# Notes']);
+    $this->assertSame('# Notes', $this->read('a/notes.md'));
+
+    $this->expectExceptionMessage('A snippet with this name already exists');
+    $snippets->create('notes.md');
   }
 
   public function testDuplicateNeverOverwrites() : void

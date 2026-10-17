@@ -27,6 +27,12 @@ class FileTree
     $this->foldersFirst  = $foldersFirst;
   }
 
+  // nav.foldersMerged: same-named folders merged, same-named files all shown
+  public function isMerged() : bool
+  {
+    return $this->foldersMerged;
+  }
+
   // Returns the target name of a link marker file name, or null if it is none.
   // Matching the exact shape keeps a snippet called "INCLUDEs and notes.yml" a normal file.
   public static function linkTarget( string $fileName ) : ?string

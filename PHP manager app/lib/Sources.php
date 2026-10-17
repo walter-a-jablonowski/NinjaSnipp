@@ -111,6 +111,17 @@ class Sources
     return true;
   }
 
+  // Labels of the data sets that have the source folder $base, e.g. a "Common" folder
+  // shared by several sets: a change there shows in all of them
+  public function dataSetsWith( string $base ) : array
+  {
+    $base = $this->normalizeBase($base);
+
+    return array_keys( array_filter( $this->dataSets, fn( $folders ) =>
+      in_array($base, array_map( fn($f) => $this->normalizeBase($f['path']), $folders), true)
+    ));
+  }
+
   public function getCurrentLabel() : string
   {
     return $this->currentLabel;

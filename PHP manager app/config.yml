@@ -10,3 +10,19 @@ debug:
   showAllFileBtns: false
 
 special: true
+
+ai:                        # AI sidebar (dev/ai_sidebar_plan.md)
+  provider:  openrouter    # openrouter | gemini | ollama - key: AI_API_KEY_<PROVIDER> in .env (see .env.sample)
+  model:     google/gemini-3.5-flash   # as the provider names it, e.g. gemini: gemini-3.8-flash (free tier: 20 requests a day)
+  ollamaUrl: http://localhost:11434
+  claudeCode:              # the local Claude Code CLI on your subscription, offered beside the provider above
+    enabled: true          # in the sidebar's provider select, only where the CLI is installed (lib/Ai/AiClaude.php)
+    default: false         # a new chat starts with Claude Code instead of the provider above
+    model:   ''            # '' = the CLI's default, else e.g. sonnet, opus
+    bin:     ''            # '' = claude from the PATH
+    phpBin:  ''            # '' = found automatically: the php CLI that runs the tool server (mcp/ai_tools.php)
+    timeout: 300           # seconds before a turn is stopped
+  maxSteps:  15            # model / tool rounds per answer
+  maxTokens: 8192          # per model answer: a rewritten prompt can be long
+  timeout:   120           # seconds per model call
+  systemPrompt: ''         # your own instructions, added to the built-in prompt (lib/Ai/system_prompt.md)

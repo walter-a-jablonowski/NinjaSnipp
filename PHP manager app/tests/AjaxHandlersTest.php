@@ -2,6 +2,7 @@
 
 namespace SnippetManager\Tests;
 
+use SnippetManager\Ai\AiTools;
 use SnippetManager\SnippetManager;
 use SnippetManager\UserStore;
 
@@ -19,13 +20,15 @@ class AjaxHandlersTest extends TestCase
 
     // Variables the handler files use from ajax.php
     $manager   = $this->manager = $this->manager();
-    $user      = new UserStore("{$this->root}/user");
+    $userDir   = "{$this->root}/user";
+    $user      = new UserStore($userDir);
     $appConfig = ['special' => false];
 
     $this->handlers = array_merge(
       require self::APP_DIR . '/ajax/files.php',
       require self::APP_DIR . '/ajax/snippets.php',
-      require self::APP_DIR . '/ajax/user.php'
+      require self::APP_DIR . '/ajax/user.php',
+      require self::APP_DIR . '/ajax/ai.php'
     );
   }
 
@@ -62,8 +65,7 @@ class AjaxHandlersTest extends TestCase
   {
     $response = $this->call('saveSnippet', [
       'path' => 'x.yml',
-      'data' => ['_type' => 'yml', '_name' => 'x', 'usage' => "head: Hi\n", 'content' => 'c'],
-      'createOnly' => true
+      'data' => ['_type' => 'yml', '_name' => 'x', 'usage' => "head: Hi\n", 'content' => 'c']
     ]);
 
     $this->assertTrue($response['success']);
@@ -76,7 +78,7 @@ class AjaxHandlersTest extends TestCase
     $this->expectExceptionMessage('A snippet with this name already exists');
 
     $this->write('a/x.yml', 'content: x');
-    $this->call('saveSnippet', ['path' => 'x.yml', 'data' => ['_type' => 'yml', 'content' => 'y'], 'createOnly' => true]);
+    $this->call('createSnippet', ['path' => 'x.yml']);
   }
 
   public function testExpectedFailuresAreResponses() : void
@@ -124,5 +126,43 @@ class AjaxHandlersTest extends TestCase
     $this->assertSame([['path' => 'x.yml']], $this->call('getRecentSnippets')['data']);
     $this->assertSame('dark', $this->call('getUserSettings')['settings']['theme']);
     $this->assertSame(['red' => '#500'], $this->call('getFolderColors', ['themeMode' => 'dark'])['colors']);
+  }
+
+  // --- AI ---
+
+  public function testAiChatNeedsAUserLine() : void
+  {
+    $this->expectExceptionMessage('Nothing to answer');
+    $this->call('aiChat', ['messages' => [['role' => 'assistant', 'content' => 'Hi'], ['role' => 'system', 'content' => 'x']]]);
+  }
+
+  public function testAiApplyRunsAnAcceptedProposal() : void
+  {
+    $this->write('a/x.yml', 'content: old');
+    $proposal = (new AiTools($this->manager, new UserStore("{$this->root}/user")))
+      ->call('c1', 'snippet_update', ['path' => 'x.yml', 'fields' => ['content' => 'new']])['proposal'];
+
+    $response = $this->call('aiApply', ['proposal' => json_decode( json_encode($proposal), true)]);
+
+    $this->assertSame(['success' => true, 'paths' => ['x.yml']], $response);
+    $this->assertSame('new', $this->manager->snippets->load('x.yml')['content']);
+  }
+
+  public function testAiSessions() : void
+  {
+    $saved = $this->call('aiSessionSave', ['session' => ['title' => 'First', 'messages' => [['role' => 'user', 'content' => 'Hi']], 'dataSet' => 'ignored']])['session'];
+
+    $this->assertSame('Test', $saved['dataSet']);                 // the data set it is held in
+    $this->assertSame([['id' => $saved['id'], 'title' => 'First', 'updated' => $saved['updated']]], $this->call('aiSessions')['sessions']);
+    $this->assertSame('Hi', $this->call('aiSessionLoad', ['id' => $saved['id']])['session']['messages'][0]['content']);
+
+    $again = $this->call('aiSessionSave', ['session' => ['id' => $saved['id'], 'title' => 'Renamed']])['session'];
+    $this->assertSame($saved['created'], $again['created']);
+
+    $this->call('aiSessionDelete', ['id' => $saved['id']]);
+    $this->assertSame([], $this->call('aiSessions')['sessions']);
+
+    $this->expectExceptionMessage('Invalid session id');
+    $this->call('aiSessionLoad', ['id' => '../settings']);
   }
 }

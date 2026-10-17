@@ -28,16 +28,14 @@ for( const { description, content, placeholders } of fixture('placeholders.json'
 }
 
 
-// extractContentMaybes
+// extractContentMaybes: same cases as the PHP parser (RendererTest::testExtractMaybesSharedCases)
 
-test('extractContentMaybes finds MAYBE names in order, once each', () => {
-  const content = '{{ MAYBE: Extra info }}a{{ END-MAYBE }} {{maybe:Second}}b{{ end-maybe }} {{ MAYBE: Extra info }}';
-  assert.deepEqual( [...extractContentMaybes(content)], ['Extra info']);   // the pattern is case-sensitive
-});
-
-test('extractContentMaybes ignores placeholders and END-MAYBE', () => {
-  assert.deepEqual( [...extractContentMaybes('{{ name }} {{ END-MAYBE }} {{ include: "x" }}')], []);
-});
+for( const { description, content, maybes } of fixture('maybes.json'))
+{
+  test(`extractContentMaybes matches PHP: ${description}`, () => {
+    assert.deepEqual( [...extractContentMaybes(content)], maybes);
+  });
+}
 
 
 // timeAgo

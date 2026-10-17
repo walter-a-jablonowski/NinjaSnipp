@@ -45,6 +45,15 @@ class SourcesTest extends TestCase
     $this->assertDirectoryExists("{$this->root}/new");           // created for the selected set only
   }
 
+  public function testDataSetsWith() : void
+  {
+    $sources = new Sources(['Common' => 'a', 'Dev' => ['Common' => 'a', 'Dev' => 'b'], 'Biz' => 'c'], $this->root);
+
+    $this->assertSame(['Common', 'Dev'], $sources->dataSetsWith("{$this->a}/"));
+    $this->assertSame(['Dev'], $sources->dataSetsWith($this->b));
+    $this->assertSame([], $sources->dataSetsWith("{$this->root}/other"));
+  }
+
   public function testLabelFallsBackToDataSetName() : void
   {
     $sources = new Sources(['Plain' => 'a'], $this->root);

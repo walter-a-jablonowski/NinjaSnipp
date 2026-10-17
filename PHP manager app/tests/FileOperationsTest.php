@@ -129,6 +129,19 @@ class FileOperationsTest extends TestCase
     $this->assertSame(['fileColors' => ['y.yml' => 'red']], json_decode($this->read('b/.sys/ninja.json'), true));
   }
 
+  public function testMovedFileKeepsColor() : void
+  {
+    $this->write('a/x.yml', 'content: x');
+    $this->write('a/.sys/ninja.json', '{"fileColors": {"x.yml": "red", "y.yml": "blue"}}');
+    $this->write('a/sub/.sys/ninja.json', '{"color": "blue"}');
+
+    $this->manager()->files->rename('x.yml', 'sub/x.yml', [null]);
+
+    $this->assertExists('a/sub/x.yml');
+    $this->assertSame(['fileColors' => ['y.yml' => 'blue']], json_decode($this->read('a/.sys/ninja.json'), true));
+    $this->assertSame(['color' => 'blue', 'fileColors' => ['x.yml' => 'red']], json_decode($this->read('a/sub/.sys/ninja.json'), true));
+  }
+
   public function testRenameMovesIntoNewFolder() : void
   {
     $this->write('a/x.yml');

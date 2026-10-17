@@ -136,12 +136,38 @@ class FileTreeController
     let item = this.app.currentTreePath ? treeItemByPath(this.app.currentTreePath) : null;
 
     if( ! item ) {
-      const ext = this.app.currentSnippet._type === 'yml' ? 'yml' : 'md';
-      const activePath = (this.app.currentPath ? this.app.currentPath + '/' : '') + this.app.currentSnippet._name + '.' + ext;
+      const activePath = this.app.editor.currentSnippetPath();
       item = treeItemByPath(activePath) || treeItemByPath(activePath, 'data-fspath');
     }
 
     if( item ) item.classList.add('active');
+  }
+
+  // The row of an item by its real path (as the AI names it), of one source when basePath
+  // is given; null while a folder above it is closed
+  rowFor( fsPath, basePath = null )
+  {
+    const rows = [...document.querySelectorAll(`#fileList .tree-item[data-fspath=${CSS.escape(fsPath)}]`)];
+    return rows.find(row => ! basePath || ! row.dataset.basePath || row.dataset.basePath === basePath) || null;
+  }
+
+  // The row of the item, or else of the nearest folder above it that is shown
+  visibleRowFor( fsPath, basePath = null )
+  {
+    for( let path = fsPath; path; path = path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : '' ) {
+      const row = this.rowFor(path, path === fsPath ? basePath : null);
+      if( row ) return row;
+    }
+    return null;
+  }
+
+  // Opens the folders above an item, so that its row is shown
+  async reveal(fsPath)
+  {
+    const parts = fsPath.split('/').slice(0, -1);
+    parts.forEach((part, i) => this.app.expandedFolders.add( parts.slice(0, i + 1).join('/')));
+    await this.restoreExpandedFolders(this.app.fileTree);
+    await this.renderTree();
   }
 
   _getSourceLabel(basePath)

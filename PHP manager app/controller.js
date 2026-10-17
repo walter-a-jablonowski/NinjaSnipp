@@ -42,6 +42,7 @@
     this.usageForm = new UsageFormController(this);
     this.render = new RenderController(this);
     this.search = new SearchController(this);
+    this.ai     = new AiController(this);
 
     this.init();
   }
@@ -183,9 +184,8 @@
       ['duplicateSnippetBtn','click', () => this.editor.duplicateCurrentSnippet()],
       ['deleteSnippetBtn',   'click', () => this.editor.deleteCurrentSnippet()],
       ['toggleLineWrapBtn',  'click', () => this.render.toggleLineWrap()],
-      ['aiBtn',              'click', () => this.toggleAiSidebar()],
+      ['aiBtn',              'click', () => this.ai.toggle()],
       ['themeToggleBtn',     'click', () => this.toggleTheme()],
-      ['aiSidebarClose',     'click', () => this.toggleAiSidebar(false)],
       ['confirmDuplicateBtn','click', () => this.editor.performDuplicate()],
       ['confirmDeleteBtn',   'click', () => this.editor.performDelete()],
       ['recent-tab',         'click', () => this.search.loadRecentSnippets()],
@@ -360,6 +360,8 @@
     // Bind autosave handlers to edit form inputs (once)
     this.editor.bindAutosaveHandlers();
 
+    this.ai.bindEvents();
+
     this.initSidebarResize();
   }
 
@@ -474,14 +476,6 @@
     if( ! (res && res.success) ) showError('Failed to save settings');
   }
 
-  toggleAiSidebar(open)
-  {
-    const sidebar = document.getElementById('aiSidebar');
-    if( ! sidebar ) return;
-    const isOpen = open !== undefined ? open : ! sidebar.classList.contains('open');
-    sidebar.classList.toggle('open', isOpen);
-  }
-
   resolveThemeMode(themePreference)
   {
     if( themePreference === 'dark' ) return 'dark';
@@ -587,6 +581,7 @@
       const recentResult = await apiCall(this.currentDataPath, 'getRecentSnippets');
       if( recentResult.success ) this.recentSnippets = recentResult.data;
       this.loadFiles();
+      this.ai.onDataSetChanged();     // chats belong to a data set
     }
     else {
       showError('Failed to change data folder: ' + result.message);

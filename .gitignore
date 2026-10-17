@@ -10,5 +10,11 @@ NinjaSnipp2.code-workspace
 # Machine local app config (selects the users/ folder to run as)
 config.local.yml
 
+# API keys of the AI sidebar (see .env.sample)
+.env
+
+# Request folders of Claude Code turns (lib/Ai/AiClaude.php)
+cache/
+
 # PHPUnit
 .phpunit.result.cache

@@ -442,6 +442,26 @@ class RenderController
     this.updateVarRowVisibility();
   }
 
+  // Fills the form as if typed and clicked (the AI's form_fill): placeholder values, and
+  // every MAYBE block on except the ones in maybeOff
+  fillForm( values, maybeOff )
+  {
+    Object.entries(values).forEach(([name, value]) => {
+      (this.app.placeholderGroups.get(name) || []).forEach(node => {
+        node.textContent    = value;
+        node.dataset.edited = '1';
+      });
+      document.querySelectorAll('#renderUsage .var-input').forEach(input => {
+        if( input.dataset.varName === name ) input.value = value;
+      });
+    });
+
+    const maybes = new Set( [...document.querySelectorAll('#inlineSnippet .maybe-block')].map(block => block.dataset.maybe));
+    maybes.forEach(name => this.setMaybeState(name, ! maybeOff.includes(name)));
+
+    this.updateRenderedOutput();
+  }
+
   openChoiceMenu(el)
   {
     this.closeChoiceMenu();

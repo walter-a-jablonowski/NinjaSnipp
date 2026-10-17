@@ -86,23 +86,30 @@ class ColorStore
     $this->write($folder, $data);
   }
 
-  // Colors are keyed by file name, so a renamed file takes its entry along. A null
-  // $newName drops the entry, so a deleted name does not hand its color to whatever
-  // file takes that name next.
-  public function moveFileColor( string $folderPath, string $oldName, ?string $newName ) : void
+  // Colors are keyed by file name, so a renamed file takes its entry along, into
+  // $newFolderPath for a moved one. A null $newName drops the entry, so a deleted name
+  // does not hand its color to whatever file takes that name next.
+  public function moveFileColor( string $folderPath, string $oldName, ?string $newName, ?string $newFolderPath = null ) : void
   {
-    $data = $this->read($folderPath);
-    if( ! isset($data['fileColors'][$oldName]) )
+    $data  = $this->read($folderPath);
+    $color = $data['fileColors'][$oldName] ?? null;
+    if( $color === null )
       return;
 
-    if( $newName !== null )
-      $data['fileColors'][$newName] = $data['fileColors'][$oldName];
     unset($data['fileColors'][$oldName]);
-
     if( empty($data['fileColors']) )
       unset($data['fileColors']);
 
     $this->write($folderPath, $data);
+
+    if( $newName !== null )
+    {
+      $newFolderPath = $newFolderPath ?? $folderPath;
+      $target        = $this->read($newFolderPath);
+
+      $target['fileColors'][$newName] = $color;
+      $this->write($newFolderPath, $target);
+    }
   }
 
   // Absolute path of an existing item (last source wins, or in $base only)

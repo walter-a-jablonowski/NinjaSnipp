@@ -23,7 +23,8 @@ $action = (string)($input['action'] ?? '');
 try {
 
   $appConfig = app_config();
-  $user      = new UserStore( APP_ROOT . '/' . user_dir());
+  $userDir   = APP_ROOT . '/' . user_dir();
+  $user      = new UserStore($userDir);
   $settings  = $user->getSettings();
   $manager   = new SnippetManager( $settings, __DIR__);
 
@@ -34,7 +35,8 @@ try {
   $handlers = array_merge(
     require 'ajax/files.php',
     require 'ajax/snippets.php',
-    require 'ajax/user.php'
+    require 'ajax/user.php',
+    require 'ajax/ai.php'
   );
 
   $response = isset($handlers[$action])

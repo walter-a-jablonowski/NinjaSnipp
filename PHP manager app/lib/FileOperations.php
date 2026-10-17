@@ -114,6 +114,7 @@ class FileOperations
   // Renames a file or folder in each of $bases (null entries mean the source it lives in).
   // A merged folder lives in several sources and has to move in all of them or in none,
   // so every source is checked up front and a failure part way through is walked back.
+  // A $newPath in another folder moves the item (the UI only renames, the AI moves too).
   // A file keeps its color.
   public function rename( string $oldPath, string $newPath, array $bases ) : void
   {
@@ -167,11 +168,10 @@ class FileOperations
       $done[] = [$old, $new];
     }
 
-    // Colors are keyed by name in the parent folder, so they only travel along when the
-    // item stays in the same folder - which is what the rename dialog does
-    if( dirname($oldPath) === dirname($newPath) )
-      foreach( $jobs as [$old] )
-        $this->colors->moveFileColor( dirname($old), basename($oldPath), basename($newPath));
+    // A file's color is keyed by its name in the parent folder, so it is handed over to
+    // the new name and parent; a folder's own color lives inside it and moves with it
+    foreach( $jobs as [$old, $new] )
+      $this->colors->moveFileColor( dirname($old), basename($old), basename($new), dirname($new));
   }
 
   // Renames a batch of siblings at once (drag & drop renumbering), possibly across sources.

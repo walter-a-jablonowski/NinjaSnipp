@@ -163,3 +163,34 @@ function extractContentVars(content)
   }
   return set;
 }
+
+// Line diff of two texts: [{ type: 'same' | 'del' | 'add', text }] in order, from the longest
+// common sequence of lines. Within a changed stretch the removed lines come first.
+function lineDiff( before, after )
+{
+  const a = before === '' ? [] : before.split('\n');
+  const b = after  === '' ? [] : after.split('\n');
+
+  // common[i][j]: length of the longest common sequence of a[i..] and b[j..]
+  const common = Array.from({ length: a.length + 1 }, () => new Array(b.length + 1).fill(0));
+  for( let i = a.length - 1; i >= 0; i-- )
+    for( let j = b.length - 1; j >= 0; j-- )
+      common[i][j] = a[i] === b[j] ? common[i + 1][j + 1] + 1 : Math.max(common[i + 1][j], common[i][j + 1]);
+
+  const out = [];
+  let i = 0, j = 0;
+  while( i < a.length && j < b.length ) {
+    if( a[i] === b[j] ) {
+      out.push({ type: 'same', text: a[i] });
+      i++; j++;
+    }
+    else if( common[i + 1][j] >= common[i][j + 1] )
+      out.push({ type: 'del', text: a[i++] });
+    else
+      out.push({ type: 'add', text: b[j++] });
+  }
+  while( i < a.length ) out.push({ type: 'del', text: a[i++] });
+  while( j < b.length ) out.push({ type: 'add', text: b[j++] });
+
+  return out;
+}

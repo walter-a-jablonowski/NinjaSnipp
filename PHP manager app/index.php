@@ -1,5 +1,6 @@
 <?php
 
+use SnippetManager\Ai\AiClient;
 use SnippetManager\Sources;
 use SnippetManager\UserStore;
 
@@ -18,6 +19,9 @@ $sources      = new Sources( $settings['dataPaths'] ?? ['data'], __DIR__);
 // Optional URL param: select initial data folder by label key from config (e.g., ?data=Demo%201)
 if( isset($_GET['data']) )
   $sources->select((string)$_GET['data']);
+
+// AI sidebar: who can answer (provider => label), the first is the default
+$aiProviders = AiClient::choices($appConfig['ai'] ?? []);
 
 // Snippet columns, switchable via pills on mobile (one column at a time)
 $fieldPanes = ['usage' => 'Usage', 'content' => 'Content'];
@@ -349,29 +353,47 @@ $usageLists = [
         </div>
       </main>
 
-      <!-- AI Chat Sidebar -->
-      <aside class="app-ai-sidebar" id="aiSidebar">
-        <div class="ai-sidebar-header border-bottom d-flex align-items-center justify-content-between px-3 d-lg-none">
-          <span class="fw-semibold small"><i class="bi bi-stars me-2 text-primary"></i>AI Assistant</span>
-          <button type="button" class="btn-close" id="aiSidebarClose" aria-label="Close"></button>
+      <!-- AI sidebar: sessions, conversation and proposals (AiController, controllers/ai.js) -->
+      <aside class="app-ai-sidebar" id="aiSidebar" aria-label="AI">
+        <div class="ai-sidebar-header border-bottom">
+          <span class="ai-title"><i class="bi bi-stars me-1 text-primary"></i>AI</span>
+          <?php if( count($aiProviders) > 1 ): ?>
+            <!-- Who answers; kept per session -->
+            <select class="form-select form-select-sm ai-select" id="aiProvider" title="Who answers" data-default="<?= htmlspecialchars( array_key_first($aiProviders)) ?>">
+              <?php foreach( $aiProviders as $provider => $providerLabel ): ?>
+                <option value="<?= htmlspecialchars($provider) ?>"><?= htmlspecialchars($providerLabel) ?></option>
+              <?php endforeach; ?>
+            </select>
+          <?php endif; ?>
+          <button type="button" class="btn btn-sm ai-header-btn ms-auto" id="aiNewSession" title="New chat" aria-label="New chat"><i class="bi bi-plus-lg"></i></button>
+          <button type="button" class="btn btn-sm ai-header-btn" id="aiSessionsToggle" title="Chats" aria-label="Chats" aria-expanded="false"><i class="bi bi-chevron-down"></i></button>
+          <button type="button" class="btn-close ms-1 d-lg-none" id="aiSidebarClose" aria-label="Close"></button>
         </div>
-        <div class="ai-messages" id="aiMessages">
-          <div class="ai-msg ai-msg-user">
-            <div class="ai-msg-bubble">How can I use this snippet manager for code templates?</div>
-          </div>
-          <div class="ai-msg ai-msg-ai">
-            <div class="ai-msg-bubble">You can store and organize reusable code templates here. Create a snippet, add your code with <code>{{ variable }}</code> placeholders, then use the preview tab to fill in values interactively.</div>
-          </div>
-        </div>
+        <div class="ai-sessions border-bottom" id="aiSessions" hidden></div>
+        <div class="ai-messages" id="aiMessages"></div>
         <div class="ai-input-area border-top p-2 pb-lg-3">
           <div class="input-group">
-            <textarea class="form-control form-control-sm" id="aiInput" placeholder="Ask AI …" rows="2" style="resize: none;"></textarea>
-            <button class="btn btn-primary btn-sm px-3" type="button" id="aiSendBtn">
+            <textarea class="form-control form-control-sm" id="aiInput" placeholder="Ask about your snippets …" rows="2" style="resize: none;"></textarea>
+            <button class="btn btn-primary btn-sm px-3" type="button" id="aiSendBtn" title="Send">
               <i class="bi bi-send-fill"></i>
             </button>
           </div>
         </div>
       </aside>
+
+      <!-- Shown while a chat is empty -->
+      <template id="aiEmptyTpl">
+        <div class="ai-empty">
+          <p>Ask about your snippets, for example:</p>
+          <ul>
+            <li>Do I have a prompt for a code review?</li>
+            <li>Fill this prompt for my task: …</li>
+            <li>Improve this prompt, keep it short</li>
+            <li>Check the snippets in this folder</li>
+          </ul>
+          <p>Changes are proposed first: you accept or reject each one.</p>
+        </div>
+      </template>
   </div>
 
   <!-- Modals -->
@@ -546,6 +568,7 @@ $usageLists = [
   <script src="<?= asset_url('controllers/usage-form.js') ?>"></script>
   <script src="<?= asset_url('controllers/render.js') ?>"></script>
   <script src="<?= asset_url('controllers/search.js') ?>"></script>
+  <script src="<?= asset_url('controllers/ai.js') ?>"></script>
   <script src="<?= asset_url('controller.js') ?>"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {

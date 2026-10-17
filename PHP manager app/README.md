@@ -6,6 +6,8 @@ A snippet manager app that has some special features
 - Nested includes
 - "Soft links": Files and folders can be used multiple times
 
+See snippet_template.yml
+
 ### URL args
 
 - initially load data folder `index.php?data=Demo%202` (key from config)
@@ -53,9 +55,12 @@ Combined base folders: cmn plus detail (see settings)
 
 version 3
 
+A new snippet starts from [snippet_template.yml](snippet_template.yml), the current format (New Snippet, and the AI's snippet_create). The fields:
+
 ```yml
-id:                     # Snipp and and version
-version: 3              # Snipp file version
+id:                     # Names the prompt: YYYY-MM-DD.NN-V1 (created, number of the day); never changes,
+                        # a new snippet or a duplicate gets a new one
+version: 3              # Snipp file format version, changes only on a format migration
 sc:                     # Shortcut for use in a Win app
 short:                  # Short desc
 usage:                  # Full text or yml keys
@@ -173,6 +178,7 @@ ajax.php                 routes ajax calls to the handlers in /ajax
 ajax/files.php           tree listing, folders, links, renames, colors
 ajax/snippets.php        snippet files, search, rendering
 ajax/user.php            data set selection, settings, search history, recent snippets
+ajax/ai.php              AI sidebar: chat turn, apply an accepted proposal, chat sessions
 lib/SnippetManager.php   builds the services below from the user settings
 lib/Sources.php          data sets, source folders, path rules (which source a path lives in / is written to)
 lib/FileTree.php         merged tree listing, INCLUDE links
@@ -182,6 +188,19 @@ lib/ColorStore.php       folder and file colors (.sys/ninja.json)
 lib/Search.php           full-text search
 lib/Renderer.php         includes, MAYBE blocks, placeholders
 lib/UserStore.php        per-user settings and lists
+lib/Ai/                  AI sidebar (plan and design: dev/ai_sidebar_plan.md)
+  AiTools.php            tool registry: read tools, client tools, call() for every provider
+  AiChanges.php          write tools: proposal (check, preview, warnings) and apply
+  AiLibrary.php          how the tools address items (relative path + source label)
+  AiCheck.php            the rules of snippet_check
+  AiChat.php             tool loop of one turn (API providers)
+  AiClient.php           OpenRouter / Gemini / Ollama in the OpenAI message shape
+  AiClaude.php           Claude Code CLI as provider (runs the tool loop itself)
+  AiMcpServer.php        the tools as stdio MCP server for Claude Code (entry: mcp/ai_tools.php)
+  AiPrompt.php           system prompt (+ system_prompt.md)
+  AiSessions.php         chat sessions, users/<user>/ai_sessions/
+  AiArgs.php             typed reads of tool arguments
+snippet_template.yml     a new snippet starts from it
 tests/                   PHPUnit tests
 tests/js/                JS tests (Node test runner)
 tests/fixtures/          test cases shared by both

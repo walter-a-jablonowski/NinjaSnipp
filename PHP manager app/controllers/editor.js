@@ -12,11 +12,7 @@ class EditorController
     // A scheduled autosave belongs to the snippet that is open right now. Run it before
     // that state is replaced, or the edits made just before the click are dropped - and
     // the timer would fire against the next snippet instead.
-    if( this.app._autosaveTimer ) {
-      this.clearAutosaveTimer();
-      if( this.getAutosaveEnabled() && this.app.currentSnippet )
-        await this.saveCurrentSnippet(true);
-    }
+    await this.flushAutosave();
 
     // Only now switch the location state: the save above must still write to the old one
     this.app.currentPath     = path.split('/').slice(0, -1).join('/');
@@ -39,8 +35,9 @@ class EditorController
       this.app.recentSnippets = this.app.recentSnippets.slice(0, 10);
       await apiCall(this.app.currentDataPath, 'saveRecentSnippets', { data: this.app.recentSnippets });
 
-      // Render the rendered views (markdown files get their preview)
-      this.app.render.composeAndRenderInline();
+      // Render the rendered views (markdown files get their preview). Awaited, so whoever
+      // opened the snippet finds its form in place (the AI's form_fill)
+      await this.app.render.composeAndRenderInline();
       this.updateActionButtonsVisibility();
       this.app.render.applyLineWrap();
     }
@@ -49,6 +46,27 @@ class EditorController
     }
 
     hideLoading('editContent');
+  }
+
+  // Runs a scheduled autosave now. Also before the AI reads or changes snippets: it would
+  // read the old file, and the queued save would write over its change afterwards.
+  async flushAutosave()
+  {
+    if( ! this.app._autosaveTimer ) return;
+
+    this.clearAutosaveTimer();
+    if( this.getAutosaveEnabled() && this.app.currentSnippet )
+      await this.saveCurrentSnippet(true);
+  }
+
+  // Path of the open snippet relative to the source folders, null when none is open
+  currentSnippetPath()
+  {
+    const snippet = this.app.currentSnippet;
+    if( ! snippet ) return null;
+
+    const ext = snippet._type === 'yml' ? 'yml' : 'md';
+    return (this.app.currentPath ? this.app.currentPath + '/' : '') + snippet._name + '.' + ext;
   }
 
   renderEditForm(snippet)
@@ -121,8 +139,7 @@ class EditorController
     if( this.app.currentSnippet._type === 'yml' )
       Object.assign( data, this.app.usageForm.read());   // short, sc, usage
 
-    const extension = this.app.currentSnippet._type === 'yml' ? 'yml' : 'md';
-    const path = (this.app.currentPath ? this.app.currentPath + '/' : '') + data._name + '.' + extension;
+    const path = this.currentSnippetPath();
 
     // Write back to the source this snippet was opened from, not just the last one
     const payload = { path, data };
@@ -405,7 +422,7 @@ class EditorController
 
     const ext     = snippet._type === 'yml' ? 'yml' : 'md';
     const curDir  = this.app.currentPath || '';
-    const curPath = (curDir ? curDir + '/' : '') + snippet._name + '.' + ext;
+    const curPath = this.currentSnippetPath();
 
     if( type === 'file' && curPath === oldPath ) {
       const parts = newPath.split('/');
@@ -477,17 +494,6 @@ class EditorController
       return;
     }
 
-    const data = {
-      _type: type,
-      _name: name,
-      content: type === 'yml' ? 'Some {{ var }} snippet content...' : '# New Markdown File\n\nContent here...'
-    };
-
-    if( type === 'yml' ) {
-      data.sc = '';
-      data.usage = '';
-    }
-
     const extension = type === 'yml' ? 'yml' : 'md';
     const folder = this.app.newItemPath;
     const path = (folder ? folder + '/' : '') + name + '.' + extension;
@@ -497,11 +503,11 @@ class EditorController
       ? baseFolderSel.value
       : null;
 
-    // createOnly: a name that is already taken must be reported, never written over
-    const payload = { path, data, createOnly: true };
+    // A yml snippet starts from the server's snippet template; a taken name is refused
+    const payload = { path };
     if( targetBasePath ) payload.targetBasePath = targetBasePath;
 
-    const result = await apiCall(this.app.currentDataPath, 'saveSnippet', payload);
+    const result = await apiCall(this.app.currentDataPath, 'createSnippet', payload);
 
     if( result.success ) {
       if( folder ) this.app.expandedFolders.add(folder);
