@@ -122,10 +122,16 @@ class ColorStore
     return $absPath;
   }
 
+  // The file holding the colors of a folder and of the files in it
+  public static function file( string $folderPath ) : string
+  {
+    return "$folderPath/.sys/ninja.json";
+  }
+
   // Read once per request instead of once per file in the folder
   private function read( string $folderPath ) : array
   {
-    $file = "$folderPath/.sys/ninja.json";
+    $file = self::file($folderPath);
 
     if( ! array_key_exists($file, $this->cache) )
     {
@@ -138,13 +144,13 @@ class ColorStore
 
   private function write( string $folderPath, array $data ) : void
   {
-    $sysDir = "$folderPath/.sys";
-    if( ! is_dir($sysDir) )
-      mkdir($sysDir, 0755, true);
+    $file = self::file($folderPath);
+    if( ! is_dir( dirname($file)) )
+      mkdir( dirname($file), 0755, true);
 
-    if( file_put_contents("$sysDir/ninja.json", json_encode($data, JSON_PRETTY_PRINT)) === false )
+    if( file_put_contents($file, json_encode($data, JSON_PRETTY_PRINT)) === false )
       throw new \RuntimeException('Failed to write color');
 
-    $this->cache["$sysDir/ninja.json"] = $data;
+    $this->cache[$file] = $data;
   }
 }

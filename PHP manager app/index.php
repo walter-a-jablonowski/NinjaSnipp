@@ -20,8 +20,9 @@ $sources      = new Sources( $settings['dataPaths'] ?? ['data'], __DIR__);
 if( isset($_GET['data']) )
   $sources->select((string)$_GET['data']);
 
-// AI sidebar: who can answer (provider => label), the first is the default
+// AI sidebar: who can answer (provider => label, the first is the default), and the default mode
 $aiProviders = AiClient::choices($appConfig['ai'] ?? []);
+$aiMode      = ($appConfig['ai']['mode'] ?? 'ask') === 'apply' ? 'apply' : 'ask';
 
 // Snippet columns, switchable via pills on mobile (one column at a time)
 $fieldPanes = ['usage' => 'Usage', 'content' => 'Content'];
@@ -357,6 +358,11 @@ $usageLists = [
       <aside class="app-ai-sidebar" id="aiSidebar" aria-label="AI">
         <div class="ai-sidebar-header border-bottom">
           <span class="ai-title"><i class="bi bi-stars me-1 text-primary"></i>AI</span>
+          <!-- What happens to the AI's changes; kept per session -->
+          <select class="form-select form-select-sm ai-select" id="aiMode" title="What happens to the AI's changes" data-default="<?= $aiMode ?>">
+            <option value="ask">Ask first</option>
+            <option value="apply">Just do it</option>
+          </select>
           <?php if( count($aiProviders) > 1 ): ?>
             <!-- Who answers; kept per session -->
             <select class="form-select form-select-sm ai-select" id="aiProvider" title="Who answers" data-default="<?= htmlspecialchars( array_key_first($aiProviders)) ?>">

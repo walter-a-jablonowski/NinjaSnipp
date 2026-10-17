@@ -22,6 +22,10 @@ ai:                        # AI sidebar (dev/ai_sidebar_plan.md)
     bin:     ''            # '' = claude from the PATH
     phpBin:  ''            # '' = found automatically: the php CLI that runs the tool server (mcp/ai_tools.php)
     timeout: 300           # seconds before a turn is stopped
+  mode:      ask           # ask | apply - default of the sidebar's mode select: changes wait for your accept,
+                           # or "just do it": applied at once, one Undo per answer
+  webSearch: true          # the AI may search the web: OpenRouter's web_search (billed per search), Gemini's
+                           # Google Search, Claude Code's WebSearch / WebFetch; not with ollama
   maxSteps:  15            # model / tool rounds per answer
   maxTokens: 8192          # per model answer: a rewritten prompt can be long
   timeout:   120           # seconds per model call

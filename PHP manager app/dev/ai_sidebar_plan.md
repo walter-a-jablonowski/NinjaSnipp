@@ -1,6 +1,6 @@
 # AI sidebar: implementation plan
 
-Status: phases 1 (backend core), 2 (sidebar) and 3 (Claude Code) done; next: 4 (undo, "Just do it", web search), 5 (quick prompts).
+Status: phases 1-4 done (backend, sidebar, Claude Code, undo + "Just do it" + web search); next: 5 (quick prompts).
 
 Deviations from the plan made while building it:
 

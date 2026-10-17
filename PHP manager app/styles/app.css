@@ -1506,6 +1506,7 @@ ul.no-indent {
 .ai-change[data-state="accepted"] { border-left-color: var(--bs-success); }
 .ai-change[data-state="rejected"] { border-left-color: var(--bs-secondary-color); opacity: 0.75; }
 .ai-change[data-state="failed"]   { border-left-color: var(--bs-danger); }
+.ai-change[data-state="undone"]   { border-left-color: var(--bs-warning); opacity: 0.75; }
 
 .ai-change-head {
   display: flex;

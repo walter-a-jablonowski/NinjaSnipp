@@ -3,6 +3,7 @@
 namespace SnippetManager\Ai;
 
 use RuntimeException;
+use SnippetManager\ColorStore;
 use Symfony\Component\Yaml\Yaml;
 
 // The write tools. A call is never run when the model makes it: it becomes a proposal the
@@ -17,6 +18,8 @@ use Symfony\Component\Yaml\Yaml;
 //   hash      md5 of what the change is based on, null when its own checks guard it
 //   paths     items the client has to refresh afterwards
 //   apply     the change itself (not part of a proposal)
+//   effects   what apply touches on disk, for the undo (AiUndo, not part of a proposal):
+//             files (absolute) it writes or deletes, moves [from, to], dirs it creates
 //
 // Applying prepares the call again, so it is checked once more and works on the files as
 // they are then. The hash makes it refuse when the user changed the same thing meanwhile.
@@ -35,20 +38,25 @@ class AiChanges
   public function propose( string $id, string $tool, array $args ) : array
   {
     $change = $this->prepare($tool, $args);
-    unset($change['apply']);
+    unset($change['apply'], $change['effects']);
 
     return ['id' => $id, 'tool' => $tool, 'args' => $args] + $change;
   }
 
-  // Returns the paths to refresh
-  public function apply( array $proposal ) : array
+  // Returns the paths to refresh. With $undo the change is recorded under $checkpoint (the
+  // answer it came with), so it can be taken back.
+  public function apply( array $proposal, ?AiUndo $undo = null, string $checkpoint = '' ) : array
   {
     $change = $this->prepare( (string)($proposal['tool'] ?? ''), is_array($proposal['args'] ?? null) ? $proposal['args'] : []);
 
     if( $change['hash'] !== ($proposal['hash'] ?? null) )
       throw new RuntimeException('Changed since it was proposed - ask the AI again');
 
-    ($change['apply'])();
+    if( $undo )
+      $undo->record($checkpoint, $change['effects'], $change['apply']);
+    else
+      ($change['apply'])();
+
     return $change['paths'];
   }
 
@@ -201,7 +209,10 @@ class AiChanges
       [['field' => 'content', 'before' => (string)($snippet['content'] ?? ''), 'after' => '']],
       array_merge($this->includeWarnings($path, 'deleting'), $this->linkWarnings($path)),
       fn() => $this->lib->manager->snippets->delete($path, $base),
-      ['hash' => md5_file("$base/$path")]
+      [
+        'hash'    => md5_file("$base/$path"),
+        'effects' => ['files' => ["$base/$path", ColorStore::file( dirname("$base/$path"))]]   // its color goes too
+      ]
     );
   }
 
@@ -216,7 +227,8 @@ class AiChanges
       throw new RuntimeException("$path exists already in " . $this->lib->label($base));
 
     return $this->change('Create folder *' . AiLibrary::displayName($path) . '*', $path, $base, [], [],
-      fn() => $this->lib->manager->files->createFolder($path, $base)
+      fn() => $this->lib->manager->files->createFolder($path, $base),
+      ['effects' => ['files' => [], 'dirs' => ["$base/$path"]]]
     );
   }
 
@@ -295,10 +307,19 @@ class AiChanges
     if( ! $folder && $byName !== null && pathinfo($path, PATHINFO_FILENAME) !== pathinfo($newPath, PATHINFO_FILENAME) )
       $warnings = array_merge($this->includeWarnings($path, $byName), $warnings);
 
+    // A file's color moves between the .sys of its old and new folder
+    $effects = ['files' => [], 'moves' => []];
+    foreach( $bases as $base )
+    {
+      $effects['moves'][] = ["$base/$path", "$base/$newPath"];
+      array_push($effects['files'], ColorStore::file( dirname("$base/$path")), ColorStore::file( dirname("$base/$newPath")));
+    }
+    $effects['files'] = array_values( array_unique($effects['files']));
+
     return $this->change($label, $path, $bases[0],
       [['field' => 'path', 'before' => $path, 'after' => $newPath]], $warnings,
       fn() => $this->lib->manager->files->rename($path, $newPath, $bases),
-      ['bases' => $bases, 'paths' => [$path, $newPath]]
+      ['bases' => $bases, 'paths' => [$path, $newPath], 'effects' => $effects]
     );
   }
 
@@ -328,16 +349,18 @@ class AiChanges
         foreach( $bases as $base )
           $folder ? $colors->setFolderColor($path, $value, $base) : $colors->setFileColor($path, $value, $base);
       },
-      ['bases' => $bases]
+      ['bases' => $bases, 'effects' => ['files' => array_map( fn( $base ) =>
+        ColorStore::file($folder ? "$base/$path" : dirname("$base/$path")), $bases)]]
     );
   }
 
   // --- Helpers ---
 
   // The common shape of a change. $options:
-  //   hash   see the class comment (default null)
-  //   bases  every source it writes to, for the shared-source warning (default [$base])
-  //   paths  what to refresh (default [$path])
+  //   hash     see the class comment (default null)
+  //   bases    every source it writes to, for the shared-source warning (default [$base])
+  //   paths    what to refresh (default [$path])
+  //   effects  see the class comment (default: the one file $base/$path)
   private function change( string $label, string $path, string $base, array $preview, array $warnings, callable $apply, array $options = [] ) : array
   {
     foreach( $options['bases'] ?? [$base] as $b )
@@ -355,7 +378,8 @@ class AiChanges
       'warnings' => $warnings,
       'hash'     => $options['hash'] ?? null,
       'paths'    => $options['paths'] ?? [$path],
-      'apply'    => $apply
+      'apply'    => $apply,
+      'effects'  => ($options['effects'] ?? []) + ['files' => ["$base/$path"], 'moves' => [], 'dirs' => []]
     ];
   }
 

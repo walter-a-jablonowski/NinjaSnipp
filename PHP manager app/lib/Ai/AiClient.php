@@ -12,6 +12,10 @@ use stdClass;
 //
 // The API key comes from .env, AI_API_KEY_<PROVIDER>, so switching the provider needs no
 // .env change; Ollama needs none.
+//
+// Web search (config.yml ai.webSearch) is the provider's own, the model decides when to
+// search: OpenRouter's openrouter:web_search server tool, Gemini's Google Search. Ollama has
+// none (canSearch()).
 class AiClient
 {
   public const LABELS = ['openrouter' => 'OpenRouter', 'gemini' => 'Gemini', 'ollama' => 'Ollama'];
@@ -22,6 +26,7 @@ class AiClient
   private string $ollamaUrl;
   private int $timeout;
   private int $maxTokens;
+  private bool $webSearch;
 
   public function __construct( array $config, string $provider, array $env )
   {
@@ -34,6 +39,7 @@ class AiClient
     $this->ollamaUrl = rtrim( (string)($config['ollamaUrl'] ?? 'http://localhost:11434'), '/');
     $this->timeout   = (int)($config['timeout'] ?? 120);
     $this->maxTokens = (int)($config['maxTokens'] ?? 8192);
+    $this->webSearch = ! empty($config['webSearch']) && self::canSearch($provider);
 
     if( $this->apiKey === '' && $provider !== 'ollama' )
       throw new RuntimeException('No API key for ' . self::LABELS[$provider] . ': set AI_API_KEY_' . strtoupper($provider) . ' in .env');
@@ -53,6 +59,12 @@ class AiClient
         : $choices + [AiClaude::PROVIDER => 'Claude Code'];
 
     return $choices;
+  }
+
+  // Whether the provider brings a web search of its own; Claude Code has WebSearch / WebFetch
+  public static function canSearch( string $provider ) : bool
+  {
+    return $provider !== 'ollama';
   }
 
   // KEY=value lines; # starts a comment
@@ -93,11 +105,15 @@ class AiClient
 
   private function callOpenRouter( array $messages, array $tools ) : array
   {
+    $tools = self::openAiTools($tools);
+    if( $this->webSearch )
+      $tools[] = ['type' => 'openrouter:web_search'];   // runs on OpenRouter's side, billed per search
+
     $body = $this->post('https://openrouter.ai/api/v1/chat/completions', [
       'model'      => $this->model,
       'max_tokens' => $this->maxTokens,
       'messages'   => self::openAiMessages($messages),
-      'tools'      => self::openAiTools($tools)
+      'tools'      => $tools
     ], ["Authorization: Bearer {$this->apiKey}", 'HTTP-Referer: NinjaSnipp']);
 
     $choice = $body['choices'][0] ?? null;
@@ -183,6 +199,14 @@ class AiClient
       'generationConfig' => ['maxOutputTokens' => $this->maxTokens]
     ];
 
+    // Google Search beside our functions: Gemini combines them when its own search calls are
+    // part of the answer - and handed back unchanged (geminiParts)
+    if( $this->webSearch )
+    {
+      $payload['tools'][]    = ['googleSearch' => new stdClass];
+      $payload['toolConfig'] = ['includeServerSideToolInvocations' => true];
+    }
+
     foreach( $messages as $msg )
       if( $msg['role'] === 'system' )
         $payload['systemInstruction'] = ['parts' => [['text' => $msg['content']]]];
@@ -256,10 +280,11 @@ class AiClient
     $calls = [];
 
     // json_decode made an empty object {} an empty list [], which Gemini refuses when the
-    // turn goes back to it
+    // turn goes back to it (its own search calls included)
     foreach( $parts as &$part )
-      if( isset($part['functionCall']) && ($part['functionCall']['args'] ?? null) === [] )
-        $part['functionCall']['args'] = new stdClass;
+      foreach( [['functionCall', 'args'], ['toolCall', 'args'], ['toolResponse', 'response']] as [$kind, $key] )
+        if( isset($part[$kind]) && ($part[$kind][$key] ?? null) === [] )
+          $part[$kind][$key] = new stdClass;
     unset($part);
 
     foreach( $parts as $part )

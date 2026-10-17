@@ -2,10 +2,13 @@
 // answer with accept / reject, and the client tools (lists, opening a snippet, filling
 // its form). The server only proposes; a change is made when the user accepts it here.
 //
-// A session as stored (ajax aiSessionSave): { id, title, provider, messages }, a message:
+// A session as stored (ajax aiSessionSave): { id, title, provider, mode, messages }, a message:
 //   { role: 'user', content }
-//   { role: 'assistant', content, proposals: [proposal + state, note?, error?], clientCalls }
-// proposal.state: open | accepted | rejected | failed
+//   { role: 'assistant', content, proposals: [proposal + state, note?, error?], clientCalls, checkpoint }
+// proposal.state: open | accepted | rejected | failed | undone
+// checkpoint: the answer's undo record on the server (AiUndo), every accepted change goes there
+//
+// Mode "apply" (Just do it): the proposals of an answer are accepted as soon as it arrives.
 
 class AiController
 {
@@ -22,7 +25,7 @@ class AiController
 
   static blankSession()
   {
-    return { id: null, title: '', provider: '', messages: [] };
+    return { id: null, title: '', provider: '', mode: '', messages: [] };
   }
 
   bindEvents()
@@ -34,6 +37,7 @@ class AiController
     this.el('aiSessionsToggle')?.addEventListener('click', () => this.toggleSessions());
     this.el('aiSidebarClose')?.addEventListener('click', () => this.toggle(false));
     this.el('aiProvider')?.addEventListener('change', e => { this.session.provider = e.target.value; });
+    this.el('aiMode')?.addEventListener('change', e => { this.session.mode = e.target.value; });
 
     input?.addEventListener('keydown', e => {
       if( e.key === 'Enter' && ! e.shiftKey && ! e.isComposing ) {
@@ -105,7 +109,7 @@ class AiController
     }
 
     this.session = { ...AiController.blankSession(), ...res.session };
-    this.useProvider(this.session.provider);
+    this.useOptions();
     this.toggleSessions(false);
     this.renderConversation();
   }
@@ -114,7 +118,7 @@ class AiController
   {
     if( this.request ) this.stop();
     this.session = AiController.blankSession();
-    this.useProvider('');
+    this.useOptions();
     this.toggleSessions(false);
     this.renderConversation();
     this.el('aiInput')?.focus();
@@ -150,15 +154,18 @@ class AiController
     if( this.sessions !== null ) await this.loadSessions();
   }
 
-  // A session goes on with the provider it was held with (the select's default otherwise)
-  useProvider(provider)
+  // A session goes on with the provider and mode it was held with (a select's default for a
+  // new one); the header's selects show them
+  useOptions()
   {
-    const select = this.el('aiProvider');
-    if( ! select ) return;
+    [['aiProvider', 'provider'], ['aiMode', 'mode']].forEach(([id, key]) => {
+      const select = this.el(id);
+      if( ! select ) return;
 
-    const known = [...select.options].some(o => o.value === provider);
-    select.value = known ? provider : select.dataset.default;
-    this.session.provider = select.value;
+      const known = [...select.options].some(o => o.value === this.session[key]);
+      select.value = known ? this.session[key] : select.dataset.default;
+      this.session[key] = select.value;
+    });
   }
 
   toggleSessions(show)
@@ -234,6 +241,7 @@ class AiController
           action:   'aiChat',
           dataPath: this.app.currentDataPath,
           provider: session.provider,
+          mode:     session.mode,
           messages: AiController.modelMessages(session.messages),
           open:     open ? { path: open, basePath: this.app.currentBasePath } : null
         })
@@ -259,7 +267,8 @@ class AiController
       role:        'assistant',
       content:     res.reply,
       proposals:   (res.proposals || []).map(p => ({ ...p, state: 'open' })),
-      clientCalls: res.clientCalls || []
+      clientCalls: res.clientCalls || [],
+      checkpoint:  AiController.newCheckpoint()
     };
     session.messages.push(answer);
     this.renderConversation();
@@ -267,7 +276,10 @@ class AiController
     for( const call of answer.clientCalls )
       await this.runClientCall(call);
 
-    await this.saveSession();
+    if( session.mode === 'apply' && answer.proposals.length )
+      await this.decide(answer, answer.proposals.map(p => p.id), 'accept');   // saves the session
+    else
+      await this.saveSession();
   }
 
   stop()
@@ -339,7 +351,8 @@ class AiController
       open:     'not decided',
       accepted: 'accepted and applied',
       rejected: 'rejected',
-      failed:   'accepted, but applying it failed'
+      failed:   'accepted, but applying it failed',
+      undone:   'accepted, then undone by the user'
     };
 
     const notes = (answer.proposals || []).map(p =>
@@ -389,12 +402,13 @@ class AiController
 
   // --- Proposals ---
 
-  async accept(proposal)
+  async accept( proposal, answer )
   {
     // An autosave still queued would write over the change right after
     await this.app.editor.flushAutosave();
 
-    const res = await apiCall(this.app.currentDataPath, 'aiApply', { proposal: AiController.sent(proposal) });
+    answer.checkpoint = answer.checkpoint || AiController.newCheckpoint();   // an answer stored before undo existed
+    const res = await apiCall(this.app.currentDataPath, 'aiApply', { proposal: AiController.sent(proposal), checkpoint: answer.checkpoint });
 
     if( res.success ) {
       proposal.state = 'accepted';
@@ -404,6 +418,11 @@ class AiController
       proposal.state = 'failed';
       proposal.error = res.message;
     }
+  }
+
+  static newCheckpoint()
+  {
+    return 'cp_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   }
 
   // What goes back to the server: the proposal as it came, without the sidebar's state
@@ -417,12 +436,47 @@ class AiController
   {
     for( const proposal of answer.proposals.filter(p => ids.includes(p.id) && p.state === 'open') ) {
       if( action === 'accept' )
-        await this.accept(proposal);
+        await this.accept(proposal, answer);
       else {
         proposal.state = 'rejected';
         if( note ) proposal.note = note;
       }
     }
+
+    this.renderConversation(false);
+    await this.saveSession();
+  }
+
+  // Takes back the accepted changes of an answer. A file changed since is left as it is and
+  // named; the open snippet is shown as it is on disk afterwards.
+  async undo(answer)
+  {
+    await this.app.editor.flushAutosave();
+
+    const res = await apiCall(this.app.currentDataPath, 'aiUndo', { checkpoint: answer.checkpoint });
+    if( ! res.success ) {
+      showError('Undo failed: ' + res.message);
+      return;
+    }
+
+    const undone = answer.proposals.filter(p => p.state === 'accepted');
+    undone.forEach(p => { p.state = 'undone'; });
+    if( res.skipped.length )
+      showError('Not undone, changed since: ' + res.skipped.join(', '));
+
+    // An open snippet a change created, renamed or moved may be somewhere else now
+    const editor = this.app.editor;
+    const open   = editor.currentSnippetPath();
+    const moved  = undone.some(p => ['snippet_create', 'snippet_duplicate', 'item_rename', 'item_move'].includes(p.tool)
+                                   && (p.path === open || p.args?.newPath === open || open?.startsWith(p.path + '/')));
+
+    await this.app.loadFiles();
+    if( open && moved ) {
+      this.app.currentSnippet = null;
+      editor.clearEditForm();
+    }
+    else if( open )
+      await editor.loadSnippet(open, this.app.currentBasePath, this.app.currentTreePath);
 
     this.renderConversation(false);
     await this.saveSession();
@@ -507,6 +561,8 @@ class AiController
       this.decide(answer, [id], 'reject', change.querySelector('.ai-change-note input').value.trim());
     else if( action === 'accept-all' || action === 'reject-all' )
       this.decide(answer, answer.proposals.map(p => p.id), action === 'accept-all' ? 'accept' : 'reject');
+    else if( action === 'undo' )
+      this.undo(answer);
     else if( action === 'propose-again' )
       this.send('Please propose these changes again, following my notes.');
   }
@@ -587,10 +643,13 @@ class AiController
 
     const open   = proposals.filter(p => p.state === 'open').length;
     const noted  = proposals.some(p => p.note);
-    const header = open > 1
+    const header = (open > 1
       ? `<button type="button" class="btn btn-sm btn-outline-success" data-action="accept-all"><i class="bi bi-check-all"></i> Accept all</button>
          <button type="button" class="btn btn-sm btn-outline-secondary" data-action="reject-all"><i class="bi bi-x-lg"></i> Reject all</button>`
-      : '';
+      : '')
+      + (answer.checkpoint && proposals.some(p => p.state === 'accepted')
+      ? '<button type="button" class="btn btn-sm btn-outline-warning" data-action="undo" title="Take back the accepted changes of this answer"><i class="bi bi-arrow-counterclockwise"></i> Undo</button>'
+      : '');
     const again = ! open && noted && isLast
       ? '<button type="button" class="btn btn-sm btn-outline-primary mt-1" data-action="propose-again"><i class="bi bi-arrow-repeat"></i> Propose again</button>'
       : '';
@@ -604,7 +663,7 @@ class AiController
 
   proposalHtml(p)
   {
-    const icons = { open: 'bi-circle', accepted: 'bi-check-circle-fill', rejected: 'bi-x-circle', failed: 'bi-exclamation-circle-fill' };
+    const icons = { open: 'bi-circle', accepted: 'bi-check-circle-fill', rejected: 'bi-x-circle', failed: 'bi-exclamation-circle-fill', undone: 'bi-arrow-counterclockwise' };
     const label = escapeHtml(p.label).replace(/\*([^*]+)\*/g, '<em>$1</em>');
     const multi = Object.keys(this.app.baseFolderLabels || {}).length > 1;
     const hasDiff = (p.preview || []).length > 0;

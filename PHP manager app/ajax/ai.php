@@ -10,6 +10,7 @@ use SnippetManager\Ai\AiLibrary;
 use SnippetManager\Ai\AiPrompt;
 use SnippetManager\Ai\AiSessions;
 use SnippetManager\Ai\AiTools;
+use SnippetManager\Ai\AiUndo;
 
 /** @var SnippetManager\SnippetManager $manager */
 /** @var SnippetManager\UserStore $user */
@@ -18,11 +19,13 @@ use SnippetManager\Ai\AiTools;
 
 $aiConfig = $appConfig['ai'] ?? [];
 $sessions = fn() => new AiSessions("$userDir/ai_sessions");
+$undo     = fn() => new AiUndo("$userDir/ai_undo");
 
 return [
 
-  // One turn: {messages: [{role, content}, ...], provider?, open?: {path, basePath}}
-  // -> {reply, proposals, clientCalls}. The tools only propose, nothing is written here.
+  // One turn: {messages: [{role, content}, ...], provider?, mode?, open?: {path, basePath}}
+  // -> {reply, proposals, clientCalls}. The tools only propose, nothing is written here
+  // (mode apply: the sidebar accepts the proposals itself, the model is told so).
   // Claude Code runs the tool loop itself (AiClaude), the API providers here (AiChat).
   'aiChat' => function( array $in ) use ( $manager, $user, $aiConfig, $userDir ) : array {
 
@@ -48,24 +51,45 @@ return [
         'source' => (new AiLibrary($manager))->label( (string)($in['open']['basePath'] ?? ''))
       ];
 
-    $system = AiPrompt::build($manager, $aiConfig, $open);
+    $mode      = ($in['mode'] ?? '') === 'apply' ? 'apply' : 'ask';
+    $webSearch = ! empty($aiConfig['webSearch']) && ($provider === AiClaude::PROVIDER || AiClient::canSearch($provider));
+    $system    = AiPrompt::build($manager, $aiConfig, $open, $mode, $webSearch);
 
     if( $provider === AiClaude::PROVIDER )
       return ['success' => true] + (new AiClaude($aiConfig['claudeCode'] ?? []))->run($system, AiClaude::prompt($history), [
         'userDir' => $userDir,
         'dataSet' => $manager->sources->getCurrentLabel()
-      ]);
+      ], $webSearch);
 
     $client = new AiClient($aiConfig, $provider, AiClient::loadEnv(__DIR__ . '/../.env'));
     $chat   = new AiChat([$client, 'chat'], new AiTools($manager, $user), (int)($aiConfig['maxSteps'] ?? 15));
     return ['success' => true] + $chat->run($system, $history);
   },
 
-  // An accepted proposal, as aiChat returned it -> {paths} to refresh
+  // An accepted proposal, as aiChat returned it, recorded under the checkpoint of its answer
+  // {proposal, checkpoint} -> {paths} to refresh
   'aiApply' => fn( array $in ) => [
     'success' => true,
-    'paths'   => (new AiChanges( new AiLibrary($manager)))->apply( is_array($in['proposal'] ?? null) ? $in['proposal'] : [])
+    'paths'   => (new AiChanges( new AiLibrary($manager)))->apply(
+      is_array($in['proposal'] ?? null) ? $in['proposal'] : [], $undo(), (string)($in['checkpoint'] ?? '')
+    )
   ],
+
+  // Takes back the accepted changes of an answer: {checkpoint} -> {restored, skipped: ["Source: path"]}
+  'aiUndo' => function( array $in ) use ( $manager, $undo ) : array {
+    $result = $undo()->undo( (string)($in['checkpoint'] ?? ''));
+    $lib    = new AiLibrary($manager);
+
+    // Absolute paths stay on the server: a skipped one is named by its source and path
+    $named = array_map( function( $path ) use ( $lib, $manager ) {
+      foreach( $manager->sources->getPaths() as $base )
+        if( strpos($path, "$base/") === 0 )
+          return $lib->label($base) . ': ' . substr($path, strlen($base) + 1);
+      return basename($path);
+    }, $result['skipped']);
+
+    return ['success' => true, 'restored' => $result['restored'], 'skipped' => $named];
+  },
 
   'aiSessions' => fn() => ['success' => true, 'sessions' => $sessions()->list( $manager->sources->getCurrentLabel())],
 

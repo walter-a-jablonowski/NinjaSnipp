@@ -64,6 +64,24 @@ test('modelMessages tells the model what became of its last answer', () => {
   ]);
 });
 
+test('modelMessages tells about an undo', () => {
+  const messages = [
+    { role: 'user', content: 'Fix x' },
+    { role: 'assistant', content: 'Done.', proposals: [{ id: 'c1', label: 'Edit *x*: content', state: 'undone' }] },
+    { role: 'user', content: 'Why?' }
+  ];
+
+  assert.equal( AiController.modelMessages(messages)[2].content,
+    '[What happened to your last answer: "Edit *x*: content" accepted, then undone by the user]\n\nWhy?');
+});
+
+test('newCheckpoint makes unique ids the server accepts', () => {
+  const a = AiController.newCheckpoint(), b = AiController.newCheckpoint();
+
+  assert.match(a, /^cp_[a-z0-9]+$/);
+  assert.notEqual(a, b);
+});
+
 test('modelMessages adds nothing for an answer without proposals', () => {
   const messages = [
     { role: 'user', content: 'Hi' },

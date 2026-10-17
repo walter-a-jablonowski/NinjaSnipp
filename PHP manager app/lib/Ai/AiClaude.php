@@ -68,8 +68,9 @@ class AiClaude
   }
 
   // One request, until the CLI has answered: ['reply', 'proposals', 'clientCalls'] as AiChat::run()
-  // $context: what the tool server needs - userDir, dataSet
-  public function run( string $system, string $prompt, array $context ) : array
+  // $context: what the tool server needs - userDir, dataSet. $webSearch: the CLI's own
+  // WebSearch / WebFetch, on the subscription
+  public function run( string $system, string $prompt, array $context, bool $webSearch = false ) : array
   {
     $dir = self::turnsDir() . '/' . uniqid('turn_', true);
     if( ! @mkdir($dir, 0755, true) )
@@ -80,7 +81,7 @@ class AiClaude
       file_put_contents("$dir/context.json", json_encode($context, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
       file_put_contents("$dir/system.md", $system);
 
-      $out  = $this->exec( $this->command($dir), $prompt, $dir);
+      $out  = $this->exec( $this->command($dir, $webSearch), $prompt, $dir);
       $turn = self::parse($out['stdout']);
 
       // Without its tools the CLI does not fail, it answers from a library it makes up
@@ -173,9 +174,10 @@ class AiClaude
   // --- The process ---
 
   // The argument list: proc_open() starts the exe directly, no shell, no quoting rules
-  private function command( string $dir ) : array
+  private function command( string $dir, bool $webSearch ) : array
   {
     [$php, $script] = $this->serverCommand();
+    $builtIn        = $webSearch ? ['WebSearch', 'WebFetch'] : [];
 
     // Forward slashes: --mcp-config takes a file name or JSON and tells them apart by
     // parsing - a Windows path would put "\x" in, no valid JSON escape (grid-view)
@@ -190,9 +192,9 @@ class AiClaude
       '--output-format', 'stream-json', '--verbose',
       '--no-session-persistence',
       '--setting-sources', '',
-      '--tools', '',
+      '--tools', implode(',', $builtIn),
       '--mcp-config', $mcp, '--strict-mcp-config',
-      '--allowedTools', implode(',', array_map( fn( $tool ) => self::PREFIX . $tool['name'], AiTools::defs())),
+      '--allowedTools', implode(',', array_merge($builtIn, array_map( fn( $tool ) => self::PREFIX . $tool['name'], AiTools::defs()))),
       '--system-prompt-file', "$dir/system.md"
     ];
 

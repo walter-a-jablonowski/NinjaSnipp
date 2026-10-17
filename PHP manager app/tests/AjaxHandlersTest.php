@@ -142,10 +142,13 @@ class AjaxHandlersTest extends TestCase
     $proposal = (new AiTools($this->manager, new UserStore("{$this->root}/user")))
       ->call('c1', 'snippet_update', ['path' => 'x.yml', 'fields' => ['content' => 'new']])['proposal'];
 
-    $response = $this->call('aiApply', ['proposal' => json_decode( json_encode($proposal), true)]);
+    $response = $this->call('aiApply', ['proposal' => json_decode( json_encode($proposal), true), 'checkpoint' => 'cp_t']);
 
     $this->assertSame(['success' => true, 'paths' => ['x.yml']], $response);
     $this->assertSame('new', $this->manager->snippets->load('x.yml')['content']);
+
+    $this->write('a/x.yml', 'content: changed by the user');
+    $this->assertSame(['success' => true, 'restored' => 0, 'skipped' => ['A: x.yml']], $this->call('aiUndo', ['checkpoint' => 'cp_t']));
   }
 
   public function testAiSessions() : void
