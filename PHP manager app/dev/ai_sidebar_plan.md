@@ -1,6 +1,6 @@
 # AI sidebar: implementation plan
 
-Status: phases 1-4 done (backend, sidebar, Claude Code, undo + "Just do it" + web search); next: 5 (quick prompts).
+Status: all phases done (backend, sidebar, Claude Code, undo + "Just do it" + web search, quick prompts).
 
 Deviations from the plan made while building it:
 
@@ -324,6 +324,11 @@ ai:
 
 The ⚡ menu left of the input, and `/` in the empty input. A pick fills the input and may
 switch the mode; it never sends.
+
+Built (2026-10-18): rendered by `index.php` (entries without a string `label` and `prompt` are
+left out, `mode` only `ask` | `apply`); no ⚡ button when the list is empty. Keyboard: `/`
+opens the menu with the first entry focused, arrows and Enter pick, Escape goes back to the
+input. The example entries are in `users/default/settings.yml`.
 
 
 ## Test cases from the real data (done: all fixed with the sidebar, 2026-10-17)

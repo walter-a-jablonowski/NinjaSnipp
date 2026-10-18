@@ -1616,6 +1616,18 @@ ul.no-indent {
   box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.2);
 }
 
+/* Quick prompts (users settings ai.quickPrompts) */
+.ai-quick-menu {
+  max-width: 340px;
+  max-height: 50vh;
+  overflow-y: auto;
+  font-size: 0.875rem;
+}
+
+.ai-quick-menu .dropdown-item {
+  white-space: normal;
+}
+
 /* Folder color swatches in dropdown */
 .folder-color-row {
   display: flex;

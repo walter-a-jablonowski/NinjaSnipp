@@ -24,6 +24,10 @@ if( isset($_GET['data']) )
 $aiProviders = AiClient::choices($appConfig['ai'] ?? []);
 $aiMode      = ($appConfig['ai']['mode'] ?? 'ask') === 'apply' ? 'apply' : 'ask';
 
+// The user's quick prompts (settings.yml ai.quickPrompts): label, prompt, optional mode
+$quickPrompts = array_values( array_filter( (array)($settings['ai']['quickPrompts'] ?? []),
+  fn( $quick ) => is_string($quick['label'] ?? null) && is_string($quick['prompt'] ?? null)));
+
 // Snippet columns, switchable via pills on mobile (one column at a time)
 $fieldPanes = ['usage' => 'Usage', 'content' => 'Content'];
 
@@ -378,8 +382,25 @@ $usageLists = [
         <div class="ai-sessions border-bottom" id="aiSessions" hidden></div>
         <div class="ai-messages" id="aiMessages"></div>
         <div class="ai-input-area border-top p-2 pb-lg-3">
-          <div class="input-group">
-            <textarea class="form-control form-control-sm" id="aiInput" placeholder="Ask about your snippets …" rows="2" style="resize: none;"></textarea>
+          <div class="input-group dropup">
+            <?php if( $quickPrompts ): ?>
+              <!-- Quick prompts: a pick fills the input (and may switch the mode), it never sends; "/" in the empty input opens it -->
+              <button class="btn btn-outline-secondary btn-sm" type="button" id="aiQuickBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Quick prompts ( / )" aria-label="Quick prompts">
+                <i class="bi bi-lightning-charge"></i>
+              </button>
+              <ul class="dropdown-menu ai-quick-menu" id="aiQuickMenu">
+                <?php foreach( $quickPrompts as $quick ): ?>
+                  <li>
+                    <button class="dropdown-item" type="button" title="<?= htmlspecialchars($quick['prompt']) ?>"
+                            data-prompt="<?= htmlspecialchars($quick['prompt']) ?>"
+                            data-mode="<?= in_array($quick['mode'] ?? '', ['ask', 'apply'], true) ? $quick['mode'] : '' ?>">
+                      <?= htmlspecialchars($quick['label']) ?>
+                    </button>
+                  </li>
+                <?php endforeach; ?>
+              </ul>
+            <?php endif; ?>
+            <textarea class="form-control form-control-sm" id="aiInput" placeholder="<?= $quickPrompts ? 'Ask about your snippets, / for quick prompts …' : 'Ask about your snippets …' ?>" rows="2" style="resize: none;"></textarea>
             <button class="btn btn-primary btn-sm px-3" type="button" id="aiSendBtn" title="Send">
               <i class="bi bi-send-fill"></i>
             </button>

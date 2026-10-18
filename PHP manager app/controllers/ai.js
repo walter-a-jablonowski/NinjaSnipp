@@ -30,7 +30,9 @@ class AiController
 
   bindEvents()
   {
-    const input = this.el('aiInput');
+    const input     = this.el('aiInput');
+    const quickBtn  = this.el('aiQuickBtn');
+    const quickMenu = this.el('aiQuickMenu');
 
     this.el('aiSendBtn')?.addEventListener('click', () => this.request ? this.stop() : this.send());
     this.el('aiNewSession')?.addEventListener('click', () => this.newSession());
@@ -44,7 +46,34 @@ class AiController
         e.preventDefault();
         if( ! this.request ) this.send();
       }
+      else if( e.key === '/' && ! input.value && quickBtn ) {     // the quick prompts
+        e.preventDefault();
+        bootstrap.Dropdown.getOrCreateInstance(quickBtn).show();
+        quickMenu.querySelector('.dropdown-item')?.focus();
+      }
     });
+
+    // Quick prompts: a pick fills the input and may switch the mode, the user sends it
+    quickMenu?.addEventListener('click', e => {
+      const item = e.target.closest('[data-prompt]');
+      if( ! item ) return;
+
+      input.value = item.dataset.prompt;
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
+
+      if( item.dataset.mode && this.el('aiMode') )
+        this.el('aiMode').value = this.session.mode = item.dataset.mode;
+    });
+    // Escape goes back to the input. Bootstrap handles it earlier (document, capture phase)
+    // and focuses the ⚡ button, so this listens before it, on window
+    if( quickMenu )
+      window.addEventListener('keydown', e => {
+        if( e.key !== 'Escape' || ! quickMenu.contains(e.target) ) return;
+        e.stopPropagation();
+        bootstrap.Dropdown.getOrCreateInstance(quickBtn).hide();
+        input.focus();
+      }, true);
 
     // One listener per container: rows come and go with every render
     const messages = this.el('aiMessages');

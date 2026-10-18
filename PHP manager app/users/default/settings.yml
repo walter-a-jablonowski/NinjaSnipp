@@ -45,3 +45,19 @@ render:
   highlightInclude: true
 edit:
   autosave: true
+
+# AI sidebar: quick prompts (the ⚡ menu, or / in the empty input). A pick fills the input,
+# you send it. mode (optional): ask | apply switches the chat's mode.
+ai:
+  quickPrompts:
+    - label:  Check this snippet
+      prompt: "Check the open snippet: placeholders and maybe blocks documented, usage complete, includes found. Propose fixes."
+    - label:  Improve prompt
+      prompt: "Improve the open prompt: clearer, shorter, nothing lost. Show what you changed and why."
+    - label:  Fill for my task
+      prompt: "Fill the open prompt for this task: "
+    - label:  Find a prompt
+      prompt: "Do I have a prompt for "
+    - label:  Clean up folder
+      prompt: "Go through the folder of the open snippet: duplicates, old versions, missing docs. Propose a cleanup."
+      mode:   ask
