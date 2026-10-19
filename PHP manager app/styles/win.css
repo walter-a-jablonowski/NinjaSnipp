@@ -109,19 +109,33 @@ body.win-app {
   font-weight: 500;
 }
 
+/* Tabs on top, their content scrolls, the result stays below */
 .win-fill-body {
   flex: 1 1 auto;
   min-height: 0;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
 .win-short {
+  flex-shrink: 0;
   font-size: 0.875rem;
   font-style: italic;
   color: var(--bs-secondary-color);
+}
+
+.win-tabs {
+  flex-shrink: 0;
+  font-size: 0.875rem;
+}
+
+.win-tabs .nav-link { padding: 0.25rem 0.75rem; }
+
+.win-tab-pane {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .win-app .inline-snippet,
@@ -131,6 +145,7 @@ body.win-app {
 }
 
 .win-result-head {
+  flex-shrink: 0;
   display: flex;
   gap: 0.5rem;
   align-items: baseline;

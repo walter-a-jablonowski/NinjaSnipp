@@ -24,8 +24,8 @@ class WinController
 
     this.el = {};
     ['pickView', 'pickFilter', 'pickDataSet', 'pickNote', 'pickList', 'fillView', 'fillBack', 'fillName', 'fillSc',
-     'fillDataSet', 'fillShort', 'renderUsage', 'fillEdited', 'fillReset', 'fillText', 'fillCancel', 'fillInsert',
-     'phChoiceMenu'].forEach(id => this.el[id] = document.getElementById(id));
+     'fillDataSet', 'fillShort', 'fillTabs', 'renderUsage', 'fillEdited', 'fillReset', 'fillText', 'fillCancel',
+     'fillInsert', 'phChoiceMenu'].forEach(id => this.el[id] = document.getElementById(id));
 
     this.form = new SnippetForm({
       inline:   document.getElementById('inlineSnippet'),
@@ -88,6 +88,11 @@ class WinController
     this.el.pickList.addEventListener('click', e => {
       const row = e.target.closest('.win-row');
       if( row ) this.choose( this.rows[Number(row.dataset.idx)]);
+    });
+
+    this.el.fillTabs.addEventListener('click', e => {
+      const tab = e.target.closest('[data-tab]');
+      if( tab ) this.showTab(tab.dataset.tab);
     });
 
     this.el.fillBack.addEventListener('click', () => this.pick(this.scFilter));
@@ -268,12 +273,30 @@ class WinController
     this.el.fillEdited.hidden = true;
     this.form.render(composed.composed || '');
     this.el.renderUsage.innerHTML = this.form.tablesHtml(snippet.usage, snippet.content || '');
-    this.el.renderUsage.hidden    = this.el.renderUsage.innerHTML === '';
     this.form.bindTables();
 
+    // Without documented vars or MAYBE blocks the form is empty: the snippet only
+    const hasForm = this.el.renderUsage.innerHTML !== '';
+    this.el.fillTabs.querySelector('[data-tab="form"]').parentElement.hidden = ! hasForm;
+    this.showTab(hasForm ? 'form' : 'snippet');
+
     this.show('fill');
-    const first = document.querySelector('#inlineSnippet .ph') || this.el.renderUsage.querySelector('.var-input') || this.el.fillInsert;
-    first.focus();
+    const first = hasForm
+      ? this.el.renderUsage.querySelector('.var-input') || this.el.renderUsage.querySelector('.maybe-table-cb')
+      : document.querySelector('#inlineSnippet .ph');
+    (first || this.el.fillInsert).focus();
+  }
+
+  showTab(tab)
+  {
+    this.form.closeChoiceMenu();
+
+    this.el.fillTabs.querySelectorAll('[data-tab]').forEach(button => {
+      const active = button.dataset.tab === tab;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-selected', active);
+    });
+    this.el.fillView.querySelectorAll('[data-pane]').forEach(pane => pane.hidden = pane.dataset.pane !== tab);
   }
 
   // The result edited by hand wins over the form until reset

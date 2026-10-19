@@ -14,6 +14,9 @@ $settings = ( new UserStore( APP_ROOT . '/' . user_dir()))->getSettings();
 $theme    = $settings['theme'] ?? 'light';
 $sources  = new Sources( $settings['dataPaths'] ?? ['data'], __DIR__);
 
+// Fill view tabs: the form (maybe and vars tables) first, the snippet with its inline placeholders
+$fillTabs = ['form' => 'Form', 'snippet' => 'Snippet'];
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -69,8 +72,19 @@ $sources  = new Sources( $settings['dataPaths'] ?? ['data'], __DIR__);
     </div>
     <div class="win-fill-body">
       <div id="fillShort" class="win-short"></div>
-      <div id="inlineSnippet" class="inline-snippet"></div>
-      <div id="renderUsage" class="usage-preview"></div>
+      <ul class="nav nav-tabs win-tabs" id="fillTabs" role="tablist">
+        <?php foreach( $fillTabs as $tab => $label ): ?>
+          <li class="nav-item" role="presentation">
+            <button type="button" class="nav-link" data-tab="<?= $tab ?>" role="tab"><?= $label ?></button>
+          </li>
+        <?php endforeach; ?>
+      </ul>
+      <div class="win-tab-pane" data-pane="form">
+        <div id="renderUsage" class="usage-preview"></div>
+      </div>
+      <div class="win-tab-pane" data-pane="snippet">
+        <div id="inlineSnippet" class="inline-snippet"></div>
+      </div>
       <div class="win-result-head">
         <label for="fillText">Result</label>
         <span id="fillEdited" hidden>
