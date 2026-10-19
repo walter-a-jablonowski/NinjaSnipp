@@ -59,7 +59,30 @@ class RendererTest extends TestCase
     $content = "Start\n  {{ MAYBE: Extra }}\n  optional\n  {{ END-MAYBE }}\nEnd";
 
     $this->assertSame("Start\n  optional\nEnd", $this->render($content));
-    $this->assertSame("Start\n<<<MAYBE:START:Extra>>>  optional<<<MAYBE:END>>>End", $this->compose($content));
+    $this->assertSame("Start\n<<<MAYBE:START:Extra>>>  optional\n<<<MAYBE:END>>>End", $this->compose($content));   // the line break goes with the block
+  }
+
+  // Blocks on lines of their own are like those lines: the blank line after one stays, no blank is added
+  public function testMaybeBlocksOnTheirOwnLines() : void
+  {
+    $content  = "Intro\n\n{{ MAYBE: A }}\nfirst\n{{ END-MAYBE }}\n{{ MAYBE: B }}\nsecond\n{{ END-MAYBE }}\n\nOutro";
+    $renderer = $this->manager()->renderer;
+
+    $this->assertSame("Intro\n\nfirst\nsecond\n\nOutro", $renderer->render(['content' => $content]));
+    $this->assertSame("Intro\n\nsecond\n\nOutro", $renderer->render(['content' => $content], [], ['A']));
+    $this->assertSame("Intro\n\n<<<MAYBE:START:A>>>first\n<<<MAYBE:END>>><<<MAYBE:START:B>>>second\n<<<MAYBE:END>>>\nOutro",
+      $renderer->compose(['content' => $content]));
+  }
+
+  // A block within a line keeps the blanks around it
+  public function testMaybeBlockWithinALine() : void
+  {
+    $content  = 'Use {{ MAYBE: X }}the fast{{ END-MAYBE }} way';
+    $renderer = $this->manager()->renderer;
+
+    $this->assertSame('Use the fast way', $renderer->render(['content' => $content]));
+    $this->assertSame('Use  way', $renderer->render(['content' => $content], [], ['X']));   // copy output squeezes blanks
+    $this->assertSame('Use <<<MAYBE:START:X>>>the fast<<<MAYBE:END>>> way', $renderer->compose(['content' => $content]));
   }
 
   public function testIncludes() : void
@@ -101,9 +124,9 @@ class RendererTest extends TestCase
   {
     $this->write('a/style.yml', 'content: STYLE');
 
-    $this->assertSame('<<<MAYBE:START:X>>>more<<<MAYBE:END>>>STYLE',
+    $this->assertSame("<<<MAYBE:START:X>>>more\n<<<MAYBE:END>>>STYLE",
       $this->compose("{{ MAYBE: X }}\nmore\n{{ END-MAYBE }}\n{{ include: \"style\" }}"));
-    $this->assertSame('<<<MAYBE:START:X>>>STYLE<<<MAYBE:END>>>',
+    $this->assertSame("<<<MAYBE:START:X>>>STYLE\n<<<MAYBE:END>>>",
       $this->compose("{{ MAYBE: X }}\n{{ include: \"style\" }}\n{{ END-MAYBE }}\n"));
   }
 

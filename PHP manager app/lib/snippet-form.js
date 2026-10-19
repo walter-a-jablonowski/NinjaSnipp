@@ -532,17 +532,9 @@ class SnippetForm
       else if( node.nodeType === Node.ELEMENT_NODE ) {
         const el = node;
 
-        if( el.classList.contains('maybe-block') ) {
-          const enabled = el.dataset.enabled === 'true';
-          if( ! enabled ) return '';
-          const content = el.querySelector('.maybe-content');
-          if( content ) {
-            let text = '';
-            content.childNodes.forEach(child => {
-              text += extractText(child);
-            });
-            return ' ' + text + ' ';
-          }
+        // The composed text has a block's line break inside it (Renderer::processMaybeBlocks),
+        // so a block is its content as it is: the text is the same as the PHP render() gives
+        if( el.classList.contains('maybe-block') && el.dataset.enabled !== 'true' ) {
           return '';
         }
 

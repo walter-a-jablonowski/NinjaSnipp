@@ -232,24 +232,32 @@ class Renderer
     }, $content);
   }
 
+  // A block on lines of its own is like those lines: on, its text keeps the line break of the
+  // END tag line (else the text after the block would join its last line); off, the lines are
+  // gone. A block within a line keeps the blanks around it, they separate it from the text.
+  // For the inline editor the line break is inside the markers: it goes with the block, the
+  // copy output (SnippetForm.updateText) then is the same text as render() gives.
   private function processMaybeBlocks( string $content, bool $forInline ) : string
   {
     // Consumes the whole tag lines (leading spaces + tag + trailing newline) so no blank lines remain
-    $pattern = '/[^\S\n]*\{\{\s*MAYBE:\s*([^}]+)\s*\}\}[^\S\n]*\n?(.*?)[^\S\n]*\{\{\s*END-MAYBE\s*\}\}[^\S\n]*(\n?)/s';
+    $pattern = '/([^\S\n]*)\{\{\s*MAYBE:\s*([^}]+)\s*\}\}[^\S\n]*\n?(.*?)[^\S\n]*\{\{\s*END-MAYBE\s*\}\}([^\S\n]*)(\n?)/s';
 
-    return preg_replace_callback($pattern, function( $matches ) use ( $forInline ) {
+    return preg_replace_callback($pattern, function( $matches ) use ( $content, $forInline ) {
 
-      $name  = trim($matches[1]);
-      if( ! $forInline && in_array($name, $this->maybeOff, true) )
-        return '';                                        // the whole block, tag lines included
+      $offset    = $matches[0][1];
+      $name      = trim($matches[2][0]);
+      $lineBreak = $matches[5][0];
+      $before    = $offset > 0 && $content[$offset - 1] !== "\n" ? $matches[1][0] : '';   // the indent of a tag line is no text
+      $after     = $lineBreak === '' ? $matches[4][0] : '';
 
-      $block = rtrim( ltrim($matches[2], "\n"), "\n ");   // no extra blank lines from the block
-      $block = $this->processMaybeBlocks($block, $forInline);
+      $block = rtrim( ltrim($matches[3][0], "\n"), "\n ");   // no extra blank lines from the block
+      $block = $this->processMaybeBlocks($block, $forInline) . $lineBreak;
 
-      // Inline, the block is its own element. As plain text it gets back the line break
-      // of the END tag line, or the text after the block would join its last line.
-      return $forInline ? "<<<MAYBE:START:$name>>>$block<<<MAYBE:END>>>" : $block . $matches[3];
-    }, $content);
+      if( $forInline )
+        return "$before<<<MAYBE:START:$name>>>$block<<<MAYBE:END>>>$after";
+
+      return in_array($name, $this->maybeOff, true) ? $before . $after : $before . $block . $after;
+    }, $content, -1, $count, PREG_OFFSET_CAPTURE);
   }
 
   // The snippet an include of $name resolves to, ['path' => fsPath, 'snippet'], or null:
