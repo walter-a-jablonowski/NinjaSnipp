@@ -14,8 +14,9 @@ $settings = ( new UserStore( APP_ROOT . '/' . user_dir()))->getSettings();
 $theme    = $settings['theme'] ?? 'light';
 $sources  = new Sources( $settings['dataPaths'] ?? ['data'], __DIR__);
 
-// Fill view tabs: the form (maybe and vars tables) first, the snippet with its inline placeholders
-$fillTabs = ['form' => 'Form', 'snippet' => 'Snippet'];
+// Fill view tabs: the form (maybe and vars tables) first, the snippet with its inline placeholders,
+// the resulting text
+$fillTabs = ['form' => 'Form', 'snippet' => 'Snippet', 'result' => 'Result'];
 
 ?>
 <!DOCTYPE html>
@@ -85,14 +86,13 @@ $fillTabs = ['form' => 'Form', 'snippet' => 'Snippet'];
       <div class="win-tab-pane" data-pane="snippet">
         <div id="inlineSnippet" class="inline-snippet"></div>
       </div>
-      <div class="win-result-head">
-        <label for="fillText">Result</label>
-        <span id="fillEdited" hidden>
-          edited by hand, changes in the form no longer apply ·
+      <div class="win-tab-pane win-result" data-pane="result">
+        <div id="fillEdited" class="win-result-note" hidden>
+          Edited by hand, changes in the form no longer apply ·
           <a href="#" id="fillReset">reset</a>
-        </span>
+        </div>
+        <textarea id="fillText" class="form-control form-control-sm" spellcheck="false" aria-label="Result"></textarea>
       </div>
-      <textarea id="fillText" class="form-control form-control-sm" rows="6" spellcheck="false"></textarea>
     </div>
     <div class="win-actions">
       <span class="win-hint">Ctrl+Enter insert · Esc close</span>

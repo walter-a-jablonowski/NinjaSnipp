@@ -109,7 +109,7 @@ body.win-app {
   font-weight: 500;
 }
 
-/* Tabs on top, their content scrolls, the result stays below */
+/* Tabs on top, their content uses the rest of the height and scrolls */
 .win-fill-body {
   flex: 1 1 auto;
   min-height: 0;
@@ -132,6 +132,11 @@ body.win-app {
 
 .win-tabs .nav-link { padding: 0.25rem 0.75rem; }
 
+.win-tab-edited::after {
+  content: " · edited";
+  color: var(--bs-warning-text-emphasis);
+}
+
 .win-tab-pane {
   flex: 1 1 auto;
   min-height: 0;
@@ -144,17 +149,23 @@ body.win-app {
   overflow: visible;
 }
 
-.win-result-head {
-  flex-shrink: 0;
+/* Result tab: the text fills it */
+.win-result:not([hidden]) {
   display: flex;
-  gap: 0.5rem;
-  align-items: baseline;
+  flex-direction: column;
+  gap: 0.25rem;
+  overflow: hidden;
+}
+
+.win-result-note {
+  flex-shrink: 0;
   font-size: 0.8rem;
-  color: var(--bs-secondary-color);
+  color: var(--bs-warning-text-emphasis);
 }
 
 #fillText {
-  flex-shrink: 0;
+  flex: 1 1 auto;
+  resize: none;
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   font-size: 0.8rem;
 }

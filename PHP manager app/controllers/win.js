@@ -269,9 +269,8 @@ class WinController
     this.el.fillShort.hidden        = ! entry.short;
     this.el.fillBack.hidden         = ! fromPicker;
 
-    this.edited = false;
-    this.el.fillEdited.hidden = true;
-    this.form.render(composed.composed || '');
+    this.setEdited(false);
+    this.form.render(composed.composed || '');      // sets the result through onChange
     this.el.renderUsage.innerHTML = this.form.tablesHtml(snippet.usage, snippet.content || '');
     this.form.bindTables();
 
@@ -304,6 +303,7 @@ class WinController
   {
     this.edited = edited;
     this.el.fillEdited.hidden = ! edited;
+    this.el.fillTabs.querySelector('[data-tab="result"]').classList.toggle('win-tab-edited', edited);   // seen from the other tabs too
     if( ! edited ) this.el.fillText.value = this.form.text;
   }
 

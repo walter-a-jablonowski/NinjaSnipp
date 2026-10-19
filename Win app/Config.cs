@@ -16,7 +16,7 @@ public class Config
   public class PopupSize
   {
     public int Width { get; set; } = 760;
-    public int Height { get; set; } = 560;
+    public int Height { get; set; } = 0;     // 0: the full screen height
   }
 
   public static Config Load( string path )

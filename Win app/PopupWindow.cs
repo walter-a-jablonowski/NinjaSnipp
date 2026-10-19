@@ -181,12 +181,21 @@ public class PopupWindow : Form
       Cancel?.Invoke();
   }
 
-  // Below the caret, above it when there is no room below. When it fits on neither side, on
-  // the larger one with less height: the line the user types in stays visible.
+  // At the caret's x. Height 0 in the config: the full screen height (long snippets need the room).
+  // Else below the caret, above it when there is no room below. When it fits on neither side,
+  // on the larger one with less height: the line the user types in stays visible.
   private void PlaceAt( Rectangle caret )
   {
     var area   = Screen.FromPoint(caret.Location).WorkingArea;
     int width  = Math.Min( LogicalToDeviceUnits(logicalSize.Width), area.Width);
+    int x      = Math.Clamp(caret.Left, area.Left, area.Right - width);
+
+    if( logicalSize.Height <= 0 )
+    {
+      Bounds = new Rectangle(x, area.Top, width, area.Height);
+      return;
+    }
+
     int height = LogicalToDeviceUnits(logicalSize.Height);
     int below  = area.Bottom - caret.Bottom - CaretGap;
     int above  = caret.Top - CaretGap - area.Top;
@@ -194,7 +203,6 @@ public class PopupWindow : Form
     bool down = height <= below || (height > above && below >= above);
     height    = Math.Min( Math.Min(height, area.Height), Math.Max(down ? below : above, LogicalToDeviceUnits(MinHeight)));
 
-    int x = Math.Clamp(caret.Left, area.Left, area.Right - width);
     int y = down ? caret.Bottom + CaretGap : caret.Top - CaretGap - height;
 
     Bounds = new Rectangle(x, Math.Clamp(y, area.Top, area.Bottom - height), width, height);

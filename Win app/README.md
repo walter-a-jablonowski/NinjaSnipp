@@ -42,7 +42,7 @@ shortcuts, Start with Windows and Exit.
 | `insertMode` | `paste`: through the clipboard, which is restored after (default) <br> `type`: as keystrokes, the clipboard isn't touched |
 | `excludedApps` | apps without typed shortcuts, process names without `.exe`, e.g. `[KeePass]` |
 | `refreshSeconds` | how often the snippets are checked for changes (cheap: the server answers "unchanged") |
-| `popup` | `width`, `height` of the popup |
+| `popup` | `width`, `height` of the popup in logical pixels; height `0` (default): the full screen height |
 
 
 ## How it works

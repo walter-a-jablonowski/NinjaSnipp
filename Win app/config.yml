@@ -7,6 +7,6 @@ insertMode:     paste            # paste: through the clipboard, restored after 
 excludedApps:   []               # no typed shortcuts in these apps, process names without .exe, e.g. [KeePass]
 refreshSeconds: 60               # how often the snippets are checked for changes
 
-popup:
+popup:              # logical pixels (Windows scaling applied)
   width:  760
-  height: 560
+  height: 0         # 0: the full screen height, else placed above or below the caret
