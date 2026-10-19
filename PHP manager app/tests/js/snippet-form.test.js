@@ -1,15 +1,15 @@
 const { test } = require('node:test');
 const assert   = require('node:assert/strict');
-const { load } = require('./load.js');
+const { load, fixture } = require('./load.js');
 
-const { RenderController } = load('lib/functions.js', 'controllers/render.js');
+const { SnippetForm } = load('lib/functions.js', 'lib/snippet-form.js');
 
-const render = new RenderController({});
+const form = new SnippetForm({});
 
 // buildInlineHtmlFromComposed() gets the composed text from the PHP Renderer: includes are resolved
 // and MAYBE blocks are marked as <<<MAYBE:START:name>>>...<<<MAYBE:END>>> (see RendererTest)
 
-const inline = text => render.buildInlineHtmlFromComposed(text);
+const inline = text => form.buildInlineHtmlFromComposed(text);
 
 const unescape = s => s.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
 const attr     = ( tag, name ) => { const m = tag.match(new RegExp(` ${name}="([^"]*)"|${name}='([^']*)'`)); return m ? unescape(m[1] ?? m[2]) : undefined; };
@@ -109,27 +109,33 @@ test('MAYBE and include names are escaped', () => {
 });
 
 
-// unwrapBlock: copy output joins soft wrapped lines
+// Copy output: soft wrapped lines are joined
 
 test('unwrapBlock joins soft wrapped lines and squeezes blanks', () => {
-  assert.equal( render.unwrapBlock('one   two\nthree\n four'), 'one two three\n four');
+  assert.equal( form.unwrapBlock('one   two\nthree\n four'), 'one two three\n four');
 });
 
 test('unwrapBlock keeps structured lines', () => {
   const block = '# Title\n- a\n* b\n+ c\n• d\n1. e\n2) f\n> quote\n| table |\n```\n  indented';
-  assert.equal( render.unwrapBlock(block), block);
+  assert.equal( form.unwrapBlock(block), block);
 });
 
 test('unwrapBlock keeps the indent of nested list items', () => {
-  assert.equal( render.unwrapBlock('- a\n  - b   c'), '- a\n  - b c');
+  assert.equal( form.unwrapBlock('- a\n  - b   c'), '- a\n  - b c');
 });
 
 test('unwrapBlock does not join text onto a list item or heading', () => {
-  assert.equal( render.unwrapBlock('# Title\ntext\nmore\n- item\nnext'), '# Title\ntext more\n- item\nnext');
+  assert.equal( form.unwrapBlock('# Title\ntext\nmore\n- item\nnext'), '# Title\ntext more\n- item\nnext');
 });
 
 test('unwrapBlock drops blank lines', () => {
-  assert.equal( render.unwrapBlock('one\n\n   \ntwo\n'), 'one two');
+  assert.equal( form.unwrapBlock('one\n\n   \ntwo\n'), 'one two');
+});
+
+// The PHP side has its own copy (Renderer::unwrap), RendererTest runs the same cases
+test('unwrap: shared cases', () => {
+  for( const c of fixture('unwrap.json') )
+    assert.equal( form.unwrap(c.text), c.unwrapped, c.description);
 });
 
 
@@ -162,9 +168,8 @@ function hiddenVars( names, phs )
   const inputs = names.map(name => el('input', 'var-input', { varName: name }));
   inputs.forEach(input => el('tr', '', {}, [input]));
 
-  globalThis.document = { querySelectorAll: selector => ({ '#renderUsage .var-input': inputs, '#inlineSnippet .ph': phs })[selector] };
-  render.updateVarRowVisibility();
-  delete globalThis.document;
+  const container = items => ({ querySelectorAll: selector => items[selector] || [] });
+  new SnippetForm({ inline: container({ '.ph': phs }), usage: container({ '.var-input': inputs }) }).updateVarRowVisibility();
 
   return inputs.filter(input => input.parentElement.style.display === 'none').map(input => input.dataset.varName);
 }

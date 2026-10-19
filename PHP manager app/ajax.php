@@ -36,7 +36,8 @@ try {
     require 'ajax/files.php',
     require 'ajax/snippets.php',
     require 'ajax/user.php',
-    require 'ajax/ai.php'
+    require 'ajax/ai.php',
+    require 'ajax/win.php'
   );
 
   $response = isset($handlers[$action])

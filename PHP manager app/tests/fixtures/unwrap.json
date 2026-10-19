@@ -1,0 +1,27 @@
+[
+  {
+    "description": "soft wrapped lines are joined, blocks keep one blank line between them",
+    "text": "one\ntwo\n\n\n\nthree\nfour",
+    "unwrapped": "one two\n\nthree four"
+  },
+  {
+    "description": "structured lines keep their line breaks, nested items their indent",
+    "text": "# Title\ntext\nmore\n- item\n  - nested   x\nnext",
+    "unwrapped": "# Title\ntext more\n- item\n  - nested x\nnext"
+  },
+  {
+    "description": "bullets, numbered items, quotes, tables and code fences are structured",
+    "text": "• a\n1. b\n2) c\n> q\n| t |\n```\ncode\n```",
+    "unwrapped": "• a\n1. b\n2) c\n> q\n| t |\n```\ncode\n```"
+  },
+  {
+    "description": "runs of blanks are squeezed, blanks at the end dropped",
+    "text": "a   b  \t c   ",
+    "unwrapped": "a b c"
+  },
+  {
+    "description": "empty blocks and lines of blanks are dropped",
+    "text": "\n\none\n   \n\n\n  \n\ntwo\n",
+    "unwrapped": "one\n\ntwo"
+  }
+]

@@ -94,7 +94,8 @@ class Sources
     return $this->dataSets;
   }
 
-  public function select( string $label ) : bool
+  // $createFolders false: for reading only (SnippetIndex visits every data set)
+  public function select( string $label, bool $createFolders = true ) : bool
   {
     if( ! isset($this->dataSets[$label]) )
       return false;
@@ -104,9 +105,10 @@ class Sources
 
     // Only for the data set in use: a typo in another set's config should not litter the
     // disk, and an unreachable drive should not emit a warning into a JSON response
-    foreach( $this->folders as $folder )
-      if( ! is_dir($folder['path']) )
-        @mkdir($folder['path'], 0755, true);
+    if( $createFolders )
+      foreach( $this->folders as $folder )
+        if( ! is_dir($folder['path']) )
+          @mkdir($folder['path'], 0755, true);
 
     return true;
   }

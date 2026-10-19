@@ -140,4 +140,15 @@ class RendererTest extends TestCase
       $renderer->includedBy('style')
     );
   }
+
+  // The front-end has its own copy (SnippetForm.unwrap in lib/snippet-form.js),
+  // tests/js/snippet-form.test.js runs the same cases against it
+  public function testUnwrapSharedCases() : void
+  {
+    $renderer = $this->manager()->renderer;
+    $cases    = json_decode( file_get_contents(__DIR__ . '/fixtures/unwrap.json'), true);
+
+    foreach( $cases as $case )
+      $this->assertSame( $case['unwrapped'], $renderer->unwrap($case['text']), $case['description']);
+  }
 }

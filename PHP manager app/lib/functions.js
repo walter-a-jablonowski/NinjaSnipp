@@ -124,6 +124,34 @@ function parseMd( src )
   return tmp.innerHTML;
 }
 
+// Copies text to the clipboard, throws if that fails. The Clipboard API only works in a secure
+// context, plain http on another host falls back to a hidden textarea and execCommand.
+async function copyToClipboard(text)
+{
+  try {
+    if( navigator.clipboard && typeof navigator.clipboard.writeText === 'function' && (window.isSecureContext || location.hostname === 'localhost') ) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+  }
+  catch( e ) {
+    // fall through to fallback
+  }
+
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.setAttribute('readonly', '');
+  ta.style.position = 'fixed';
+  ta.style.top = '-1000px';
+  ta.style.left = '-1000px';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  const ok = document.execCommand('copy');
+  document.body.removeChild(ta);
+  if( ! ok ) throw new Error('execCommand(copy) returned false');
+}
+
 function timeAgo(timestamp)
 {
   const now = Date.now();

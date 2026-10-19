@@ -1,0 +1,11 @@
+<Project>
+
+  <!-- The WebView2 package references its WPF assembly in every .NET project (the tests get it
+       through the app), the app is WinForms only -->
+  <Target Name="RemoveWebView2Wpf" BeforeTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <Reference Remove="@(Reference)" Condition="'%(Filename)' == 'Microsoft.Web.WebView2.Wpf'" />
+    </ItemGroup>
+  </Target>
+
+</Project>

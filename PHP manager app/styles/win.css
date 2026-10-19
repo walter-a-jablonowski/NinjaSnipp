@@ -1,0 +1,154 @@
+/* The Win app's popup (win.php), on top of app.css */
+
+body.win-app {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bs-body-bg);
+}
+
+.win-view {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem;
+}
+
+.win-view[hidden] { display: none; }
+
+.win-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+#pickDataSet {
+  width: auto;
+  max-width: 40%;
+}
+
+.win-note {
+  font-size: 0.8rem;
+  color: var(--bs-warning-text-emphasis);
+}
+
+.win-hint {
+  font-size: 0.75rem;
+  color: var(--bs-secondary-color);
+  flex-shrink: 0;
+}
+
+/* Picker list */
+
+.win-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.win-row {
+  padding: 0.3rem 0.5rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+
+.win-row:hover { background: var(--bs-tertiary-bg); }
+.win-row.active { background: var(--bs-primary-bg-subtle); }
+
+.win-row-main {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.win-row-name {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.win-row-sc { font-size: 0.8rem; }
+.win-row-form { color: var(--bs-secondary-color); }
+
+.win-row-sub {
+  font-size: 0.8rem;
+  color: var(--bs-secondary-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.win-row-sub:empty { display: none; }
+
+.win-chip {
+  font-size: 0.7rem;
+  padding: 0 0.35rem;
+  border-radius: 0.6rem;
+  border: 1px solid var(--bs-border-color);
+  color: var(--bs-secondary-color);
+  white-space: nowrap;
+}
+
+.win-empty {
+  padding: 1rem 0.5rem;
+  color: var(--bs-secondary-color);
+}
+
+/* Fill view */
+
+.win-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  font-weight: 500;
+}
+
+.win-fill-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.win-short {
+  font-size: 0.875rem;
+  font-style: italic;
+  color: var(--bs-secondary-color);
+}
+
+.win-app .inline-snippet,
+.win-app #renderUsage {
+  flex: none;           /* app.css sizes them for the manager's columns */
+  overflow: visible;
+}
+
+.win-result-head {
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
+  font-size: 0.8rem;
+  color: var(--bs-secondary-color);
+}
+
+#fillText {
+  flex-shrink: 0;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.8rem;
+}
+
+.win-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.win-actions .win-hint { margin-right: auto; }

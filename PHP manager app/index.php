@@ -590,6 +590,7 @@ $usageLists = [
   <script src="<?= asset_url('lib/ext/bootstrap.bundle.min.js') ?>"></script>
   <script src="<?= asset_url('lib/ext/marked.min.js') ?>"></script>
   <script src="<?= asset_url('lib/functions.js') ?>"></script>
+  <script src="<?= asset_url('lib/snippet-form.js') ?>"></script>
   <script src="<?= asset_url('controllers/file-tree.js') ?>"></script>
   <script src="<?= asset_url('controllers/editor.js') ?>"></script>
   <script src="<?= asset_url('controllers/usage-form.js') ?>"></script>

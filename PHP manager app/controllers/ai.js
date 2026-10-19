@@ -410,7 +410,7 @@ class AiController
         this.app.render.applyFieldViews();
       }
       this.app.render.showMobilePane('content');
-      this.app.render.fillForm(call.values || {}, call.maybeOff || []);
+      this.app.render.form.fill(call.values || {}, call.maybeOff || []);
     }
   }
 

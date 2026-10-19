@@ -13,8 +13,6 @@
     this.searchHistory = [];
     this.recentSnippets = [];
     this.selectedFiles = new Set();
-    this.placeholderGroups = new Map(); // name => [elements]
-    this.renderedText = '';
     this.fileTree = []; // Tree state for file navigator
     this.baseFolderLabels = {}; // path => label map from last listFiles call
     this.expandedFolders = new Set(); // Paths of currently expanded folders

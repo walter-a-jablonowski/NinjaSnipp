@@ -76,6 +76,40 @@ class Renderer
     }, $content);
   }
 
+  // Copy output: text blocks (split at blank lines) with their soft wrapped lines joined, one
+  // blank line between them. Structured lines (list items, headings, quotes, tables, code,
+  // indented lines) keep their line breaks. Mirrors SnippetForm.unwrap() in lib/snippet-form.js,
+  // tests/fixtures/unwrap.json runs against both.
+  public function unwrap( string $text ) : string
+  {
+    $structured = '/^(?:[ \t]*(?:[-*+•]|\d+[.)])[ \t]|[ \t]*(?:#{1,6}[ \t]|>|\||```)|[ \t]+\S)/u';
+    $blocks     = [];
+
+    foreach( preg_split('/\n{2,}/', $text) as $block )
+    {
+      $lines = [];
+      foreach( explode("\n", $block) as $line )
+      {
+        // Squeeze inner runs of blanks, keep the indent (nested lists)
+        $indent = substr($line, 0, strspn($line, " \t"));
+        $line   = $indent . trim( preg_replace('/[ \t]{2,}/', ' ', substr($line, strlen($indent))));
+        if( trim($line) === '' )
+          continue;
+
+        $last = count($lines) - 1;
+        if( $last >= 0 && ! preg_match($structured, $line) && ! preg_match($structured, $lines[$last]) )
+          $lines[$last] .= " $line";
+        else
+          $lines[] = $line;
+      }
+
+      if( $lines )
+        $blocks[] = implode("\n", $lines);
+    }
+
+    return implode("\n\n", $blocks);
+  }
+
   // name => ['type' => 'text'|'choice', 'default' => string, 'choices' => [...] (choice only)]
   public function extractPlaceholders( string $content ) : array
   {

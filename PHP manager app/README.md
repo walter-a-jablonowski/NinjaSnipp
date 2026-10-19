@@ -179,6 +179,7 @@ ajax/files.php           tree listing, folders, links, renames, colors
 ajax/snippets.php        snippet files, search, rendering
 ajax/user.php            data set selection, settings, search history, recent snippets
 ajax/ai.php              AI sidebar: chat turn, apply an accepted proposal, chat sessions
+ajax/win.php             the Win app: all snippets of all data sets
 lib/SnippetManager.php   builds the services below from the user settings
 lib/Sources.php          data sets, source folders, path rules (which source a path lives in / is written to)
 lib/FileTree.php         merged tree listing, INCLUDE links
@@ -186,7 +187,8 @@ lib/FileOperations.php   create folder / link, rename, reorder, delete folder
 lib/SnippetStore.php     read / write / delete / duplicate snippet files
 lib/ColorStore.php       folder and file colors (.sys/ninja.json)
 lib/Search.php           full-text search
-lib/Renderer.php         includes, MAYBE blocks, placeholders
+lib/Renderer.php         includes, MAYBE blocks, placeholders, copy output
+lib/SnippetIndex.php     all snippets of all data sets for the Win app (sc, form or final text)
 lib/UserStore.php        per-user settings and lists
 lib/Ai/                  AI sidebar (plan and design: dev/ai_sidebar_plan.md)
   AiTools.php            tool registry: read tools, client tools, call() for every provider
@@ -200,6 +202,7 @@ lib/Ai/                  AI sidebar (plan and design: dev/ai_sidebar_plan.md)
   AiPrompt.php           system prompt (+ system_prompt.md)
   AiSessions.php         chat sessions, users/<user>/ai_sessions/
   AiArgs.php             typed reads of tool arguments
+lib/snippet-form.js      the fill-in form of a snippet (preview, Win app): placeholders, MAYBE blocks, text
 snippet_template.yml     a new snippet starts from it
 tests/                   PHPUnit tests
 tests/js/                JS tests (Node test runner)
@@ -218,4 +221,4 @@ composer test:js     # JS, needs Node 22+ (no npm packages)
 
 Every PHP test runs on a fresh temporary data set with two sources, so no real data is touched.
 
-The JS tests cover the front-end logic that has no DOM dependency: placeholder parsing, the inline snippet view, copy output, tree state and drag & drop renumbering. Var row visibility uses a small stand-in for the few DOM elements it touches. `tests/js/load.js` runs the browser scripts unchanged. The placeholder cases in `tests/fixtures/placeholders.json` run against both the PHP and the JS parser, so the two stay in sync.
+The JS tests cover the front-end logic that has no DOM dependency: placeholder parsing, the inline snippet view, copy output, tree state and drag & drop renumbering. Var row visibility uses a small stand-in for the few DOM elements it touches. `tests/js/load.js` runs the browser scripts unchanged. The placeholder cases in `tests/fixtures/placeholders.json` run against both the PHP and the JS parser, and the copy output cases in `tests/fixtures/unwrap.json` against both unwrap functions, so the two stay in sync.

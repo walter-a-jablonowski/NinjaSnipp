@@ -11,6 +11,7 @@ namespace SnippetManager;
 //   snippets  reading and writing snippet files
 //   search    full-text search
 //   renderer  includes, MAYBE blocks and placeholders
+//   index     all snippets of all data sets (Win app)
 class SnippetManager
 {
   public Sources $sources;
@@ -20,6 +21,7 @@ class SnippetManager
   public SnippetStore $snippets;
   public Search $search;
   public Renderer $renderer;
+  public SnippetIndex $index;
 
   public function __construct( array $settings, string $appRoot )
   {
@@ -32,5 +34,6 @@ class SnippetManager
     $this->snippets = new SnippetStore( $this->sources, $this->colors);
     $this->search   = new Search( $this->tree, $this->snippets);
     $this->renderer = new Renderer( $this->sources, $this->tree, $this->snippets, $settings['render'] ?? []);
+    $this->index    = new SnippetIndex( $this->sources, $this->tree, $this->snippets, $this->renderer);
   }
 }

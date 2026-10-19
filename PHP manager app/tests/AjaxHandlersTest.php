@@ -28,7 +28,8 @@ class AjaxHandlersTest extends TestCase
       require self::APP_DIR . '/ajax/files.php',
       require self::APP_DIR . '/ajax/snippets.php',
       require self::APP_DIR . '/ajax/user.php',
-      require self::APP_DIR . '/ajax/ai.php'
+      require self::APP_DIR . '/ajax/ai.php',
+      require self::APP_DIR . '/ajax/win.php'
     );
   }
 
@@ -167,5 +168,17 @@ class AjaxHandlersTest extends TestCase
 
     $this->expectExceptionMessage('Invalid session id');
     $this->call('aiSessionLoad', ['id' => '../settings']);
+  }
+
+  public function testWinSnippets() : void
+  {
+    $this->write('a/x.yml', "sc: x--\ncontent: x");
+
+    $response = $this->call('winSnippets');
+    $this->assertSame(['Test'], $response['dataSets']);
+    $this->assertSame('x--', $response['snippets'][0]['sc']);
+
+    // Polling with the stamp: nothing changed, nothing sent
+    $this->assertSame(['success' => true, 'unchanged' => true], $this->call('winSnippets', ['stamp' => $response['stamp']]));
   }
 }
