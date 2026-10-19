@@ -164,6 +164,8 @@ internal static class Native
 
   // Windows
 
+  public const int WS_EX_TOPMOST = 0x8;
+
   [StructLayout(LayoutKind.Sequential)]
   public struct RECT
   {

@@ -14,6 +14,7 @@ public class PopupWindow : Form
 {
   private const int RetryMs = 5000;
   private const int CaretGap = 4;
+  private const int MinHeight = 250;    // logical pixels, smaller is of no use (then it covers the caret)
 
   private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
@@ -37,6 +38,7 @@ public class PopupWindow : Form
   private bool ready;          // win.php is loaded
   private bool waiting;        // the waiting page is shown
   private string? pending;     // message for win.php, sent as soon as it is loaded
+  private bool switching;      // the popup takes the focus or hands it back: no reason to close
 
   public event Action<string>? Insert;
   public event Action? Cancel;
@@ -50,7 +52,6 @@ public class PopupWindow : Form
     Text            = "NinjaSnipp";
     FormBorderStyle = FormBorderStyle.None;
     ShowInTaskbar   = false;
-    TopMost         = true;
     StartPosition   = FormStartPosition.Manual;
     Padding         = new Padding(1);                 // the back color shows as a border
     BackColor       = Color.FromArgb(73, 80, 87);
@@ -64,7 +65,7 @@ public class PopupWindow : Form
 
     // Like a menu: clicking elsewhere closes it
     Deactivate += ( s, e ) => {
-      if( ! Visible )
+      if( ! Visible || switching )
         return;
       Log.Write($"Popup: lost the focus to {Native.GetForegroundWindow()}, closed");
       Cancel?.Invoke();
@@ -99,23 +100,46 @@ public class PopupWindow : Form
 
   public void ShowFill( IntPtr target, Snippet snippet ) => Open(target, new { action = "fill", snippet });
 
-  public void HidePopup()
+  // Back to the window the user typed in, then hidden. In this order: while the popup is in
+  // front Windows lets this app hand the focus on, after hiding it another window would get it.
+  public void HideTo( IntPtr target )
   {
-    pending = null;
+    pending   = null;
+    switching = true;
+    Native.ForceForeground(target);
     Hide();
+    switching = false;
   }
 
+  // Shown without activating (Show() would, while Windows still keeps the focus with the other
+  // app, which takes it right back and closes the popup), then brought to the front once
   private void Open( IntPtr target, object message )
   {
     pending = JsonSerializer.Serialize(message, Json);
     var caret = CaretOf(target);
     PlaceAt(caret);
 
+    switching = true;
     Show();
     Native.ForceForeground(Handle);
     web.Focus();
+    switching = false;
+
     Log.Write($"Popup: shown at {Bounds} for caret {caret} of window {target}, page {(ready ? "loaded" : "not loaded")}, in front: {Native.GetForegroundWindow() == Handle}");
     SendPending();
+  }
+
+  protected override bool ShowWithoutActivation => true;
+
+  // Topmost through the window style: the TopMost property activates the window when shown
+  protected override CreateParams CreateParams
+  {
+    get
+    {
+      var cp = base.CreateParams;
+      cp.ExStyle |= Native.WS_EX_TOPMOST;
+      return cp;
+    }
   }
 
   private void SendPending()
@@ -157,19 +181,23 @@ public class PopupWindow : Form
       Cancel?.Invoke();
   }
 
-  // Below the caret, above it when there is no room below; inside the screen
+  // Below the caret, above it when there is no room below. When it fits on neither side, on
+  // the larger one with less height: the line the user types in stays visible.
   private void PlaceAt( Rectangle caret )
   {
-    var area = Screen.FromPoint(caret.Location).WorkingArea;
-    var size = new Size( LogicalToDeviceUnits(logicalSize.Width), LogicalToDeviceUnits(logicalSize.Height));
-    size     = new Size( Math.Min(size.Width, area.Width), Math.Min(size.Height, area.Height));
+    var area   = Screen.FromPoint(caret.Location).WorkingArea;
+    int width  = Math.Min( LogicalToDeviceUnits(logicalSize.Width), area.Width);
+    int height = LogicalToDeviceUnits(logicalSize.Height);
+    int below  = area.Bottom - caret.Bottom - CaretGap;
+    int above  = caret.Top - CaretGap - area.Top;
 
-    int x = Math.Clamp(caret.Left, area.Left, area.Right - size.Width);
-    int y = caret.Bottom + CaretGap + size.Height <= area.Bottom
-      ? caret.Bottom + CaretGap
-      : Math.Max(area.Top, caret.Top - CaretGap - size.Height);
+    bool down = height <= below || (height > above && below >= above);
+    height    = Math.Min( Math.Min(height, area.Height), Math.Max(down ? below : above, LogicalToDeviceUnits(MinHeight)));
 
-    Bounds = new Rectangle(x, y, size.Width, size.Height);
+    int x = Math.Clamp(caret.Left, area.Left, area.Right - width);
+    int y = down ? caret.Bottom + CaretGap : caret.Top - CaretGap - height;
+
+    Bounds = new Rectangle(x, Math.Clamp(y, area.Top, area.Bottom - height), width, height);
   }
 
   // The caret of the target window on the screen; the mouse position for apps that have no

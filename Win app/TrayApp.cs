@@ -65,10 +65,7 @@ public class TrayApp : ApplicationContext
     };
 
     popup.Insert += text => _ = InsertFromPopupAsync(text);
-    popup.Cancel += () => {
-      BackToTarget();
-      popup.HidePopup();
-    };
+    popup.Cancel += () => popup.HideTo(target);
 
     hotkey.Pressed += ShowPicker;
     if( ! hotkey.Register(config.Hotkey) )
@@ -129,16 +126,11 @@ public class TrayApp : ApplicationContext
 
   private async Task InsertFromPopupAsync( string text )
   {
-    BackToTarget();
-    popup.HidePopup();
+    popup.HideTo(target);
 
     if( ! await inserter.InsertAsync(target, text) )
       NotInserted(text);
   }
-
-  // While the popup is in front Windows lets this app hand the focus on, after hiding it not
-  // any more (another window would get it): so first the target, then hide
-  private void BackToTarget() => Native.ForceForeground(target);
 
   private void NotInserted( string text )
   {
