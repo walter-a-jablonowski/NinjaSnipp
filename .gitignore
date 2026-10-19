@@ -18,3 +18,7 @@ cache/
 
 # PHPUnit
 .phpunit.result.cache
+PHP manager app/README.md
+PHP manager app/controllers/render.js
+PHP manager app/tests/js/render.test.js
+Win app/dev/win_app_plan.md

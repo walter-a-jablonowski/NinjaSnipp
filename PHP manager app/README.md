@@ -218,4 +218,4 @@ composer test:js     # JS, needs Node 22+ (no npm packages)
 
 Every PHP test runs on a fresh temporary data set with two sources, so no real data is touched.
 
-The JS tests cover the front-end logic that has no DOM dependency: placeholder parsing, the inline snippet view, copy output, tree state and drag & drop renumbering. `tests/js/load.js` runs the browser scripts unchanged. The placeholder cases in `tests/fixtures/placeholders.json` run against both the PHP and the JS parser, so the two stay in sync.
+The JS tests cover the front-end logic that has no DOM dependency: placeholder parsing, the inline snippet view, copy output, tree state and drag & drop renumbering. Var row visibility uses a small stand-in for the few DOM elements it touches. `tests/js/load.js` runs the browser scripts unchanged. The placeholder cases in `tests/fixtures/placeholders.json` run against both the PHP and the JS parser, so the two stay in sync.

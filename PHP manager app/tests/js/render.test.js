@@ -131,3 +131,59 @@ test('unwrapBlock does not join text onto a list item or heading', () => {
 test('unwrapBlock drops blank lines', () => {
   assert.equal( render.unwrapBlock('one\n\n   \ntwo\n'), 'one two');
 });
+
+
+// Var rows: a row is hidden when all of its placeholders are in switched off MAYBE blocks
+
+// Minimal stand-in for the DOM elements updateVarRowVisibility() uses,
+// closest() understands selectors like 'tr', '.cls' and '.cls[data-name="value"]'
+function el( tag, cls, data = {}, children = [] )
+{
+  const node = { tagName: tag, className: cls, dataset: data, style: {}, parentElement: null };
+
+  node.closest = selector => {
+    const [, t, c, key, value] = selector.match(/^(\w*)(?:\.([\w-]+))?(?:\[data-([\w-]+)="([^"]*)"\])?$/);
+    for( let n = node; n; n = n.parentElement )
+      if( (! t || n.tagName === t) && (! c || n.className.split(' ').includes(c)) && (! key || n.dataset[key] === value))
+        return n;
+    return null;
+  };
+
+  children.forEach(child => child.parentElement = node);
+  return node;
+}
+
+const ph    = name => el('span', 'ph ph-text', { ph: name });
+const maybe = ( name, enabled, children ) => el('div', 'maybe-block', { maybe: name, enabled: String(enabled) }, children);
+
+// Runs updateVarRowVisibility() for a var row per name and returns the names of the hidden rows
+function hiddenVars( names, phs )
+{
+  const inputs = names.map(name => el('input', 'var-input', { varName: name }));
+  inputs.forEach(input => el('tr', '', {}, [input]));
+
+  globalThis.document = { querySelectorAll: selector => ({ '#renderUsage .var-input': inputs, '#inlineSnippet .ph': phs })[selector] };
+  render.updateVarRowVisibility();
+  delete globalThis.document;
+
+  return inputs.filter(input => input.parentElement.style.display === 'none').map(input => input.dataset.varName);
+}
+
+test('a var row is hidden when all its placeholders are in disabled MAYBE blocks', () => {
+  const phs = [ph('only'), ph('both'), ph('both'), ph('on')];
+  maybe('Off', false, [phs[0], phs[1]]);
+  maybe('On', true, [phs[3]]);
+
+  assert.deepEqual( hiddenVars(['only', 'both', 'on'], phs), ['only']);
+});
+
+test('a placeholder in an enabled MAYBE block inside a disabled one is hidden', () => {
+  const phs = [ph('inner')];
+  maybe('Outer', false, [maybe('Inner', true, phs)]);
+
+  assert.deepEqual( hiddenVars(['inner'], phs), ['inner']);
+});
+
+test('a var row without placeholders in the content stays visible', () => {
+  assert.deepEqual( hiddenVars(['unused'], []), []);
+});

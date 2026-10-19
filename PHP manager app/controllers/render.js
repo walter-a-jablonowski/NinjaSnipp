@@ -727,13 +727,11 @@ class RenderController
   updateVarRowVisibility()
   {
     // For each var row: hide if ALL its placeholders are inside disabled maybe-blocks
+    // (at any level, an enabled inner block in a disabled outer one is hidden too)
     document.querySelectorAll('#renderUsage .var-input').forEach(input => {
       const name = input.dataset.varName;
       const phs  = [...document.querySelectorAll('#inlineSnippet .ph')].filter(ph => ph.dataset.ph === name);
-      const allHidden = phs.length > 0 && phs.every(ph => {
-        const block = ph.closest('.maybe-block');
-        return block && block.dataset.enabled === 'false';
-      });
+      const allHidden = phs.length > 0 && phs.every(ph => ph.closest('.maybe-block[data-enabled="false"]'));
       const row = input.closest('tr');
       if( row ) row.style.display = allHidden ? 'none' : '';
     });
